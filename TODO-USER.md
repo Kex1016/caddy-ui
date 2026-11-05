@@ -43,3 +43,8 @@ Newest at the bottom. Format: date · workstream · what · why.
   (`/var/run/docker.sock`) and the compose directory mounted at the same absolute path
   as on the host (`CADDY_UI_COMPOSE_DIR`) · that is root-equivalent on the host; skip the
   sidecar and use Watchtower if you do not want that.
+- [ ] 2026-11-05 · W10 · Decide whether history and settings from the old zackwag backend
+  should be imported into the new UI; the drafts say they are not · an importer is extra
+  work and only worth it if you have history you want to keep.
+- [ ] 2026-11-05 · W10 · Pick the license for the first release (the README says MIT, to
+  be added) · the repo has no LICENSE file yet.
