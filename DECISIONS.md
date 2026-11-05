@@ -47,3 +47,10 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-05 · Plan · Visual editor shape is B, tree outline + inspector, with recipes
   (E) for adding sites · David chose it on the decision card in the planning thread ·
   David can change it in the thread before W5 starts; after that it is a rewrite.
+- 2026-11-05 · W10 · Documentation drafts are written from PLAN.md and marked `Draft` at
+  the top of each page, with `(draft)` on unconfirmed details · the code does not exist
+  yet, so claims must not look final · the final W10 pass removes the markers after
+  W5–W9 land.
+- 2026-11-05 · W10 · Docs file set follows the PLAN.md W10 row exactly, plus the two
+  existing companion docs; the migration page keeps the planned name
+  `migration-from-caddy-ui.md` · matches the plan's contract · rename and fix links.
