@@ -63,3 +63,7 @@ Newest at the bottom. Format: date · workstream · what · why.
 - [ ] 2026-11-05 · W4 · If any site's upstream is only reachable from the Caddy container (not from other
   containers on the `caddy-ui` network), expect it to show as down; tell the thread so the probe can go
   through Caddy instead · upstreams are probed directly from the UI container.
+- [ ] 2026-11-05 · W8 · Try the Sites page on your real Caddyfile once the image is up: add, duplicate, disable,
+      re-enable and delete a throwaway site (for example `test.example.com`). Each change is validated by Caddy and
+      kept in History, so a mistake is one click to undo · the unit tests cover the file edits, but only your
+      Caddyfile proves they sit well with its comments and layout.

@@ -68,12 +68,18 @@
 		} else if (draft) {
 			writeDraft(storage(), null);
 		}
+		// `?at=<address>` scrolls to that site block; `?line=N` (the sites list's link) to that line.
 		const at = page.url.searchParams.get('at');
-		if (at) {
+		const lineParam = Number(page.url.searchParams.get('line'));
+		if (at || (Number.isSafeInteger(lineParam) && lineParam > 0)) {
 			const t = setInterval(() => {
-				const hit = blocks.find((b) => b.label.split(', ').includes(at));
-				if (hit && editor) {
-					editor.reveal(hit.from);
+				const from = at
+					? blocks.find((b) => b.label.split(', ').includes(at))?.from
+					: blocks.length
+						? new LineIndex(base.text).offset(lineParam)
+						: undefined;
+				if (from !== undefined && editor) {
+					editor.reveal(from);
 					clearInterval(t);
 				}
 			}, 100);
