@@ -1,0 +1,6 @@
+uri query {
+	+foo bar
+	-baz
+	qux test
+	renamethis>renamed
+}

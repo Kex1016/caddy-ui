@@ -1,0 +1,9 @@
+example.com {
+	reverse_proxy localhost:5000
+
+	handle_errors 502 503 {
+		root * /srv/maintenance
+		rewrite * /index.html
+		file_server
+	}
+}

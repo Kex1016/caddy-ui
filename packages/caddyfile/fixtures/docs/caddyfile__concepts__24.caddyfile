@@ -1,0 +1,16 @@
+(snippet) {
+	{block}
+	respond "OK"
+}
+
+a.example.com {
+	import snippet {
+		header +foo bar
+	}
+}
+
+b.example.com {
+	import snippet {
+		header +bar foo
+	}
+}

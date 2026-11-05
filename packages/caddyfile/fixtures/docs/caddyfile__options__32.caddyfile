@@ -1,0 +1,8 @@
+{
+	cert_issuer acme {
+		...
+	}
+	cert_issuer zerossl {
+		...
+	}
+}

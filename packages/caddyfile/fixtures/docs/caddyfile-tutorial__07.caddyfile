@@ -1,0 +1,7 @@
+:8080 {
+	respond "I am 8080"
+}
+
+:8081 {
+	respond "I am 8081"
+}

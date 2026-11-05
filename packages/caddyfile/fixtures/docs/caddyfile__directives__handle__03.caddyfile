@@ -1,0 +1,15 @@
+example.com {
+	handle /foo* {
+		handle /foo/bar* {
+			# This block only matches paths under /foo/bar
+		}
+
+		handle {
+			# This block matches everything else under /foo/
+		}
+	}
+
+	handle {
+		# This block matches everything else (acts as a fallback)
+	}
+}

@@ -1,0 +1,3 @@
+... pki_intermediate [<ca_name>...] {
+	authority <ca_name>...
+}

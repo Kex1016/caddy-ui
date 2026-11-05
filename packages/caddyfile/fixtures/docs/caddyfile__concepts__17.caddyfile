@@ -1,0 +1,6 @@
+# Comma and new-line separated site addresses
+localhost:8080,
+example.com,
+www.example.com {
+	...
+}

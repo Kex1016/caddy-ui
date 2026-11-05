@@ -1,0 +1,23 @@
+... acme [<directory_url>] {
+	dir      <directory_url>
+	test_dir <test_directory_url>
+	email    <email>
+	timeout  <duration>
+	disable_http_challenge
+	disable_tlsalpn_challenge
+	alt_http_port    <port>
+	alt_tlsalpn_port <port>
+	eab <key_id> <mac_key>
+	trusted_roots <pem_files...>
+	dns [<provider_name> [<options>]]
+	propagation_timeout <duration>
+	propagation_delay   <duration>
+	dns_ttl             <duration>
+	dns_challenge_override_domain <domain>
+	resolvers <dns_servers...>
+	preferred_chains [smallest] {
+		root_common_name <common_names...>
+		any_common_name  <common_names...>
+	}
+	profile <name>
+}

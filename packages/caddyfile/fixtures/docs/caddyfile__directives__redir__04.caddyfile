@@ -1,0 +1,4 @@
+example.com {
+	redir /about-us /about
+	reverse_proxy localhost:9000
+}

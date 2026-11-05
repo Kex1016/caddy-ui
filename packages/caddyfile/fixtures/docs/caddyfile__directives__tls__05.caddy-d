@@ -1,0 +1,4 @@
+... storage [<storage_keys>...] {
+	storage <storage_module>
+	keys    <storage_keys>...
+}

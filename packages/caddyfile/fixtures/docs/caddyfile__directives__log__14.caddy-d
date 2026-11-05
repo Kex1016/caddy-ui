@@ -1,0 +1,5 @@
+<field> query {
+	delete  <key>
+	replace <key> <replacement>
+	hash    <key>
+}

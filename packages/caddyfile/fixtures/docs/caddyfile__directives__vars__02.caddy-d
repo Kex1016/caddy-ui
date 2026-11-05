@@ -1,0 +1,13 @@
+vars {
+	# boolean
+	abc true
+
+	# integer
+	def 1
+
+	# float
+	ghi 2.3
+
+	# string
+	jkl "example"
+}

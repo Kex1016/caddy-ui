@@ -1,0 +1,12 @@
+intercept [<matcher>] {
+	@name {
+		status <code...>
+		header <field> [<value>]
+	}
+
+	replace_status [<response_matcher>] <code>
+
+	handle_response [<response_matcher>] {
+		<directives...>
+	}
+}

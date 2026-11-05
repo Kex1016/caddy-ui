@@ -1,0 +1,12 @@
+{
+	servers {
+		timeouts {
+			read_body      5m
+			read_body_idle 30s
+			read_header    5s
+			write          10m
+			write_idle     30s 1024
+			idle           10m
+		}
+	}
+}

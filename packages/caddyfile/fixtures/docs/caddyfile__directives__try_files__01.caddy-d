@@ -1,0 +1,2 @@
+@try_files file <files...>
+rewrite @try_files {file_match.relative}

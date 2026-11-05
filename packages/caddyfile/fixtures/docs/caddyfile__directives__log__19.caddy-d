@@ -1,0 +1,7 @@
+format append {
+	fields {
+		<field> <value>
+	}
+	<field> <value>
+	wrap <encode_module> ...
+}

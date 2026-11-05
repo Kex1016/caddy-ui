@@ -1,0 +1,1 @@
+header >Set-Cookie (.*) "$1; SameSite=None;"

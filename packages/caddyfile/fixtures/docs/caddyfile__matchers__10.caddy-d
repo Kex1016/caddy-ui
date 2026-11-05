@@ -1,0 +1,2 @@
+@post method POST
+reverse_proxy @post localhost:6001

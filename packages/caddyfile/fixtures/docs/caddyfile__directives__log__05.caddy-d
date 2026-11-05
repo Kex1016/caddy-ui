@@ -1,0 +1,4 @@
+output net <address> {
+	dial_timeout <duration>
+	soft_start
+}

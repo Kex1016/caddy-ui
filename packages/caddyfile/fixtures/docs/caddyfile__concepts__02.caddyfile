@@ -1,0 +1,8 @@
+example1.com {
+	root /www/example.com
+	file_server
+}
+
+example2.com {
+	reverse_proxy localhost:9000
+}

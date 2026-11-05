@@ -1,0 +1,5 @@
+{
+	servers {
+		expected_underscore_headers X_Custom_Header webhook_*
+	}
+}

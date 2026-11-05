@@ -1,0 +1,5 @@
+localhost {
+	reverse_proxy localhost:9000 localhost:9001 {
+		lb_policy first
+	}
+}

@@ -1,0 +1,7 @@
+example.com {
+	log {
+		format filter {
+			request>headers>User-Agent delete
+		}
+	}
+}

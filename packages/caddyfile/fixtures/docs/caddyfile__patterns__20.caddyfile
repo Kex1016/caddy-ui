@@ -1,0 +1,13 @@
+{
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+http://foo.example.com {
+	reverse_proxy foo-app:8080
+}
+
+http://bar.example.com {
+	reverse_proxy bar-app:9000
+}

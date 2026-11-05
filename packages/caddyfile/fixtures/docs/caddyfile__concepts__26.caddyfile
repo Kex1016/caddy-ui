@@ -1,0 +1,7 @@
+example.com {
+	invoke app-proxy
+}
+
+www.example.com {
+	invoke app-proxy
+}

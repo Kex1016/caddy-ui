@@ -1,0 +1,5 @@
+{
+	preferred_chains {
+		root_common_name "ISRG Root X2"
+	}
+}

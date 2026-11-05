@@ -1,0 +1,4 @@
+example.com {
+	rewrite /add     /add/
+	rewrite /remove/ /remove
+}

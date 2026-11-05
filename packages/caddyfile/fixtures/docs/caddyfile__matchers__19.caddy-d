@@ -1,0 +1,1 @@
+@404 expression {err.status_code} == 404

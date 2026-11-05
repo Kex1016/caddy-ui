@@ -1,0 +1,5 @@
+handle_path /static* {
+	root /srv/static
+	log_skip
+	file_server
+}

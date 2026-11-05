@@ -1,0 +1,9 @@
+... zerossl <api_key> {
+	validity_days <days>
+	alt_http_port <port>
+	dns <provider_name> ...
+	propagation_delay <duration>
+	propagation_timeout <duration>
+	resolvers <list...>
+	dns_ttl <duration>
+}

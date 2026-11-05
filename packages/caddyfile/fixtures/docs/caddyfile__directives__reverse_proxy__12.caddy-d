@@ -1,0 +1,28 @@
+transport http {
+	read_buffer             <size>
+	write_buffer            <size>
+	max_response_header     <size>
+	proxy_protocol          v1|v2
+	dial_timeout            <duration>
+	dial_fallback_delay     <duration>
+	response_header_timeout <duration>
+	expect_continue_timeout <duration>
+	resolvers <ip...>
+	tls
+	tls_client_auth <automate_name> | <cert_file> <key_file>
+	tls_insecure_skip_verify
+	tls_curves <curves...>
+	tls_timeout <duration>
+	tls_trust_pool <module>
+	tls_server_name <server_name>
+	tls_renegotiation <level>
+	tls_except_ports <ports...>
+	keepalive [off|<duration>]
+	keepalive_interval <interval>
+	keepalive_idle_conns <max_count>
+	keepalive_idle_conns_per_host <count>
+	versions <versions...>
+	compression off
+	max_conns_per_host <count>
+	network_proxy <module>
+}

@@ -1,0 +1,15 @@
+app1.example.com {
+	root /srv/app1/public
+	php_fastcgi app1:9000 {
+		root /var/www/html/public
+	}
+	file_server
+}
+
+app2.example.com {
+	root /srv/app2/public
+	php_fastcgi app2:9000 {
+		root /var/www/html/public
+	}
+	file_server
+}

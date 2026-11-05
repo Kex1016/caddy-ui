@@ -1,0 +1,9 @@
+example.com {
+	handle_path /foo/* {
+		# The path has the "/foo" prefix stripped
+	}
+
+	handle /bar/* {
+		# The path still retains "/bar"
+	}
+}

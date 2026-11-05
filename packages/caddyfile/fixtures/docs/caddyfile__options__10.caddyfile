@@ -1,0 +1,6 @@
+{
+	admin :2019 {
+		origins http://localhost:2019 http://example.com:8080
+		enforce_origin
+	}
+}

@@ -1,0 +1,1 @@
+@html-or-error file {path}.html {path} =404

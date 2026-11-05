@@ -1,0 +1,3 @@
+metrics /metrics {
+	disable_openmetrics
+}

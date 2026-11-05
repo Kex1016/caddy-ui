@@ -1,0 +1,77 @@
+reverse_proxy [<matcher>] [<upstreams...>] {
+	# backends
+	to      <upstreams...>
+	dynamic <module> ...
+
+	# load balancing
+	lb_policy       <name> [<options...>]
+	lb_retries      <retries>
+	lb_try_duration <duration>
+	lb_try_interval <interval>
+	lb_retry_match  <request-matcher>
+
+	# active health checking
+	health_uri          <uri>
+	health_upstream     <ip:port>
+	health_port         <port>
+	health_interval     <interval>
+	health_passes       <num>
+	health_fails	    <num>
+	health_timeout      <duration>
+	health_method       <method>
+	health_status       <status>
+	health_request_body <body>
+	health_body         <regexp>
+	health_follow_redirects
+	health_headers {
+		<field> [<values...>]
+	}
+
+	# passive health checking
+	fail_duration     <duration>
+	max_fails         <num>
+	unhealthy_status  <status>
+	unhealthy_latency <duration>
+	unhealthy_request_count <num>
+
+	# streaming
+	flush_interval     <duration>
+	request_buffers    <size>
+	response_buffers   <size>
+	stream_timeout     <duration>
+	stream_close_delay <duration>
+
+	# reporting
+	proxy_status_name <name>
+
+	# request/header manipulation
+	trusted_proxies [private_ranges] <ranges...>
+	header_up   [+|-]<field> [<value|regexp> [<replacement>]]
+	header_down [+|-]<field> [<value|regexp> [<replacement>]]
+	method <method>
+	rewrite <to>
+
+	# round trip
+	transport <name> {
+		...
+	}
+
+	# optionally intercept responses from upstream
+	@name {
+		status <code...>
+		header <field> [<value>]
+	}
+	replace_status [<matcher>] <status_code>
+	handle_response [<matcher>] {
+		<directives...>
+
+		# special directives only available in handle_response
+		copy_response [<matcher>] [<status>] {
+			status <status>
+		}
+		copy_response_headers [<matcher>] {
+			include <fields...>
+			exclude <fields...>
+		}
+	}
+}

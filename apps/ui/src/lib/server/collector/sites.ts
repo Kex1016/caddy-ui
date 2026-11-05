@@ -1,14 +1,10 @@
 import { createHash } from 'node:crypto';
+import { parse, positionAt, type Node } from '@caddy-ui/caddyfile';
 
 /**
  * What the collector needs from the Caddyfile: each site block's addresses and the upstreams it proxies to.
- *
- * This is a deliberately small scanner, not the real parser. `packages/caddyfile` (W1) owns parsing; once it
- * lands, `scanCaddyfile` should be reimplemented on top of its CST with the same output. Until then this
- * understands just enough: comments, quotes, backticks, heredocs, braces, snippets, named routes, `import`
- * of snippets, and the directives that name upstreams.
+ * Built on the CST from `packages/caddyfile` (W1); only the directives that name upstreams are interpreted.
  */
-
 export type Upstream = {
 	/** The address as written, for example `10.0.0.5:8080` or `https://10.0.0.7`. */
 	address: string;
@@ -24,130 +20,31 @@ export type SiteBlock = {
 	line: number;
 };
 
-type Tok = { text: string; line: number; quoted: boolean };
-
-/** Splits Caddyfile text into tokens with line numbers. Tokens on one line form one directive. */
-export function tokenize(src: string): Tok[] {
-	const out: Tok[] = [];
-	let i = 0;
-	let line = 1;
-	const n = src.length;
-	while (i < n) {
-		const c = src[i] as string;
-		if (c === '\n') {
-			line++;
-			i++;
-			continue;
-		}
-		if (c === ' ' || c === '\t' || c === '\r') {
-			i++;
-			continue;
-		}
-		if (c === '#') {
-			while (i < n && src[i] !== '\n') i++;
-			continue;
-		}
-		const startLine = line;
-		if (c === '"' || c === '`') {
-			let text = '';
-			i++;
-			while (i < n && src[i] !== c) {
-				if (c === '"' && src[i] === '\\' && (src[i + 1] === '"' || src[i + 1] === '\\')) {
-					text += src[i + 1];
-					i += 2;
-					continue;
-				}
-				if (src[i] === '\n') line++;
-				text += src[i];
-				i++;
-			}
-			i++;
-			out.push({ text, line: startLine, quoted: true });
-			continue;
-		}
-		const heredoc = /^<<([A-Za-z0-9_-]+)[ \t]*\r?\n/.exec(src.slice(i, i + 64));
-		if (heredoc) {
-			const marker = heredoc[1] as string;
-			i += heredoc[0].length;
-			line++;
-			const close = new RegExp(`^[ \\t]*${marker}(?=\\s|$)`, 'm');
-			const rest = src.slice(i);
-			const m = close.exec(rest);
-			const body = m ? rest.slice(0, m.index) : rest;
-			line += body.split('\n').length - 1;
-			i += m ? m.index + m[0].length : rest.length;
-			out.push({ text: body, line: startLine, quoted: true });
-			continue;
-		}
-		let text = '';
-		while (i < n && !/\s/.test(src[i] as string)) {
-			text += src[i];
-			i++;
-		}
-		out.push({ text, line: startLine, quoted: false });
-	}
-	return out;
-}
-
-const isOpen = (t: Tok | undefined) => t !== undefined && !t.quoted && t.text === '{';
-const isClose = (t: Tok | undefined) => t !== undefined && !t.quoted && t.text === '}';
-
-type Line = { toks: Tok[]; body?: Line[] };
-
-/** Groups tokens into lines, nesting `{ … }` bodies under the line that opens them. */
-function group(toks: Tok[]): Line[] {
-	let pos = 0;
-	function lines(): Line[] {
-		const out: Line[] = [];
-		while (pos < toks.length) {
-			const first = toks[pos] as Tok;
-			if (isClose(first)) {
-				pos++;
-				return out;
-			}
-			const ln: Line = { toks: [] };
-			// A site's address list may continue onto the next line after a trailing comma.
-			while (pos < toks.length) {
-				const t = toks[pos] as Tok;
-				const prev = ln.toks[ln.toks.length - 1];
-				const continues = prev !== undefined && prev.text.endsWith(',') && !prev.quoted;
-				if (prev !== undefined && t.line !== prev.line && !continues) break;
-				if (isClose(t)) break;
-				if (isOpen(t)) {
-					pos++;
-					ln.body = lines();
-					break;
-				}
-				ln.toks.push(t);
-				pos++;
-			}
-			if (ln.toks.length > 0 || ln.body) out.push(ln);
-		}
-		return out;
-	}
-	return lines();
-}
-
 const UPSTREAM_DIRECTIVES = new Set(['reverse_proxy', 'forward_auth', 'php_fastcgi']);
 
 function isMatcherToken(text: string): boolean {
 	return text.startsWith('@') || text.startsWith('/') || text === '*';
 }
 
-function collectUpstreams(body: Line[], snippets: Map<string, Line[]>, seen: Set<string>, out: Upstream[]) {
+function collectUpstreams(
+	body: readonly Node[],
+	snippets: Map<string, Node[]>,
+	seen: Set<string>,
+	out: Upstream[]
+) {
 	const add = (address: string, via: string) => {
 		// Placeholders and env vars resolve at request time, so there is nothing fixed to probe.
 		if (address.includes('{') || address.startsWith('unix/')) return;
 		if (!out.some((u) => u.address === address)) out.push({ address, via });
 	};
-	for (const ln of body) {
-		const name = ln.toks[0]?.text;
-		if (name === undefined) {
-			if (ln.body) collectUpstreams(ln.body, snippets, seen, out);
+	for (const node of body) {
+		if (node.kind !== 'directive') {
+			if (node.kind === 'raw' && node.body) collectUpstreams(node.body, snippets, seen, out);
 			continue;
 		}
+		const name = node.name.text;
 		if (name === 'import') {
-			const target = ln.toks[1]?.text;
+			const target = node.args[0]?.text;
 			const snip = target ? snippets.get(target) : undefined;
 			if (target && snip && !seen.has(target)) {
 				seen.add(target);
@@ -157,15 +54,16 @@ function collectUpstreams(body: Line[], snippets: Map<string, Line[]>, seen: Set
 			continue;
 		}
 		if (UPSTREAM_DIRECTIVES.has(name)) {
-			const args = ln.toks.slice(1).map((t) => t.text);
-			if (args[0] !== undefined && isMatcherToken(args[0])) args.shift();
+			const args = node.args.map((t) => t.text);
+			// The parser only classifies matchers inside directive bodies; strip one it left in place.
+			if (node.matcher === undefined && args[0] !== undefined && isMatcherToken(args[0])) args.shift();
 			for (const a of args) add(a, name);
-			for (const sub of ln.body ?? []) {
-				if (sub.toks[0]?.text === 'to') for (const t of sub.toks.slice(1)) add(t.text, name);
+			for (const sub of node.body ?? []) {
+				if (sub.kind === 'directive' && sub.name.text === 'to') for (const t of sub.args) add(t.text, name);
 			}
 			continue;
 		}
-		if (ln.body) collectUpstreams(ln.body, snippets, seen, out);
+		if (node.body) collectUpstreams(node.body, snippets, seen, out);
 	}
 }
 
@@ -180,28 +78,24 @@ export function siteId(addresses: string[]): string {
 }
 
 export function scanCaddyfile(src: string): SiteBlock[] {
-	const top = group(tokenize(src));
-	const snippets = new Map<string, Line[]>();
-	for (const ln of top) {
-		const head = ln.toks[0]?.text ?? '';
-		if (ln.toks.length === 1 && /^\(.+\)$/.test(head) && ln.body) snippets.set(head.slice(1, -1), ln.body);
+	const { file } = parse(src);
+	const snippets = new Map<string, Node[]>();
+	for (const block of file.blocks) {
+		if (block.kind === 'snippet') snippets.set(block.name, block.body);
 	}
 	const sites: SiteBlock[] = [];
-	for (const [index, ln] of top.entries()) {
-		const head = ln.toks[0]?.text;
-		if (head === undefined) continue; // global options block
-		if (/^&?\(.+\)$/.test(head)) continue; // snippet or named route
-		const addresses = ln.toks
+	for (const block of file.blocks) {
+		if (block.kind !== 'site') continue;
+		const addresses = block.addresses
 			.flatMap((t) => t.text.split(','))
 			.map((a) => a.trim())
 			.filter(Boolean);
 		if (addresses.length === 0) continue;
-		// A Caddyfile with a single site may omit the braces; then the rest of the file is its body.
-		const body = ln.body ?? (index === top.findIndex((l) => l.toks.length > 0) ? top.slice(index + 1) : []);
 		const upstreams: Upstream[] = [];
-		collectUpstreams(body, snippets, new Set(), upstreams);
-		sites.push({ id: siteId(addresses), addresses, upstreams, line: (ln.toks[0] as Tok).line });
-		if (!ln.body) break;
+		collectUpstreams(block.body, snippets, new Set(), upstreams);
+		const first = block.addresses[0]!;
+		const line = first.span ? positionAt(src, first.span.start).line : 1;
+		sites.push({ id: siteId(addresses), addresses, upstreams, line });
 	}
 	return sites;
 }

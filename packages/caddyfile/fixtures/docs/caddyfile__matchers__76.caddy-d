@@ -1,0 +1,7 @@
+url_pattern <pattern> {
+	base_url <url>
+	ignore_case
+}
+
+expression url_pattern('<pattern>')
+expression url_pattern('<pattern>', '<base_url>')

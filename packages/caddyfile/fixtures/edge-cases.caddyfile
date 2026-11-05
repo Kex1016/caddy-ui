@@ -1,0 +1,71 @@
+# Odd but valid spellings that must survive a round trip.
+{
+	debug
+	order replace after encode   # trailing comment in globals
+	servers :443 {
+		protocols h1 h2 h3
+	}
+}
+
+(logging) {
+	log {
+		output file /var/log/caddy/{args[0]}.log {
+			roll_size 10MiB
+		}
+		format json
+	}
+}
+
+&(api-route) {
+	respond "api"
+}
+
+import /etc/caddy/conf.d/*.caddy
+
+one.example.com,
+two.example.com , three.example.com{$PORT_SUFFIX} {
+	import logging two
+	@static {
+		path *.css *.js
+		not path /dynamic/*
+	}
+	@ws `header({'Connection':'*Upgrade*','Upgrade':'websocket'})`
+	@html file {
+		try_files {path}.html {path}
+	}
+	header @static Cache-Control "public, max-age=3600"
+	respond @ws "no websockets here" 426 {
+		close
+	}
+	respond <<HTML
+		<html>
+		  <body>{{ "{" }}</body>
+		</html>
+		HTML 200
+	respond /quoted "{" \
+		201
+	reverse_proxy \
+		10.0.0.1:80 \
+		10.0.0.2:80 {
+		lb_policy first
+		header_up -Server
+		transport http {
+			tls_insecure_skip_verify
+		}
+	}
+	handle_errors 404 {
+		rewrite * /404.html
+		file_server
+	}
+	encode {}
+	templates { }
+	tls internal {
+	}
+	root * `/srv/with space`
+	file_server browse # tabs and spaces below
+        php_fastcgi unix//run/php/php-fpm.sock
+}   
+
+:8080 {
+	respond "Hello, {remote_host}\"!" 200
+}

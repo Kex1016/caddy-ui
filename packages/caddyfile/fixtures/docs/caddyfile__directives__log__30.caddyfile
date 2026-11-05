@@ -1,0 +1,9 @@
+example.com {
+	log {
+		sampling {
+			interval   1s
+			first      5
+			thereafter 10
+		}
+	}
+}

@@ -1,0 +1,16 @@
+{
+	pki {
+		ca local {
+			root {
+				format pem_file
+				cert /path/to/root.pem
+				key /path/to/root.key
+			}
+			intermediate {
+				format pem_file
+				cert /path/to/intermediate.pem
+				key /path/to/intermediate.key
+			}
+		}
+	}
+}

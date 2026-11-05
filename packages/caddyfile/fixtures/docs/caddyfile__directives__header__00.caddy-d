@@ -1,0 +1,26 @@
+header [<matcher>] [[+|-|?|>]<field> [<value>|<find>] [<replace>]] {
+	# Add
+	+<field> <value>
+
+	# Set
+	<field> <value>
+
+	# Set with defer
+	><field> <value>
+
+	# Delete
+	-<field>
+
+	# Replace
+	<field> <find> <replace>
+
+	# Replace with defer
+	><field> <find> <replace>
+
+	# Default
+	?<field> <value>
+
+	[defer]
+
+	match <inline_response_matcher>
+}

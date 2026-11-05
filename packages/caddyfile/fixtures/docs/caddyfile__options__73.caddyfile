@@ -1,0 +1,7 @@
+{
+	pki {
+		ca local {
+			maintenance_interval 30m
+		}
+	}
+}

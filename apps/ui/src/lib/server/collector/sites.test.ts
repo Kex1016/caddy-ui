@@ -1,15 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import {
-	HostMatcher,
-	parseAddress,
-	probeTarget,
-	scanCaddyfile,
-	siteId,
-	tokenize,
-	upstreamTarget
-} from './sites';
+import { HostMatcher, parseAddress, probeTarget, scanCaddyfile, siteId, upstreamTarget } from './sites';
 
 const fixture = readFileSync(join(import.meta.dirname, 'fixtures', 'Caddyfile'), 'utf8');
 
@@ -52,14 +44,13 @@ describe('scanCaddyfile', () => {
 	});
 });
 
-describe('tokenize', () => {
-	it('keeps quoted braces as text', () => {
-		const toks = tokenize('respond "}" 200\n');
-		expect(toks.map((t) => [t.text, t.quoted])).toEqual([
-			['respond', false],
-			['}', true],
-			['200', false]
-		]);
+describe('quoted braces and heredocs', () => {
+	it('does not end a block at a brace inside a string', () => {
+		const s = scanCaddyfile(
+			'a.example.com {\n\trespond "}" 200\n\treverse_proxy 10.0.0.1:80\n}\nb.example.com {\n}\n'
+		);
+		expect(s.map((x) => x.addresses)).toEqual([['a.example.com'], ['b.example.com']]);
+		expect(s[0]?.upstreams.map((u) => u.address)).toEqual(['10.0.0.1:80']);
 	});
 });
 

@@ -1,0 +1,4 @@
+header_regexp [<name>] <field> <regexp>
+
+expression header_regexp('<name>', '<field>', '<regexp>')
+expression header_regexp('<field>', '<regexp>')
