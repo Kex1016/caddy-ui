@@ -1,3 +1,4 @@
+import { adminFetch } from '../caddy/admin-fetch';
 import { config } from '../env';
 import { getDb, type Db } from '../db';
 import {
@@ -58,7 +59,9 @@ export async function liveUpstreams(
 	if (liveCache && now - liveCache.at < 5_000) return liveCache.data;
 	let data: Map<string, LiveUpstream> | null = null;
 	try {
-		const res = await fetch(`${adminUrl}/reverse_proxy/upstreams`, { signal: AbortSignal.timeout(2_000) });
+		const res = await adminFetch(`${adminUrl}/reverse_proxy/upstreams`, {
+			signal: AbortSignal.timeout(2_000)
+		});
 		if (res.ok) {
 			const list = (await res.json()) as LiveUpstream[];
 			data = new Map((Array.isArray(list) ? list : []).map((u) => [u.address, u]));

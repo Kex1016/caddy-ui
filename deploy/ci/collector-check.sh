@@ -32,6 +32,8 @@ fail() { echo "FAIL: $*"; exit 1; }
 [ "$(echo "$sites" | jq -r '.sites[] | select(.label == "http://down.test") | .status')" = down ] || fail "down.test is not down"
 [ "$(echo "$sites" | jq -r '.sites[] | select(.label == "http://down.test") | .upstreams[0].status')" = down ] ||
 	fail "the closed upstream is not down"
+[ "$(echo "$overview" | jq '.sources.metrics.ok')" = true ] ||
+	fail "Caddy's /metrics could not be read: $(echo "$overview" | jq -r '.sources.metrics.error')"
 id=$(echo "$sites" | jq -r '.sites[] | select(.label == "http://up.test") | .id')
 stats=$(api "/api/sites/$id/stats?range=1h")
 echo "$stats" | jq '{totals, source: .series.requests.source, top}'

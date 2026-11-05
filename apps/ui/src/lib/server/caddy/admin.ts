@@ -1,3 +1,4 @@
+import { adminFetch } from './admin-fetch';
 import type { Diagnostic } from '$lib/api/config';
 
 /**
@@ -67,7 +68,7 @@ export class CaddyAdmin {
 		opts: AdminClientOptions = {}
 	) {
 		this.timeoutMs = opts.timeoutMs ?? 10_000;
-		this.fetchFn = opts.fetch ?? fetch;
+		this.fetchFn = opts.fetch ?? adminFetch;
 	}
 
 	private async call(method: string, path: string, body?: string, contentType?: string): Promise<Response> {
