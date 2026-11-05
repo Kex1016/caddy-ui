@@ -50,7 +50,7 @@ DECISIONS.md.
 | `commentOutBlock`, `uncommentTrivia` | Disable a site by commenting it out, and restore it byte for byte. |
 | `walk`, `findDirectives`, `sites`, `nodeAt`, `tokenAt`, `blockAt`, `summarize` | Queries for editors. |
 | `positionAt`, `offsetAt`, `lineSpan` | Offsets to Caddy-style 1-based lines and back (for `/adapt` errors). |
-| `siteKey`, `siteId` | Stable identity of a site block from its address list (PLAN.md §3.2). |
+| `siteKey` | Normalised address list of a site block, the key the collector hashes into the site id (PLAN.md §3.2). |
 | `lex` | The logical-line lexer, for the text editor's highlighter. |
 
 ## Lexing rules implemented

@@ -5,7 +5,6 @@ import {
 	parseFragment,
 	print,
 	sites,
-	siteId,
 	siteKey,
 	summarize,
 	nodeAt,
@@ -277,10 +276,9 @@ describe('queries', () => {
 			multi.addresses
 				.map((a) => a.text.toLowerCase())
 				.sort()
-				.join(' ')
+				.join(',')
 		);
-		expect(siteId(multi)).toMatch(/^[0-9a-f]{16}$/);
-		const ids = new Set(list.map(siteId));
-		expect(ids.size).toBe(list.length);
+		const keys = new Set(list.map(siteKey));
+		expect(keys.size).toBe(list.length);
 	});
 });

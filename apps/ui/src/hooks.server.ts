@@ -1,7 +1,9 @@
 import { json, type Handle, type HandleServerError, type ServerInit } from '@sveltejs/kit';
+import { building } from '$app/environment';
 import { identify } from '$lib/server/auth';
 import { startConfigService } from '$lib/server/config';
 import { installCaddyfileParser } from '$lib/server/config/caddyfile-parser';
+import { startCollector } from '$lib/server/collector';
 import { ConfigError } from '$lib/server/env';
 import { isApiPath, isPublicPath, sameOrigin } from '$lib/server/guard';
 import { getRuntime } from '$lib/server/runtime';
@@ -21,6 +23,7 @@ export const init: ServerInit = async () => {
 		} else if (auth.mode === 'local-misconfigured') {
 			console.error(`caddy-ui: ${auth.missing} is unset; every request is refused until both are set.`);
 		}
+		if (!building && process.env.VITEST === undefined) startCollector();
 	} catch (err) {
 		if (err instanceof ConfigError) {
 			console.error(`caddy-ui: invalid configuration: ${err.message}`);

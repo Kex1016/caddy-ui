@@ -56,3 +56,10 @@ Newest at the bottom. Format: date · workstream · what · why.
 - [ ] 2026-11-05 · W1 · Nothing needed from you. For reference: the parser treats `root /srv`
   (one argument) as a path, matching Caddy ≥ 2.8; if your server runs an older Caddy, write
   `root * /srv` · only matters for the visual editor's matcher field on `root`.
+- [ ] 2026-11-05 · W4 · Mount Caddy's log directory and data directory into the UI container read-only
+  (`./logs:/var/log/caddy:ro`, `./data:/data/caddy:ro`; if your Caddy mounts `./data` at `/data`, mount it at
+  `/data` and set `CADDY_DATA_PATH=/data`) · access-log stats and certificate expiry read these; the UI only
+  reads them.
+- [ ] 2026-11-05 · W4 · If any site's upstream is only reachable from the Caddy container (not from other
+  containers on the `caddy-ui` network), expect it to show as down; tell the thread so the probe can go
+  through Caddy instead · upstreams are probed directly from the UI container.

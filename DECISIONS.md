@@ -233,3 +233,57 @@ Format: date · workstream · decision · why · how to reverse.
   diagnostics (offset spans) to W3's line/column `Diagnostic` and passes `format()` through,
   so `GET /api/caddyfile` returns the CST and `/api/caddyfile/format` works · W3 left this
   seam (`setParser`) for W1 to fill · `setParser(null)` restores the parser-less behaviour.
+- 2026-11-05 · W4 · W3 and W4 share one SQLite module (`apps/ui/src/lib/server/db`, migrations tracked with
+  `PRAGMA user_version`); W3 owns migration 1 (`revisions`, `settings`), W4 appends migration 2 · one file, one
+  migration history · none.
+- 2026-11-05 · W4 · Additive changes to the §3.2 tables: a new `sites(id, addresses_json, first_seen, last_seen,
+  removed_at)` table, and `state_changes` gains `target` (`''` is the site itself, otherwise an upstream
+  address) · "a down upstream shows as down" needs a per-upstream "since", and stats for a removed site still
+  need its addresses · drop the column and table in a later migration if unused. Existing columns unchanged.
+- 2026-11-05 · W4 · Until `packages/caddyfile` (W1) merges, the collector finds site blocks and upstreams with
+  a small scanner in `collector/sites.ts` (comments, quotes, heredocs, snippets and `import` handled) · W4
+  must not wait for W1 · swap `scanCaddyfile` for the W1 CST with the same output once it lands.
+- 2026-11-05 · W4 · Site id is the first 16 hex chars of SHA-256 over the address list lower-cased, trimmed and
+  sorted · §3.2 says "hash of its address list"; sorting means reordering addresses keeps history · none
+  without losing history.
+- 2026-11-05 · W4 · Sites are probed through Caddy itself: the request goes to the host of
+  `CADDY_ADMIN_URL` (`caddy` in compose) with the site's name as Host and SNI, not to the public DNS name ·
+  works inside the compose network without hairpin NAT and checks Caddy plus the backend · probe the public
+  URL instead if checking DNS and the router matters.
+- 2026-11-05 · W4 · A site probe counts as up for any answer except 502, 503 and 504; same-host redirects are
+  followed (up to 5), a redirect to another host (a tinyauth sign-in page) counts as up. Certificates are not
+  verified by the probe (expiry comes from the cert reader). A failed probe is retried once after 1s before it
+  counts · behind forward_auth a 302 is the healthy answer · edit `statusIsUp` in `collector/probe.ts`.
+- 2026-11-05 · W4 · A site without a probeable address (only wildcards or placeholders) is judged by its
+  upstreams: down only if all are down. Loopback upstreams (`localhost:3000`) are probed on Caddy's host ·
+  they are local to Caddy, not to the UI container · none.
+- 2026-11-05 · W4 · `forward_auth` and `php_fastcgi` targets count as upstreams alongside `reverse_proxy` · if
+  tinyauth is down every site behind it is effectively down, and that should be visible · filter by `via`.
+- 2026-11-05 · W4 · `metric_samples` holds per-minute values derived from `/metrics` (`requests`, `errors_4xx`,
+  `errors_5xx`, `bytes_out`, `latency_p50_ms`, `latency_p95_ms`, `in_flight` per `{"site":id}` and `{"site":"*"}`,
+  plus process gauges), not raw scrapes. Idle sites write no rows; the server row is always written so a gap
+  means no scrape. Per (server, host) only the handler with most requests is counted, because Caddy counts a
+  request once per handler · raw scrapes of ~35 hosts' histograms would be millions of rows a day · store raw
+  series in a new table if PromQL-style queries are ever needed.
+- 2026-11-05 · W4 · Retention (`CADDY_UI_RETENTION_DAYS`) prunes `probes` and `metric_samples` hourly;
+  `log_minutes`, `state_changes`, `sites` and `certs` are kept · PLAN.md keeps minute rollups forever and
+  state history is small · downsample `metric_samples` into hours if 90 days of metrics is too short.
+- 2026-11-05 · W4 · When the access log has data in the requested window, traffic series come from it (exact);
+  otherwise from metrics. Every series and tile carries its `source` so pages can name it · the log is exact,
+  metrics are approximate · none.
+- 2026-11-05 · W4 · Latency across a chart bucket is the request-weighted mean of per-minute p50/p95, which is
+  an approximation of the true percentile · storing per-minute histograms costs much more · document in
+  docs/stats.md.
+- 2026-11-05 · W4 · The log tailer starts at the end of a log that already exists when the UI first sees it and
+  stores its position in `settings` (`collector.log_position`), so restarts neither replay nor skip lines; a
+  log that appears later, or is rotated, is read from the top · none.
+- 2026-11-05 · W4 · The Dockerfile build stage installs `python3 make g++` so better-sqlite3 can compile when
+  no prebuilt musl binary is available · W9 may drop it if prebuilt binaries are always used.
+- 2026-11-05 · W4 · CI gains a `collector` job that runs `caddy:2` and the image in one Docker network with
+  `deploy/ci/Caddyfile.collector` (metrics `per_host`, JSON access log) and checks the overview, sites and
+  stats APIs · the definition of done is about a real Caddy, which only CI has · none.
+- 2026-11-05 · W1 · The collector's stand-in Caddyfile scanner
+  (`apps/ui/src/lib/server/collector/sites.ts`) now runs on the parser's CST; its output
+  (`scanCaddyfile`, `siteId`) is unchanged and its tests still pass · one parser in the
+  codebase · the persisted site id stays W4's sha256 of the comma-joined normalised address
+  list; `packages/caddyfile` exports that key as `siteKey()` and no hash of its own.

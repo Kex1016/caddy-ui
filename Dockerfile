@@ -4,7 +4,8 @@
 
 FROM node:22-alpine AS build
 WORKDIR /src
-RUN corepack enable
+# better-sqlite3 is native: prebuilt binaries are used when available, these build it from source otherwise.
+RUN apk add --no-cache python3 make g++ && corepack enable
 COPY . .
 RUN pnpm install --frozen-lockfile
 ARG CADDY_UI_VERSION=dev

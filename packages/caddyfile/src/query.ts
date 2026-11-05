@@ -135,33 +135,17 @@ export function tokenAt(file: Caddyfile, offset: number): Token | undefined {
 
 /**
  * Stable identity of a site block: its address list, normalised (trimmed,
- * lower-cased, sorted, de-duplicated). Reordering or editing the body keeps
- * the key; changing an address changes it. Mirrors PLAN.md §3.2 "Site identity".
+ * lower-cased, sorted, de-duplicated, comma-joined). Reordering or editing the
+ * body keeps the key; changing an address changes it. The collector hashes this
+ * key (sha256, first 16 hex chars) into the persisted site id; see
+ * `apps/ui/src/lib/server/collector/sites.ts`. Mirrors PLAN.md §3.2 "Site identity".
  */
 export function siteKey(site: SiteBlock): string {
 	const addrs = site.addresses
 		.map((a) => a.text.trim().toLowerCase())
 		.filter((a) => a.length > 0)
 		.sort();
-	return Array.from(new Set(addrs)).join(' ');
-}
-
-/** 16-hex-character hash of {@link siteKey}, usable as a URL-safe id. */
-export function siteId(site: SiteBlock): string {
-	return hash64(siteKey(site));
-}
-
-/** FNV-1a (32-bit) and a second independent 32-bit hash, concatenated. */
-function hash64(s: string): string {
-	let h1 = 0x811c9dc5;
-	let h2 = 0x1b873593;
-	for (let i = 0; i < s.length; i++) {
-		const c = s.charCodeAt(i);
-		h1 ^= c;
-		h1 = Math.imul(h1, 0x01000193) >>> 0;
-		h2 = (Math.imul(h2 ^ c, 0x5bd1e995) ^ (h2 >>> 15)) >>> 0;
-	}
-	return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
+	return Array.from(new Set(addrs)).join(',');
 }
 
 /** A short human summary of a node, for tree outlines: `reverse_proxy → 10.0.0.1:80`, `@api path /api/*`. */
