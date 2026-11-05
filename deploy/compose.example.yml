@@ -1,0 +1,76 @@
+# Example compose file: Caddy + caddy-ui + the updater sidecar.
+# Copy next to your own compose.yml, or merge the `caddy-ui` and `caddy-ui-updater`
+# services into it. All values below are placeholders.
+#
+# Required in .env or the shell:
+#   CADDY_UI_COMPOSE_DIR   absolute path of the directory holding this file
+#   CADDY_UI_SESSION_SECRET  long random string (cookie signing)
+name: caddy
+
+services:
+  caddy:
+    image: caddy:latest
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./data:/data
+      - ./logs:/var/log/caddy
+    networks: [caddy-ui]
+
+  caddy-ui:
+    image: ghcr.io/kex1016/caddy-ui:${CADDY_UI_TAG:-latest}
+    # Used only when CADDY_UI_UPDATE_SOURCE=git (updater builds from a clone).
+    build:
+      context: ${CADDY_UI_BUILD_CONTEXT:-.}
+    restart: unless-stopped
+    depends_on: [caddy]
+    ports:
+      # Same host port the old zackwag backend used; change the left side freely.
+      - "${CADDY_UI_HOST_PORT:-9876}:${CADDY_UI_PORT:-3001}"
+    environment:
+      TZ: ${TZ:-UTC}
+      CADDY_UI_PORT: ${CADDY_UI_PORT:-3001}
+      CADDY_ADMIN_URL: http://caddy:2019
+      CADDYFILE_PATH: /etc/caddy/Caddyfile
+      CADDY_LOG_PATH: /var/log/caddy/access.log
+      CADDY_DATA_PATH: /data/caddy
+      CADDY_UI_USER: ${CADDY_UI_USER:-admin}
+      CADDY_UI_PASSWORD: ${CADDY_UI_PASSWORD:?set CADDY_UI_PASSWORD}
+      CADDY_UI_SESSION_SECRET: ${CADDY_UI_SESSION_SECRET:?set CADDY_UI_SESSION_SECRET}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./data:/data:ro
+      - ./logs:/var/log/caddy:ro
+      - ./caddy-ui:/etc/caddy-ui
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:${CADDY_UI_PORT:-3001}/api/health >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [caddy-ui]
+
+  caddy-ui-updater:
+    image: ghcr.io/kex1016/caddy-ui-updater:${CADDY_UI_TAG:-latest}
+    # Or build locally: build: ./updater
+    restart: unless-stopped
+    environment:
+      CADDY_UI_UPDATE_SOURCE: ${CADDY_UI_UPDATE_SOURCE:-ghcr}   # ghcr | git
+      CADDY_UI_UPDATE_INTERVAL: ${CADDY_UI_UPDATE_INTERVAL:-1h} # 30s, 5m, 1h, 1d
+      CADDY_UI_UPDATE_WEBHOOK_PORT: ${CADDY_UI_UPDATE_WEBHOOK_PORT:-}
+      CADDY_UI_UPDATE_WEBHOOK_SECRET: ${CADDY_UI_UPDATE_WEBHOOK_SECRET:-}
+      COMPOSE_PROJECT_NAME: caddy
+    # The compose directory must be mounted at the SAME absolute path as on the host,
+    # because relative bind mounts (./Caddyfile) are resolved by the host Docker daemon.
+    working_dir: ${CADDY_UI_COMPOSE_DIR:?set CADDY_UI_COMPOSE_DIR}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${CADDY_UI_COMPOSE_DIR}:${CADDY_UI_COMPOSE_DIR}
+    # Uncomment with CADDY_UI_UPDATE_WEBHOOK_PORT to receive GitHub push webhooks:
+    # ports: ["${CADDY_UI_UPDATE_WEBHOOK_PORT}:${CADDY_UI_UPDATE_WEBHOOK_PORT}"]
+
+networks:
+  caddy-ui:

@@ -32,3 +32,14 @@ Newest at the bottom. Format: date · workstream · what · why.
 - [ ] 2026-11-05 · W0 · Decide `CADDY_UI_AUTH_MODE`: `local` (username/password as today),
   `forward` (put the UI behind tinyauth like your other services), or `none` on a
   trusted network · auth ships with all three; the default is `local`.
+- [ ] 2026-11-05 · W9 · Build and publish the updater image once
+  (`docker build deploy/updater -t ghcr.io/kex1016/caddy-ui-updater`) or use
+  `build: ./updater` in compose · the Actions workflow for it arrives with the Dockerfile
+  part of W9 after W0 merges; until then build it locally on the server.
+- [ ] 2026-11-05 · W9 · If you enable the updater webhook, publish its port only on a
+  trusted network and set `CADDY_UI_UPDATE_WEBHOOK_SECRET` · the endpoint triggers a
+  redeploy check.
+- [ ] 2026-11-05 · W9 · The updater needs the Docker socket
+  (`/var/run/docker.sock`) and the compose directory mounted at the same absolute path
+  as on the host (`CADDY_UI_COMPOSE_DIR`) · that is root-equivalent on the host; skip the
+  sidecar and use Watchtower if you do not want that.

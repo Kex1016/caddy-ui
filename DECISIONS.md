@@ -47,3 +47,18 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-05 · Plan · Visual editor shape is B, tree outline + inspector, with recipes
   (E) for adding sites · David chose it on the decision card in the planning thread ·
   David can change it in the thread before W5 starts; after that it is a rewrite.
+- 2026-11-05 · W9 · Updater is bash + socat in an Alpine `docker:cli` image
+  (`deploy/updater`), not Node · it only shells out to `docker compose`, so a shell script
+  is the smallest thing that works and is testable with a fake `docker` · rewrite in Go
+  or Node if it grows.
+- 2026-11-05 · W9 · New env names beyond PLAN §3.2: `CADDY_UI_UPDATE_WEBHOOK_SECRET`,
+  `CADDY_UI_UPDATE_SERVICE`, `CADDY_UI_UPDATE_HEALTH_TIMEOUT`, `CADDY_UI_UPDATE_GIT_URL`,
+  `CADDY_UI_UPDATE_GIT_BRANCH`, `CADDY_UI_UPDATE_GIT_DIR`, and compose-only
+  `CADDY_UI_COMPOSE_DIR`, `CADDY_UI_TAG`, `CADDY_UI_HOST_PORT` · needed for webhook
+  auth, rollback and the git source; the contract names are unchanged · remove the extras.
+- 2026-11-05 · W9 · Updater rolls back automatically: if the container is not healthy
+  within 90s it retags the previous image and recreates the service · a bad release
+  should not take the proxy UI down unattended · set a huge timeout to effectively
+  disable.
+- 2026-11-05 · W9 · Minimum update interval is 30s · stops a typo from hammering GHCR ·
+  edit `updater.sh`.
