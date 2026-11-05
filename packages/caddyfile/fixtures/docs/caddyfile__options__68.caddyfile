@@ -1,0 +1,19 @@
+{
+	filesystem foo custom {
+		...
+	}
+
+	filesystem bar custom {
+		...
+	}
+}
+
+foo.example.com {
+	fs foo
+	file_server
+}
+
+foo.example.com {
+	fs bar
+	file_server
+}

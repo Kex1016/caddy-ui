@@ -1,0 +1,5 @@
+... internal {
+	ca       <name>
+	lifetime <duration>
+	sign_with_root
+}

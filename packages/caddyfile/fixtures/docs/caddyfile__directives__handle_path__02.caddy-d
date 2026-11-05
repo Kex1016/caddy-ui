@@ -1,0 +1,4 @@
+handle /prefix/* {
+	uri strip_prefix /prefix
+	...
+}

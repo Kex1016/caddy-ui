@@ -1,0 +1,5 @@
+{
+	servers {
+		trusted_proxies static 12.34.56.0/24 1200:ab00::/32
+	}
+}

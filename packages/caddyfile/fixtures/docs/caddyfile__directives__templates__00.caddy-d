@@ -1,0 +1,10 @@
+templates [<matcher>] {
+	mime    <types...>
+	between <open_delim> <close_delim>
+	root    <path>
+	extensions {
+		<name> {
+			...
+		}
+	}
+}

@@ -1,0 +1,8 @@
+(proxy-rewrite) {
+	rewrite {args[0]}{uri}
+	reverse_proxy {args[1:]}
+}
+
+example.com {
+	import proxy-rewrite /api 10.0.0.1 10.0.0.2 10.0.0.3
+}

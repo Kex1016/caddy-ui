@@ -1,0 +1,13 @@
+output file <filename> {
+	mode          <mode>
+	roll_disabled
+	roll_size     <size>
+	roll_interval <duration>
+	roll_minutes  <minutes...>
+	roll_at	      <times...>
+	roll_uncompressed
+	roll_local_time
+	roll_keep     <num>
+	roll_keep_for <days>
+	backup_time_format <format>
+}

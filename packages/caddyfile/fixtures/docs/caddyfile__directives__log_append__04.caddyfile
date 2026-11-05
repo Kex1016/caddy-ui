@@ -1,0 +1,7 @@
+example.com {
+	log
+	log_append req_body {http.request.body}
+	log_append resp_body {http.response.body}
+
+	reverse_proxy localhost:9000
+}

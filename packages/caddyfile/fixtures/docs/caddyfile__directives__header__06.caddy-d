@@ -1,0 +1,2 @@
+header ?Cache-Control "max-age=3600"
+reverse_proxy upstream:443

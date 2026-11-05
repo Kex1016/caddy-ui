@@ -1,0 +1,3 @@
+@html file {
+	try_files {path}.html {path} 
+}

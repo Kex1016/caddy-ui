@@ -1,0 +1,4 @@
+@with-neither {
+	not path /api/*
+	not method POST
+}

@@ -1,0 +1,8 @@
+example.com {
+	root /srv
+
+	log
+	log_skip /static*
+
+	file_server
+}

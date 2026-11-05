@@ -1,0 +1,1 @@
+@content `url_pattern('/books/:id') || url_pattern('/authors/:name')`

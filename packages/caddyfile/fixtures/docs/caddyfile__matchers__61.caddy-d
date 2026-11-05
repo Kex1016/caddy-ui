@@ -1,0 +1,1 @@
+@static `path_regexp(r'\.([a-f0-9]{6})\.(css|js)$') && file()`

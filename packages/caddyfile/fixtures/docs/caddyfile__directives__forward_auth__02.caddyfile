@@ -1,0 +1,14 @@
+# Serve the authentication gateway itself
+auth.example.com {
+	reverse_proxy authelia:9091
+}
+
+# Serve your app
+app1.example.com {
+	forward_auth authelia:9091 {
+		uri /api/authz/forward-auth
+		copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+	}
+
+	reverse_proxy app1:8080
+}

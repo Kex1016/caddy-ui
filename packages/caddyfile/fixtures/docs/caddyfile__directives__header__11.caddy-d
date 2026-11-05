@@ -1,0 +1,4 @@
+header Access-Control-Allow-Origin "allowed-partner.com" {
+	match header Access-Control-Allow-Origin *
+}
+reverse_proxy upstream:443

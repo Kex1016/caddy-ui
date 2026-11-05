@@ -1,0 +1,17 @@
+{
+	log access-formatted {
+		include http.log.access.foo
+		output file /var/log/access-foo.log
+		format transform "{common_log}"
+	}
+
+	log access-json {
+		include http.log.access.foo
+		output file /var/log/access-foo.json
+		format json
+	}
+}
+
+foo.example.com {
+	log foo
+}

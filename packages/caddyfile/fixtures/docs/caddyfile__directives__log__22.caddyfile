@@ -1,0 +1,10 @@
+example.com {
+	log {
+		output file /var/log/access.log {
+			roll_at 00:00
+			roll_size 1gb
+			roll_keep 5
+			roll_keep_for 720h
+		}
+	}
+}

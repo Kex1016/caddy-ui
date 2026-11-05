@@ -1,0 +1,11 @@
+{
+	filesystem foo custom {
+		api_key abc123
+	}
+}
+
+example.com {
+	fs foo
+	root /srv
+	file_server
+}

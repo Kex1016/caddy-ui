@@ -1,0 +1,7 @@
+{
+	pki {
+		ca local {
+			intermediate_lifetime 30d
+		}
+	}
+}

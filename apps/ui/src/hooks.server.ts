@@ -2,6 +2,7 @@ import { json, type Handle, type HandleServerError, type ServerInit } from '@sve
 import { building } from '$app/environment';
 import { identify } from '$lib/server/auth';
 import { startConfigService } from '$lib/server/config';
+import { installCaddyfileParser } from '$lib/server/config/caddyfile-parser';
 import { startCollector } from '$lib/server/collector';
 import { ConfigError } from '$lib/server/env';
 import { isApiPath, isPublicPath, sameOrigin } from '$lib/server/guard';
@@ -30,6 +31,7 @@ export const init: ServerInit = async () => {
 		}
 		throw err;
 	}
+	installCaddyfileParser();
 	await startConfigService();
 };
 

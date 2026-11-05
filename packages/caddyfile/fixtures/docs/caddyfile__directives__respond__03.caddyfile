@@ -1,0 +1,9 @@
+example.com {
+	header Content-Type text/html
+	respond <<HTML
+		<html>
+			<head><title>Foo</title></head>
+			<body>Foo</body>
+		</html>
+		HTML 200
+}

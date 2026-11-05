@@ -1,0 +1,7 @@
+example.com {
+	tls {
+		client_auth {
+			trust_pool file ../caddy.ca.cer ../root.ca.cer
+		}
+	}
+}

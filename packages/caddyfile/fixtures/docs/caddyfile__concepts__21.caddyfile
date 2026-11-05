@@ -1,0 +1,7 @@
+example.com {
+	import logging
+}
+
+www.example.com {
+	import logging
+}

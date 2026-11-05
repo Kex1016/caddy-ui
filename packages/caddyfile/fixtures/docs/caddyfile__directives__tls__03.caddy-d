@@ -1,0 +1,3 @@
+... pki_root [<ca_name>...] {
+	authority <ca_name>...
+}

@@ -1,0 +1,24 @@
+{
+	pki {
+		ca company {
+			root {
+				format pem_file
+				cert /var/certs/root-ca.crt
+				key /var/certs/sub-ca.key
+			}
+			intermediate {
+				format pem_file
+				cert /var/certs/sub-ca.crt
+				key /var/certs/sub-ca.key
+			}
+		}
+	}
+}
+
+my.example {
+	tls {
+		issuer internal {
+			ca company
+		}
+	}
+}

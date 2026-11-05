@@ -1,0 +1,7 @@
+{
+	tls_automate_names *.example.com
+}
+
+foo.example.com {
+	respond "Hello, world!"
+}

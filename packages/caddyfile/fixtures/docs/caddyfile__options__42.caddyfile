@@ -1,0 +1,15 @@
+{
+	servers :443 {
+		name https
+	}
+
+	servers :80 {
+		name http
+	}
+}
+
+example.com {
+}
+
+http:// {
+}

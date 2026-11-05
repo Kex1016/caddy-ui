@@ -1,0 +1,13 @@
+format <encoder_module> {
+	message_key     <key>
+	level_key       <key>
+	time_key        <key>
+	name_key        <key>
+	caller_key      <key>
+	stacktrace_key  <key>
+	line_ending     <char>
+	time_format     <format>
+	time_local
+	duration_format <format>
+	level_format    <format>
+}

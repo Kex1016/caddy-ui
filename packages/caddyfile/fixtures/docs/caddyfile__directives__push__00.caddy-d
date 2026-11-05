@@ -1,0 +1,7 @@
+push [<matcher>] [<resource>] {
+	[GET|HEAD] <resource>
+	headers {
+		[+]<field> [<value|regexp> [<replacement>]]
+		-<field>
+	}
+}

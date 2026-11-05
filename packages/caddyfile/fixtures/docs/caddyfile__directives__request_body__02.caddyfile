@@ -1,0 +1,13 @@
+example.com {
+	handle /jazz {
+		request_body {
+			set `\{"statementText":"SELECT name, genre, debut_year FROM artists WHERE genre = 'Jazz'"}`
+		}
+
+		reverse_proxy localhost:8080 {
+			header_up Content-Type application/json
+			method POST
+			rewrite /execute-sql
+		}
+	}
+}

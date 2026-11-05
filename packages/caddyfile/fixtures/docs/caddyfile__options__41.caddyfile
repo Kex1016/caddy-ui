@@ -1,0 +1,19 @@
+{
+	# This will NOT match the server, bind address missing
+	servers :8080 {
+		name private
+	}
+
+	# This will work because it's an exact match
+	servers 192.168.1.2:8080 {
+		name public
+	}
+}
+
+:8080 {
+	bind 127.0.0.1
+}
+
+:8080 {
+	bind 192.168.1.2
+}

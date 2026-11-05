@@ -1,0 +1,7 @@
+{
+	pki {
+		ca local {
+			renewal_window_ratio 0.1
+		}
+	}
+}

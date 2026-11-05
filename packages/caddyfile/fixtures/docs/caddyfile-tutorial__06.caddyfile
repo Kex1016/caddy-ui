@@ -1,0 +1,5 @@
+localhost {
+	encode
+	templates
+	file_server browse
+}

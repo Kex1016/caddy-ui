@@ -1,0 +1,3 @@
+log_level INFO
+log_level /api/* DEBUG
+log_level /api/private/* ERROR

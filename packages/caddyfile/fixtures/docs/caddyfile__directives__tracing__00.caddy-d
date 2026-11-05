@@ -1,0 +1,7 @@
+tracing {
+	span <span_name>
+	span_attributes {
+		<attr1> <value1>
+		<attr2> <value2>
+	}
+}

@@ -1,0 +1,4 @@
+example.com {
+	respond /health-check 200
+	respond "Hello, world!"
+}

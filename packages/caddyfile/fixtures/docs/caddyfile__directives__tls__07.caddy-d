@@ -1,0 +1,7 @@
+... {
+	ca                    <ca_module>
+	insecure_skip_verify
+	handshake_timeout     <duration>
+	server_name           <name>
+	renegotiation         <never|once|freely>
+}

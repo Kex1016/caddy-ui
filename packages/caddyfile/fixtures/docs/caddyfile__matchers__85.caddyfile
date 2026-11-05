@@ -1,0 +1,10 @@
+example.com {
+	vars combined_header "{header.Foo}_{header.Bar}"
+	@special vars {vars.combined_header} "123_456"
+	handle @special {
+		respond "You sent Foo=123 and Bar=456!"
+	}
+	handle {
+		respond "Foo and Bar were not special."
+	}
+}

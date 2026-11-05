@@ -1,0 +1,3 @@
+reverse_proxy https://example.com {
+	header_up Host {upstream_hostport}
+}

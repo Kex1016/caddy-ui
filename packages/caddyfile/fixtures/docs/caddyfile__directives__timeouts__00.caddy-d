@@ -1,0 +1,5 @@
+timeouts [<matcher>] {
+	read_timeout    <duration> [<min_rate>]
+	write_timeout   <duration> [<min_rate>]
+	max_write_chunk <size>
+}

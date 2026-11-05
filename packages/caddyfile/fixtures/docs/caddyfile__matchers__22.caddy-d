@@ -1,0 +1,5 @@
+@api <<CEL
+	{method} == "GET"
+	&& {path}.startsWith("/api/")
+	CEL
+respond @api "Hello, API!"

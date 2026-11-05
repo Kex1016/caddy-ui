@@ -1,0 +1,4 @@
+@api url_pattern /api/:version/* {
+	base_url https://example.com
+	ignore_case
+}

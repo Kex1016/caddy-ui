@@ -1,0 +1,5 @@
+example.com {
+	log {
+		output file /var/log/access.log
+	}
+}
