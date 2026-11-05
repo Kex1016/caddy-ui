@@ -11,7 +11,7 @@ services:
   caddy:
     image: caddy:latest
     restart: unless-stopped
-    ports: ["80:80", "443:443", "443:443/udp"]
+    ports: ['80:80', '443:443', '443:443/udp']
     environment:
       TZ: ${TZ:-UTC}
     volumes:
@@ -29,7 +29,7 @@ services:
     depends_on: [caddy]
     ports:
       # Same host port the old zackwag backend used; change the left side freely.
-      - "${CADDY_UI_HOST_PORT:-9876}:${CADDY_UI_PORT:-3001}"
+      - '${CADDY_UI_HOST_PORT:-9876}:${CADDY_UI_PORT:-3001}'
     environment:
       TZ: ${TZ:-UTC}
       CADDY_UI_PORT: ${CADDY_UI_PORT:-3001}
@@ -46,7 +46,7 @@ services:
       - ./logs:/var/log/caddy:ro
       - ./caddy-ui:/etc/caddy-ui
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:${CADDY_UI_PORT:-3001}/api/health >/dev/null || exit 1"]
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:${CADDY_UI_PORT:-3001}/api/health >/dev/null || exit 1']
       interval: 15s
       timeout: 5s
       retries: 5
@@ -58,7 +58,7 @@ services:
     # Or build locally: build: ./updater
     restart: unless-stopped
     environment:
-      CADDY_UI_UPDATE_SOURCE: ${CADDY_UI_UPDATE_SOURCE:-ghcr}   # ghcr | git
+      CADDY_UI_UPDATE_SOURCE: ${CADDY_UI_UPDATE_SOURCE:-ghcr} # ghcr | git
       CADDY_UI_UPDATE_INTERVAL: ${CADDY_UI_UPDATE_INTERVAL:-1h} # 30s, 5m, 1h, 1d
       CADDY_UI_UPDATE_WEBHOOK_PORT: ${CADDY_UI_UPDATE_WEBHOOK_PORT:-}
       CADDY_UI_UPDATE_WEBHOOK_SECRET: ${CADDY_UI_UPDATE_WEBHOOK_SECRET:-}

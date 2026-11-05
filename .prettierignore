@@ -1,0 +1,11 @@
+node_modules/
+build/
+dist/
+.svelte-kit/
+coverage/
+pnpm-lock.yaml
+# Ported verbatim from the Fishnet design system; kept byte-identical so updates diff cleanly.
+apps/ui/src/lib/design/tokens.css
+apps/ui/src/lib/design/fishnet.css
+# Markdown is prose owned by the plan and docs threads; prettier would rewrap tables and lists.
+*.md

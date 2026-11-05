@@ -48,3 +48,9 @@ Newest at the bottom. Format: date · workstream · what · why.
   work and only worth it if you have history you want to keep.
 - [ ] 2026-11-05 · W10 · Pick the license for the first release (the README says MIT, to
   be added) · the repo has no LICENSE file yet.
+- [ ] 2026-11-05 · W0 · If you pick `CADDY_UI_AUTH_MODE=forward`, do not publish the UI's port on the host
+  (drop the `ports:` mapping and reach it only through Caddy with `forward_auth`) · in forward mode the UI
+  trusts the `Remote-User` header, and anyone who can reach the port directly could send it.
+- [ ] 2026-11-05 · W0 · Look at the theme once a preview runs and veto it if you dislike it: the accent is
+  teal-green and `success` (the "up" colour) moved from Fishnet's teal to a leaf green so the two don't clash ·
+  only colour and font may differ from Fishnet, so these are the choices to check.

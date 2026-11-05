@@ -69,3 +69,48 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-05 · W10 · Docs file set follows the PLAN.md W10 row exactly, plus the two
   existing companion docs; the migration page keeps the planned name
   `migration-from-caddy-ui.md` · matches the plan's contract · rename and fix links.
+- 2026-11-05 · W0 · Toolchain pinned to SvelteKit 2.70, Svelte 5, Vite 7, TypeScript 5.9, ESLint 9,
+  Vitest 3 and adapter-node 5, not the newest majors (Kit 3, Vite 8, TypeScript 7, ESLint 10) · the newer
+  majors are weeks old and every workstream builds on this base · bump in one PR once they settle.
+- 2026-11-05 · W0 · Sessions are stateless HMAC-signed cookies (`caddy_ui_session`, 7 days, HttpOnly,
+  SameSite=Lax) with no database; changing `CADDY_UI_USER` or the secret signs everyone out · W4 owns
+  SQLite and W0 should not depend on it · move sessions into SQLite if revocation is ever needed.
+- 2026-11-05 · W0 · Local mode with exactly one of `CADDY_UI_USER` / `CADDY_UI_PASSWORD` set fails closed:
+  every request is refused and the sign-in page names the missing variable. Both unset means open, with a
+  warning banner on every page, as PLAN.md §3.2 says · a half-set config is almost always a typo, and
+  guessing would either lock David out or leave the UI open · none.
+- 2026-11-05 · W0 · `forward` mode trusts the `Remote-User` header from any client, like tinyauth's other
+  services · the UI cannot tell Caddy from another LAN client without extra config; TODO-USER says not to
+  publish the port in that mode · add a trusted-proxy list if that ever matters.
+- 2026-11-05 · W0 · SvelteKit's own CSRF origin check is replaced by one in `hooks.server.ts` that compares
+  the `Origin` host with `Host` / `X-Forwarded-Host` and ignores the scheme; it covers every unsafe method,
+  JSON included. Session cookies are `Secure` only when `X-Forwarded-Proto` or `CADDY_UI_PUBLIC_URL` says
+  https · adapter-node assumes https without an `ORIGIN`, which broke sign-in on a plain http port such as
+  the old `9876` mapping · set `ORIGIN` and turn Kit's check back on if the UI is only ever used via Caddy.
+- 2026-11-05 · W0 · `CADDY_UI_PORT` is mapped to adapter-node's `PORT` in `apps/ui/server.js` instead of
+  adapter-node's `envPrefix` · `envPrefix: 'CADDY_UI_'` makes the server refuse to start when any other
+  `CADDY_UI_*` variable is set · none. adapter-node's own variables (`ORIGIN`, `ADDRESS_HEADER`,
+  `XFF_DEPTH`, ...) still work unprefixed.
+- 2026-11-05 · W0 · Theme values: dark accent `#5fd3b4` as proposed; light `acc-ink` is `#1a7560` rather
+  than `#1f8a70` so links and the focus ring keep 4.5:1 on the light ground (`#1f8a70` is the light chart
+  colour). `success` moves from Fishnet's teal to a leaf green (`#9ccf86` dark, ink `#3f6f22` light) so "up"
+  never reads as "selected" next to a teal accent. Both are colour-only changes in `theme-caddy.css` · the
+  one-accent rule and status contrast · edit `theme-caddy.css`, then `pnpm --filter @caddy-ui/ui gen:theme`.
+- 2026-11-05 · W0 · "System" theme is a generated `theme-system.css` (light tokens under
+  `prefers-color-scheme: light` for `<html>` without `data-theme`); a unit test fails if it drifts from
+  `tokens.css` + `theme-caddy.css`, and another fails if the theme file touches non-colour tokens · Fishnet's
+  `tokens.css` only ships dark on `:root` · none.
+- 2026-11-05 · W0 · The brand mark is a new one-colour Lucide-style glyph (a page with a padlock) on
+  Fishnet's 24px grid; the fish stays Fishnet's · the fish is the Minecraft site's mark, not part of the
+  system's rules · replace `Brand.svelte` and `static/favicon.svg`.
+- 2026-11-05 · W0 · The image runs as root · the UI must rewrite the bind-mounted Caddyfile, which is
+  root-owned on the host, as the zackwag backend did · W9 may add a PUID/PGID switch.
+- 2026-11-05 · W0 · A baseline `Dockerfile` lives at the repo root and CI builds it and checks
+  `/api/health`; W9 owns it from here (multi-stage tuning, GHCR publishing) · W0's definition includes a
+  Dockerfile and the image must exist for W3/W4 to test against · W9 may move it under `deploy/`.
+- 2026-11-05 · W0 · Prettier and ESLint run over the whole repo from the root (`pnpm lint`); Markdown is not
+  prettier-formatted, and the two Fishnet files ported verbatim (`tokens.css`, `fishnet.css`) are excluded
+  so a design-system update diffs cleanly · plan and docs threads own their prose layout · none.
+- 2026-11-05 · W0 · Failed sign-ins are limited to 10 per 15 minutes per client address. Behind Caddy all
+  clients share Caddy's address unless adapter-node's `ADDRESS_HEADER=x-forwarded-for` is set · acceptable
+  for a single-admin UI · documented for W10.

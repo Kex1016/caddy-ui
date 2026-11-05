@@ -1,9 +1,9 @@
 name: updater
 on:
   push:
-    paths: ["deploy/**", ".github/workflows/updater.yml"]
+    paths: ['deploy/**', '.github/workflows/updater.yml']
   pull_request:
-    paths: ["deploy/**", ".github/workflows/updater.yml"]
+    paths: ['deploy/**', '.github/workflows/updater.yml']
 jobs:
   test:
     runs-on: ubuntu-latest
