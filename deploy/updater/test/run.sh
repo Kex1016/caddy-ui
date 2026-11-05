@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034  # out/resp are read inside eval in check()
 # Behavioural tests for updater.sh using a fake docker. Run: deploy/updater/test/run.sh
 set -u
-# shellcheck disable=SC2034  # out/resp are read inside eval in check()
 here="$(cd "$(dirname "$0")" && pwd)"
 export FAKE_DIR; FAKE_DIR="$(mktemp -d)"
 bin="$FAKE_DIR/bin"; mkdir -p "$bin"; cp "$here/fake-docker.sh" "$bin/docker"; chmod +x "$bin/docker"
