@@ -1,0 +1,10 @@
+map {host}                {my_placeholder}  {magic_number} {
+	example.com           "some value"      3
+	foo.example.com       "another value"
+	~(.*)\.example\.com$  "${1} subdomain"  5
+
+	~.*\.net$             -                 7
+	~.*\.xyz$             -                 15
+
+	default               "unknown domain"  42
+}

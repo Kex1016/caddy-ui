@@ -1,0 +1,12 @@
+example.com {
+	# Serve your API, stripping the /api prefix
+	handle_path /api/* {
+		reverse_proxy localhost:9000
+	}
+
+	# Serve your static site
+	handle {
+		root /srv
+		file_server
+	}
+}

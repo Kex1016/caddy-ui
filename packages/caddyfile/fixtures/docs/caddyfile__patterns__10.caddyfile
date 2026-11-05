@@ -1,0 +1,6 @@
+www.example.com {
+	redir https://example.com{uri}
+}
+
+example.com {
+}

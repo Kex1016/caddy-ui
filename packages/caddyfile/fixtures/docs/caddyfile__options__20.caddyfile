@@ -1,0 +1,3 @@
+{
+	fallback_sni example.com
+}

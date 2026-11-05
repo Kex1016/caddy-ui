@@ -1,0 +1,5 @@
+https:// {
+	tls {
+		get_certificate http http://localhost:9007/certs
+	}
+}

@@ -1,0 +1,9 @@
+header {
+	Cache-Control "max-age=3600"
+	Vary "Sec-CH-Prefers-Color-Scheme"
+	match {
+		header Accept-CH "*Sec-CH-Prefers-Color-Scheme*"
+		header Critical-CH "Sec-CH-Prefers-Color-Scheme"
+	}
+}
+reverse_proxy upstream:443

@@ -1,0 +1,15 @@
+example.com {
+	root /srv
+
+	# Trigger errors for certain paths
+    error /private* "Unauthorized" 403
+	error /hidden* "Not found" 404
+
+    # Handle the error by serving an HTML page 
+    handle_errors {
+        rewrite /{err.status_code}.html
+		file_server
+    }
+
+	file_server
+}

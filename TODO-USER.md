@@ -53,3 +53,6 @@ Newest at the bottom. Format: date · workstream · what · why.
 - [ ] 2026-11-05 · W0 · Look at the theme once a preview runs and veto it if you dislike it: the accent is
   teal-green and `success` (the "up" colour) moved from Fishnet's teal to a leaf green so the two don't clash ·
   only colour and font may differ from Fishnet, so these are the choices to check.
+- [ ] 2026-11-05 · W1 · Nothing needed from you. For reference: the parser treats `root /srv`
+  (one argument) as a path, matching Caddy ≥ 2.8; if your server runs an older Caddy, write
+  `root * /srv` · only matters for the visual editor's matcher field on `root`.

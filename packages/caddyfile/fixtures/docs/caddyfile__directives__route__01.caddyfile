@@ -1,0 +1,4 @@
+example.com {
+	file_server /specific.html
+	redir https://anothersite.com{uri}
+}

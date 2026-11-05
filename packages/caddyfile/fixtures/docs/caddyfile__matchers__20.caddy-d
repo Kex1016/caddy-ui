@@ -1,0 +1,1 @@
+@user expression path_regexp(r'^/user/(\w*)') || path_regexp(r'^/(\w*)')

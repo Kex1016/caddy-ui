@@ -1,0 +1,4 @@
+example.com {
+	@book url_pattern /books/:id([0-9]+)
+	respond @book "Book number {http.url_pattern.pathname.id}"
+}

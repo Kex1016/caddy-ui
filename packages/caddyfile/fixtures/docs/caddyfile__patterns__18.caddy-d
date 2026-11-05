@@ -1,0 +1,4 @@
+route {
+	try_files {path} /index.html
+	header /index.html Cache-Control "public, max-age=0, must-revalidate"
+}

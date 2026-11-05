@@ -1,0 +1,8 @@
+{
+	acme_ca https://acme.example.com/acme/home/directory
+	acme_ca_root /path/to/home_ca_root.crt
+}
+
+example.com {
+	respond "Hello, world!"
+}

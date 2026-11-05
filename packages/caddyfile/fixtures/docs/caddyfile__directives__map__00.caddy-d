@@ -1,0 +1,4 @@
+map [<matcher>] <source> <destinations...> {
+	[~]<input> <outputs...>
+	default    <defaults...>
+}

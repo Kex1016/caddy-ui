@@ -1,0 +1,6 @@
+example.com {
+	log
+	log_append <original_path {http.request.uri.path}
+	rewrite /new-base{uri}
+	reverse_proxy localhost:9000
+}

@@ -1,0 +1,21 @@
+(hello-world) {
+	header {
+		Cache-Control max-age=3600
+		X-Foo bar
+		{blocks.content_type}
+	}
+	respond /hello-world 200 {
+		{blocks.body}
+	}
+}
+
+example.com {
+	import hello-world {
+		content_type {
+			Content-Type text/html
+		}
+		body {
+			body "<h1>hello world</h1>"
+		}
+	}
+}

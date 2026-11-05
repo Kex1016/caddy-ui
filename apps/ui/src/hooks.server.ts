@@ -1,6 +1,7 @@
 import { json, type Handle, type HandleServerError, type ServerInit } from '@sveltejs/kit';
 import { identify } from '$lib/server/auth';
 import { startConfigService } from '$lib/server/config';
+import { installCaddyfileParser } from '$lib/server/config/caddyfile-parser';
 import { ConfigError } from '$lib/server/env';
 import { isApiPath, isPublicPath, sameOrigin } from '$lib/server/guard';
 import { getRuntime } from '$lib/server/runtime';
@@ -27,6 +28,7 @@ export const init: ServerInit = async () => {
 		}
 		throw err;
 	}
+	installCaddyfileParser();
 	await startConfigService();
 };
 

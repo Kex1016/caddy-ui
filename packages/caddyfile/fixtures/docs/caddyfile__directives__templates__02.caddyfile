@@ -1,0 +1,5 @@
+example.com {
+	header Content-Type text/plain
+	templates
+	respond `Current year is: {{printf "{{"}}now | date "2006"{{printf "}}"}}`
+}

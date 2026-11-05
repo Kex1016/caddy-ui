@@ -1,0 +1,15 @@
+file {
+	root       <path>
+	try_files  <files...>
+	try_policy first_exist|first_exist_fallback|smallest_size|largest_size|most_recently_modified
+	split_path <delims...>
+}
+file <files...>
+
+expression `file({
+	'root': '<path>',
+	'try_files': ['<files...>'],
+	'try_policy': 'first_exist|first_exist_fallback|smallest_size|largest_size|most_recently_modified',
+	'split_path': ['<delims...>']
+})`
+expression file('<files...>')

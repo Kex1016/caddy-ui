@@ -1,0 +1,5 @@
+{
+	servers {
+		expected_dot_headers X.Custom.Header webhook.*
+	}
+}

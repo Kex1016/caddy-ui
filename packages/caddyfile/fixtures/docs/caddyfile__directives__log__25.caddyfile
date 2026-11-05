@@ -1,0 +1,9 @@
+example.com {
+	log {
+		format filter {
+			resp_headers>Set-Cookie set_cookie {
+				hash session
+			}
+		}
+	}
+}

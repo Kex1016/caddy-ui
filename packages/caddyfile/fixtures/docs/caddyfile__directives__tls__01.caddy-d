@@ -1,0 +1,3 @@
+trust_pool inline {
+	trust_der      <base64_der>
+}

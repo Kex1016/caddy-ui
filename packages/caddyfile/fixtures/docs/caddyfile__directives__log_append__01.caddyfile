@@ -1,0 +1,13 @@
+example.com {
+	log
+
+	handle /static* {
+		log_append area "static"
+		respond "Static response!"
+	}
+
+	handle {
+		log_append area "dynamic"
+		reverse_proxy localhost:9000
+	}
+}

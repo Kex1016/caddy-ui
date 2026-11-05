@@ -1,0 +1,3 @@
+handle_path <path_matcher> {
+	<directives...>
+}

@@ -1,0 +1,5 @@
+example.com {
+	log
+	log_level /healthz DEBUG
+	reverse_proxy localhost:8080
+}

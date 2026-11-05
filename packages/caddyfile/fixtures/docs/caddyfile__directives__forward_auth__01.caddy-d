@@ -1,0 +1,24 @@
+reverse_proxy <upstreams...> {
+	# Always GET, so that the incoming
+	# request's body is not consumed
+	method GET
+
+	# Change the URI to the auth gateway's
+	# verification endpoint
+	rewrite <to>
+
+	# Forward the original method and URI,
+	# since they get rewritten above; this
+	# is in addition to other X-Forwarded-*
+	# headers already set by reverse_proxy
+	header_up X-Forwarded-Method {method}
+	header_up X-Forwarded-Uri {uri}
+
+	# On a successful response, copy response headers
+	@good status 2xx
+	handle_response @good {
+		# for example, for each copy_headers field...
+		request_header Remote-User {rp.header.Remote-User}
+		request_header Remote-Email {rp.header.Remote-Email}
+	}
+}

@@ -1,0 +1,3 @@
+directive [<matcher>] <args...> {
+	subdirective [<args...>]
+}

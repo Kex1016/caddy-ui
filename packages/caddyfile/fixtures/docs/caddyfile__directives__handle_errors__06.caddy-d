@@ -1,0 +1,11 @@
+handle_errors 404 410 {
+	respond "It's a 404 or 410 error!"
+}
+
+handle_errors 5xx {
+	respond "It's a 5xx error."
+}
+
+handle_errors {
+	respond "It's another error"
+}

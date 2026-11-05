@@ -28,6 +28,7 @@
     "vitest": "3.2.7"
   },
   "dependencies": {
+    "@caddy-ui/caddyfile": "workspace:*",
     "better-sqlite3": "12.11.1"
   }
 }

@@ -1,0 +1,9 @@
+uri [<matcher>] strip_prefix <target>
+uri [<matcher>] strip_suffix <target>
+uri [<matcher>] replace      <target> <replacement> [<limit>]
+uri [<matcher>] path_regexp  <target> <replacement>
+uri [<matcher>] query        [-|+]<param> [<value>]
+uri [<matcher>] query {
+	<param> [<value>] [<replacement>]
+	...
+}

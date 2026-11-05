@@ -1,0 +1,10 @@
+example.com {
+	root /srv
+
+	basic_auth /secret/* argon2id {
+		# Username "Bob", password "hiccup"
+		Bob $argon2id$v=19$m=47104,t=1,p=1$zJPvVe48N64JUa9MFlVhiw$b5Tznu0PxnA4TciY6qYe2BFPxncF1ePQaeNukHhH1cU
+	}
+
+	file_server
+}

@@ -1,0 +1,6 @@
+proxy_protocol {
+	timeout <duration>
+	allow <cidrs...>
+	deny <cidrs...>
+	fallback_policy <policy>
+}

@@ -1,0 +1,11 @@
+*.example.com {
+	tls {
+		dns <provider_name> [<params...>]
+	}
+	abort
+}
+
+# This will use the above certificate
+foo.example.com {
+	respond "Foo!"
+}

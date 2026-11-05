@@ -1,0 +1,5 @@
+example.com {
+	reverse_proxy /api/* node1:80 node2:80 node3:80 {
+		lb_policy cookie api_sticky
+	}
+}

@@ -1,0 +1,10 @@
+example.com {
+	log {
+		format append {
+			server_id {env.SERVER_ID}
+			wrap filter {
+				request>headers>Cookie delete
+			}
+		}
+	}
+}

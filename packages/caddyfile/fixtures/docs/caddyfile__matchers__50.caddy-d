@@ -1,0 +1,6 @@
+@without-both {
+	not {
+		path /api/*
+		method POST
+	}
+}

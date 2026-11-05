@@ -1,0 +1,5 @@
+<field> cookie {
+	delete  <name>
+	replace <name> <replacement>
+	hash    <name>
+}

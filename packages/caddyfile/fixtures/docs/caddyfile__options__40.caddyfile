@@ -1,0 +1,12 @@
+{
+	servers :443 {
+		listener_wrappers {
+			http_redirect
+			tls
+		}
+	}
+
+	servers :80 {
+		protocols h1 h2c
+	}
+}

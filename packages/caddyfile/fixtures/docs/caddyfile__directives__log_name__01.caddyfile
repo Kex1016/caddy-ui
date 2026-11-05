@@ -1,0 +1,19 @@
+localhost {
+	log {
+		output file ./caddy.access.log
+	}
+
+	log health_check_log {
+		output file ./caddy.access.health.log
+		no_hostname
+	}
+
+	handle /healthz* {
+		log_name health_check_log
+		respond "Healthy"
+	}
+
+	handle {
+		respond "Hello World"
+	}
+}

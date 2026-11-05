@@ -1,0 +1,5 @@
+<field> set_cookie {
+	delete  <name>
+	replace <name> <replacement>
+	hash    <name>
+}

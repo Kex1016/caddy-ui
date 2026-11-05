@@ -1,0 +1,6 @@
+example.com {
+	vars /foo* isFoo "yep"
+	vars isFoo "nope"
+
+	respond {vars.isFoo}
+}

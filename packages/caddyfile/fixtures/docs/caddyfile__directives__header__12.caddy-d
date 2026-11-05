@@ -1,0 +1,2 @@
+header /no-cache* >Cache-Control no-cache
+reverse_proxy upstream:443

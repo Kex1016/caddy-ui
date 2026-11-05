@@ -1,0 +1,4 @@
+example.com {
+	redir /add     /add/
+	redir /remove/ /remove
+}

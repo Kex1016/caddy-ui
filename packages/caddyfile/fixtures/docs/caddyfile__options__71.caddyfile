@@ -1,0 +1,7 @@
+{
+	pki {
+		ca local {
+			intermediate_cn "My Local CA - ECC Intermediate"
+		}
+	}
+}

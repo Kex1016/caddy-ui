@@ -1,0 +1,4 @@
+route {
+	header           Cache-Control max-age=3600
+	header /static/* Cache-Control max-age=31536000
+}

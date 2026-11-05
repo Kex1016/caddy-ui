@@ -1,0 +1,4 @@
+request_body [<matcher>] {
+	max_size <value>
+	set <body_content>
+}

@@ -1,0 +1,3642 @@
+[
+  {
+    "file": "caddyfile__00.caddyfile",
+    "page": "caddyfile.md",
+    "index": 0,
+    "lang": "caddy",
+    "line": 11
+  },
+  {
+    "file": "caddyfile-tutorial__00.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 0,
+    "lang": "caddy",
+    "line": 30
+  },
+  {
+    "file": "caddyfile-tutorial__01.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 43
+  },
+  {
+    "file": "caddyfile-tutorial__02.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 79
+  },
+  {
+    "file": "caddyfile-tutorial__03.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 115
+  },
+  {
+    "file": "caddyfile-tutorial__04.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 4,
+    "lang": "caddy",
+    "line": 134
+  },
+  {
+    "file": "caddyfile-tutorial__05.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 5,
+    "lang": "caddy",
+    "line": 156
+  },
+  {
+    "file": "caddyfile-tutorial__06.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 6,
+    "lang": "caddy",
+    "line": 166
+  },
+  {
+    "file": "caddyfile-tutorial__07.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 7,
+    "lang": "caddy",
+    "line": 180
+  },
+  {
+    "file": "caddyfile-tutorial__08.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 8,
+    "lang": "caddy",
+    "line": 194
+  },
+  {
+    "file": "caddyfile-tutorial__09.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 9,
+    "lang": "caddy",
+    "line": 211
+  },
+  {
+    "file": "caddyfile-tutorial__10.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 10,
+    "lang": "caddy",
+    "line": 220
+  },
+  {
+    "file": "caddyfile-tutorial__11.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 11,
+    "lang": "caddy",
+    "line": 245
+  },
+  {
+    "file": "caddyfile-tutorial__12.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 12,
+    "lang": "caddy",
+    "line": 253
+  },
+  {
+    "file": "caddyfile-tutorial__13.caddyfile",
+    "page": "caddyfile-tutorial.md",
+    "index": 13,
+    "lang": "caddy",
+    "line": 268
+  },
+  {
+    "file": "getting-started__00.caddyfile",
+    "page": "getting-started.md",
+    "index": 0,
+    "lang": "caddy",
+    "line": 124
+  },
+  {
+    "file": "caddyfile__concepts__00.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 0,
+    "lang": "caddy",
+    "line": 343
+  },
+  {
+    "file": "caddyfile__concepts__01.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 352
+  },
+  {
+    "file": "caddyfile__concepts__02.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 363
+  },
+  {
+    "file": "caddyfile__concepts__03.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 381
+  },
+  {
+    "file": "caddyfile__concepts__04.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 4,
+    "lang": "caddy",
+    "line": 389
+  },
+  {
+    "file": "caddyfile__concepts__05.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 5,
+    "lang": "caddy",
+    "line": 401
+  },
+  {
+    "file": "caddyfile__concepts__06.caddy-d",
+    "page": "caddyfile/concepts.md",
+    "index": 6,
+    "lang": "caddy-d",
+    "line": 422
+  },
+  {
+    "file": "caddyfile__concepts__07.caddy-d",
+    "page": "caddyfile/concepts.md",
+    "index": 7,
+    "lang": "caddy-d",
+    "line": 430
+  },
+  {
+    "file": "caddyfile__concepts__08.caddy-d",
+    "page": "caddyfile/concepts.md",
+    "index": 8,
+    "lang": "caddy-d",
+    "line": 436
+  },
+  {
+    "file": "caddyfile__concepts__09.caddy-d",
+    "page": "caddyfile/concepts.md",
+    "index": 9,
+    "lang": "caddy-d",
+    "line": 442
+  },
+  {
+    "file": "caddyfile__concepts__10.caddy-d",
+    "page": "caddyfile/concepts.md",
+    "index": 10,
+    "lang": "caddy-d",
+    "line": 448
+  },
+  {
+    "file": "caddyfile__concepts__11.caddy-d",
+    "page": "caddyfile/concepts.md",
+    "index": 11,
+    "lang": "caddy-d",
+    "line": 455
+  },
+  {
+    "file": "caddyfile__concepts__12.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 12,
+    "lang": "caddy",
+    "line": 461
+  },
+  {
+    "file": "caddyfile__concepts__13.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 13,
+    "lang": "caddy",
+    "line": 483
+  },
+  {
+    "file": "caddyfile__concepts__14.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 14,
+    "lang": "caddy",
+    "line": 495
+  },
+  {
+    "file": "caddyfile__concepts__15.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 15,
+    "lang": "caddy",
+    "line": 547
+  },
+  {
+    "file": "caddyfile__concepts__16.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 16,
+    "lang": "caddy",
+    "line": 556
+  },
+  {
+    "file": "caddyfile__concepts__17.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 17,
+    "lang": "caddy",
+    "line": 565
+  },
+  {
+    "file": "caddyfile__concepts__18.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 18,
+    "lang": "caddy",
+    "line": 578
+  },
+  {
+    "file": "caddyfile__concepts__19.caddy-d",
+    "page": "caddyfile/concepts.md",
+    "index": 19,
+    "lang": "caddy-d",
+    "line": 596
+  },
+  {
+    "file": "caddyfile__concepts__20.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 20,
+    "lang": "caddy",
+    "line": 680
+  },
+  {
+    "file": "caddyfile__concepts__21.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 21,
+    "lang": "caddy",
+    "line": 691
+  },
+  {
+    "file": "caddyfile__concepts__22.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 22,
+    "lang": "caddy",
+    "line": 703
+  },
+  {
+    "file": "caddyfile__concepts__23.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 23,
+    "lang": "caddy",
+    "line": 713
+  },
+  {
+    "file": "caddyfile__concepts__24.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 24,
+    "lang": "caddy",
+    "line": 731
+  },
+  {
+    "file": "caddyfile__concepts__25.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 25,
+    "lang": "caddy",
+    "line": 759
+  },
+  {
+    "file": "caddyfile__concepts__26.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 26,
+    "lang": "caddy",
+    "line": 767
+  },
+  {
+    "file": "caddyfile__concepts__27.caddy-d",
+    "page": "caddyfile/concepts.md",
+    "index": 27,
+    "lang": "caddy-d",
+    "line": 789
+  },
+  {
+    "file": "caddyfile__concepts__28.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 28,
+    "lang": "caddy",
+    "line": 802
+  },
+  {
+    "file": "caddyfile__concepts__29.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 29,
+    "lang": "caddy",
+    "line": 810
+  },
+  {
+    "file": "caddyfile__concepts__30.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 30,
+    "lang": "caddy",
+    "line": 818
+  },
+  {
+    "file": "caddyfile__concepts__31.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 31,
+    "lang": "caddy",
+    "line": 828
+  },
+  {
+    "file": "caddyfile__concepts__32.caddyfile",
+    "page": "caddyfile/concepts.md",
+    "index": 32,
+    "lang": "caddy",
+    "line": 840
+  },
+  {
+    "file": "caddyfile__directives__00.caddy-d",
+    "page": "caddyfile/directives.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 92
+  },
+  {
+    "file": "caddyfile__directives__01.caddy-d",
+    "page": "caddyfile/directives.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 111
+  },
+  {
+    "file": "caddyfile__directives__02.caddy-d",
+    "page": "caddyfile/directives.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 124
+  },
+  {
+    "file": "caddyfile__matchers__00.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 74
+  },
+  {
+    "file": "caddyfile__matchers__01.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 80
+  },
+  {
+    "file": "caddyfile__matchers__02.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 86
+  },
+  {
+    "file": "caddyfile__matchers__03.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 92
+  },
+  {
+    "file": "caddyfile__matchers__04.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 4,
+    "lang": "caddy-d",
+    "line": 107
+  },
+  {
+    "file": "caddyfile__matchers__05.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 5,
+    "lang": "caddy-d",
+    "line": 118
+  },
+  {
+    "file": "caddyfile__matchers__06.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 6,
+    "lang": "caddy-d",
+    "line": 133
+  },
+  {
+    "file": "caddyfile__matchers__07.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 7,
+    "lang": "caddy-d",
+    "line": 141
+  },
+  {
+    "file": "caddyfile__matchers__08.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 8,
+    "lang": "caddy-d",
+    "line": 147
+  },
+  {
+    "file": "caddyfile__matchers__09.caddyfile",
+    "page": "caddyfile/matchers.md",
+    "index": 9,
+    "lang": "caddy",
+    "line": 153
+  },
+  {
+    "file": "caddyfile__matchers__10.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 10,
+    "lang": "caddy-d",
+    "line": 167
+  },
+  {
+    "file": "caddyfile__matchers__11.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 11,
+    "lang": "caddy-d",
+    "line": 174
+  },
+  {
+    "file": "caddyfile__matchers__12.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 12,
+    "lang": "caddy-d",
+    "line": 200
+  },
+  {
+    "file": "caddyfile__matchers__13.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 13,
+    "lang": "caddy-d",
+    "line": 218
+  },
+  {
+    "file": "caddyfile__matchers__14.caddyfile",
+    "page": "caddyfile/matchers.md",
+    "index": 14,
+    "lang": "caddy",
+    "line": 224
+  },
+  {
+    "file": "caddyfile__matchers__15.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 15,
+    "lang": "caddy-d",
+    "line": 235
+  },
+  {
+    "file": "caddyfile__matchers__16.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 16,
+    "lang": "caddy-d",
+    "line": 243
+  },
+  {
+    "file": "caddyfile__matchers__17.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 17,
+    "lang": "caddy-d",
+    "line": 257
+  },
+  {
+    "file": "caddyfile__matchers__18.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 18,
+    "lang": "caddy-d",
+    "line": 269
+  },
+  {
+    "file": "caddyfile__matchers__19.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 19,
+    "lang": "caddy-d",
+    "line": 275
+  },
+  {
+    "file": "caddyfile__matchers__20.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 20,
+    "lang": "caddy-d",
+    "line": 281
+  },
+  {
+    "file": "caddyfile__matchers__21.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 21,
+    "lang": "caddy-d",
+    "line": 287
+  },
+  {
+    "file": "caddyfile__matchers__22.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 22,
+    "lang": "caddy-d",
+    "line": 293
+  },
+  {
+    "file": "caddyfile__matchers__23.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 23,
+    "lang": "caddy-d",
+    "line": 305
+  },
+  {
+    "file": "caddyfile__matchers__24.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 24,
+    "lang": "caddy-d",
+    "line": 351
+  },
+  {
+    "file": "caddyfile__matchers__25.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 25,
+    "lang": "caddy-d",
+    "line": 377
+  },
+  {
+    "file": "caddyfile__matchers__26.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 26,
+    "lang": "caddy-d",
+    "line": 383
+  },
+  {
+    "file": "caddyfile__matchers__27.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 27,
+    "lang": "caddy-d",
+    "line": 391
+  },
+  {
+    "file": "caddyfile__matchers__28.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 28,
+    "lang": "caddy-d",
+    "line": 397
+  },
+  {
+    "file": "caddyfile__matchers__29.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 29,
+    "lang": "caddy-d",
+    "line": 407
+  },
+  {
+    "file": "caddyfile__matchers__30.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 30,
+    "lang": "caddy-d",
+    "line": 431
+  },
+  {
+    "file": "caddyfile__matchers__31.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 31,
+    "lang": "caddy-d",
+    "line": 437
+  },
+  {
+    "file": "caddyfile__matchers__32.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 32,
+    "lang": "caddy-d",
+    "line": 446
+  },
+  {
+    "file": "caddyfile__matchers__33.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 33,
+    "lang": "caddy-d",
+    "line": 452
+  },
+  {
+    "file": "caddyfile__matchers__34.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 34,
+    "lang": "caddy-d",
+    "line": 460
+  },
+  {
+    "file": "caddyfile__matchers__35.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 35,
+    "lang": "caddy-d",
+    "line": 488
+  },
+  {
+    "file": "caddyfile__matchers__36.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 36,
+    "lang": "caddy-d",
+    "line": 494
+  },
+  {
+    "file": "caddyfile__matchers__37.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 37,
+    "lang": "caddy-d",
+    "line": 500
+  },
+  {
+    "file": "caddyfile__matchers__38.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 38,
+    "lang": "caddy-d",
+    "line": 509
+  },
+  {
+    "file": "caddyfile__matchers__39.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 39,
+    "lang": "caddy-d",
+    "line": 525
+  },
+  {
+    "file": "caddyfile__matchers__40.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 40,
+    "lang": "caddy-d",
+    "line": 531
+  },
+  {
+    "file": "caddyfile__matchers__41.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 41,
+    "lang": "caddy-d",
+    "line": 537
+  },
+  {
+    "file": "caddyfile__matchers__42.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 42,
+    "lang": "caddy-d",
+    "line": 546
+  },
+  {
+    "file": "caddyfile__matchers__43.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 43,
+    "lang": "caddy-d",
+    "line": 560
+  },
+  {
+    "file": "caddyfile__matchers__44.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 44,
+    "lang": "caddy-d",
+    "line": 566
+  },
+  {
+    "file": "caddyfile__matchers__45.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 45,
+    "lang": "caddy-d",
+    "line": 572
+  },
+  {
+    "file": "caddyfile__matchers__46.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 46,
+    "lang": "caddy-d",
+    "line": 581
+  },
+  {
+    "file": "caddyfile__matchers__47.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 47,
+    "lang": "caddy-d",
+    "line": 587
+  },
+  {
+    "file": "caddyfile__matchers__48.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 48,
+    "lang": "caddy-d",
+    "line": 599
+  },
+  {
+    "file": "caddyfile__matchers__49.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 49,
+    "lang": "caddy-d",
+    "line": 611
+  },
+  {
+    "file": "caddyfile__matchers__50.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 50,
+    "lang": "caddy-d",
+    "line": 624
+  },
+  {
+    "file": "caddyfile__matchers__51.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 51,
+    "lang": "caddy-d",
+    "line": 635
+  },
+  {
+    "file": "caddyfile__matchers__52.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 52,
+    "lang": "caddy-d",
+    "line": 641
+  },
+  {
+    "file": "caddyfile__matchers__53.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 53,
+    "lang": "caddy-d",
+    "line": 651
+  },
+  {
+    "file": "caddyfile__matchers__54.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 54,
+    "lang": "caddy-d",
+    "line": 678
+  },
+  {
+    "file": "caddyfile__matchers__55.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 55,
+    "lang": "caddy-d",
+    "line": 684
+  },
+  {
+    "file": "caddyfile__matchers__56.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 56,
+    "lang": "caddy-d",
+    "line": 690
+  },
+  {
+    "file": "caddyfile__matchers__57.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 57,
+    "lang": "caddy-d",
+    "line": 696
+  },
+  {
+    "file": "caddyfile__matchers__58.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 58,
+    "lang": "caddy-d",
+    "line": 705
+  },
+  {
+    "file": "caddyfile__matchers__59.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 59,
+    "lang": "caddy-d",
+    "line": 733
+  },
+  {
+    "file": "caddyfile__matchers__60.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 60,
+    "lang": "caddy-d",
+    "line": 739
+  },
+  {
+    "file": "caddyfile__matchers__61.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 61,
+    "lang": "caddy-d",
+    "line": 745
+  },
+  {
+    "file": "caddyfile__matchers__62.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 62,
+    "lang": "caddy-d",
+    "line": 754
+  },
+  {
+    "file": "caddyfile__matchers__63.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 63,
+    "lang": "caddy-d",
+    "line": 768
+  },
+  {
+    "file": "caddyfile__matchers__64.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 64,
+    "lang": "caddy-d",
+    "line": 774
+  },
+  {
+    "file": "caddyfile__matchers__65.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 65,
+    "lang": "caddy-d",
+    "line": 783
+  },
+  {
+    "file": "caddyfile__matchers__66.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 66,
+    "lang": "caddy-d",
+    "line": 803
+  },
+  {
+    "file": "caddyfile__matchers__67.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 67,
+    "lang": "caddy-d",
+    "line": 809
+  },
+  {
+    "file": "caddyfile__matchers__68.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 68,
+    "lang": "caddy-d",
+    "line": 815
+  },
+  {
+    "file": "caddyfile__matchers__69.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 69,
+    "lang": "caddy-d",
+    "line": 824
+  },
+  {
+    "file": "caddyfile__matchers__70.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 70,
+    "lang": "caddy-d",
+    "line": 842
+  },
+  {
+    "file": "caddyfile__matchers__71.caddyfile",
+    "page": "caddyfile/matchers.md",
+    "index": 71,
+    "lang": "caddy",
+    "line": 848
+  },
+  {
+    "file": "caddyfile__matchers__72.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 72,
+    "lang": "caddy-d",
+    "line": 859
+  },
+  {
+    "file": "caddyfile__matchers__73.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 73,
+    "lang": "caddy-d",
+    "line": 868
+  },
+  {
+    "file": "caddyfile__matchers__74.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 74,
+    "lang": "caddy-d",
+    "line": 899
+  },
+  {
+    "file": "caddyfile__matchers__75.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 75,
+    "lang": "caddy-d",
+    "line": 906
+  },
+  {
+    "file": "caddyfile__matchers__76.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 76,
+    "lang": "caddy-d",
+    "line": 915
+  },
+  {
+    "file": "caddyfile__matchers__77.caddyfile",
+    "page": "caddyfile/matchers.md",
+    "index": 77,
+    "lang": "caddy",
+    "line": 950
+  },
+  {
+    "file": "caddyfile__matchers__78.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 78,
+    "lang": "caddy-d",
+    "line": 959
+  },
+  {
+    "file": "caddyfile__matchers__79.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 79,
+    "lang": "caddy-d",
+    "line": 965
+  },
+  {
+    "file": "caddyfile__matchers__80.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 80,
+    "lang": "caddy-d",
+    "line": 971
+  },
+  {
+    "file": "caddyfile__matchers__81.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 81,
+    "lang": "caddy-d",
+    "line": 980
+  },
+  {
+    "file": "caddyfile__matchers__82.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 82,
+    "lang": "caddy-d",
+    "line": 989
+  },
+  {
+    "file": "caddyfile__matchers__83.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 83,
+    "lang": "caddy-d",
+    "line": 1006
+  },
+  {
+    "file": "caddyfile__matchers__84.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 84,
+    "lang": "caddy-d",
+    "line": 1012
+  },
+  {
+    "file": "caddyfile__matchers__85.caddyfile",
+    "page": "caddyfile/matchers.md",
+    "index": 85,
+    "lang": "caddy",
+    "line": 1018
+  },
+  {
+    "file": "caddyfile__matchers__86.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 86,
+    "lang": "caddy-d",
+    "line": 1033
+  },
+  {
+    "file": "caddyfile__matchers__87.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 87,
+    "lang": "caddy-d",
+    "line": 1041
+  },
+  {
+    "file": "caddyfile__matchers__88.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 88,
+    "lang": "caddy-d",
+    "line": 1069
+  },
+  {
+    "file": "caddyfile__matchers__89.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 89,
+    "lang": "caddy-d",
+    "line": 1075
+  },
+  {
+    "file": "caddyfile__matchers__90.caddy-d",
+    "page": "caddyfile/matchers.md",
+    "index": 90,
+    "lang": "caddy-d",
+    "line": 1081
+  },
+  {
+    "file": "caddyfile__options__00.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 0,
+    "lang": "caddy",
+    "line": 60
+  },
+  {
+    "file": "caddyfile__options__01.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 70
+  },
+  {
+    "file": "caddyfile__options__02.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 213
+  },
+  {
+    "file": "caddyfile__options__03.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 245
+  },
+  {
+    "file": "caddyfile__options__04.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 4,
+    "lang": "caddy",
+    "line": 258
+  },
+  {
+    "file": "caddyfile__options__05.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 5,
+    "lang": "caddy",
+    "line": 270
+  },
+  {
+    "file": "caddyfile__options__06.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 6,
+    "lang": "caddy",
+    "line": 286
+  },
+  {
+    "file": "caddyfile__options__07.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 7,
+    "lang": "caddy",
+    "line": 318
+  },
+  {
+    "file": "caddyfile__options__08.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 8,
+    "lang": "caddy",
+    "line": 326
+  },
+  {
+    "file": "caddyfile__options__09.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 9,
+    "lang": "caddy",
+    "line": 334
+  },
+  {
+    "file": "caddyfile__options__10.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 10,
+    "lang": "caddy",
+    "line": 344
+  },
+  {
+    "file": "caddyfile__options__11.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 11,
+    "lang": "caddy",
+    "line": 359
+  },
+  {
+    "file": "caddyfile__options__12.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 12,
+    "lang": "caddy",
+    "line": 406
+  },
+  {
+    "file": "caddyfile__options__13.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 13,
+    "lang": "caddy",
+    "line": 423
+  },
+  {
+    "file": "caddyfile__options__14.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 14,
+    "lang": "caddy",
+    "line": 436
+  },
+  {
+    "file": "caddyfile__options__15.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 15,
+    "lang": "caddy",
+    "line": 477
+  },
+  {
+    "file": "caddyfile__options__16.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 16,
+    "lang": "caddy",
+    "line": 495
+  },
+  {
+    "file": "caddyfile__options__17.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 17,
+    "lang": "caddy",
+    "line": 507
+  },
+  {
+    "file": "caddyfile__options__18.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 18,
+    "lang": "caddy",
+    "line": 522
+  },
+  {
+    "file": "caddyfile__options__19.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 19,
+    "lang": "caddy",
+    "line": 532
+  },
+  {
+    "file": "caddyfile__options__20.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 20,
+    "lang": "caddy",
+    "line": 546
+  },
+  {
+    "file": "caddyfile__options__21.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 21,
+    "lang": "caddy",
+    "line": 556
+  },
+  {
+    "file": "caddyfile__options__22.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 22,
+    "lang": "caddy",
+    "line": 566
+  },
+  {
+    "file": "caddyfile__options__23.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 23,
+    "lang": "caddy",
+    "line": 578
+  },
+  {
+    "file": "caddyfile__options__24.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 24,
+    "lang": "caddy",
+    "line": 587
+  },
+  {
+    "file": "caddyfile__options__25.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 25,
+    "lang": "caddy",
+    "line": 599
+  },
+  {
+    "file": "caddyfile__options__26.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 26,
+    "lang": "caddy",
+    "line": 616
+  },
+  {
+    "file": "caddyfile__options__27.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 27,
+    "lang": "caddy",
+    "line": 630
+  },
+  {
+    "file": "caddyfile__options__28.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 28,
+    "lang": "caddy",
+    "line": 644
+  },
+  {
+    "file": "caddyfile__options__29.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 29,
+    "lang": "caddy",
+    "line": 666
+  },
+  {
+    "file": "caddyfile__options__30.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 30,
+    "lang": "caddy",
+    "line": 699
+  },
+  {
+    "file": "caddyfile__options__31.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 31,
+    "lang": "caddy",
+    "line": 719
+  },
+  {
+    "file": "caddyfile__options__32.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 32,
+    "lang": "caddy",
+    "line": 733
+  },
+  {
+    "file": "caddyfile__options__33.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 33,
+    "lang": "caddy",
+    "line": 750
+  },
+  {
+    "file": "caddyfile__options__34.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 34,
+    "lang": "caddy",
+    "line": 766
+  },
+  {
+    "file": "caddyfile__options__35.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 35,
+    "lang": "caddy",
+    "line": 778
+  },
+  {
+    "file": "caddyfile__options__36.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 36,
+    "lang": "caddy",
+    "line": 788
+  },
+  {
+    "file": "caddyfile__options__37.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 37,
+    "lang": "caddy",
+    "line": 801
+  },
+  {
+    "file": "caddyfile__options__38.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 38,
+    "lang": "caddy",
+    "line": 819
+  },
+  {
+    "file": "caddyfile__options__39.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 39,
+    "lang": "caddy",
+    "line": 825
+  },
+  {
+    "file": "caddyfile__options__40.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 40,
+    "lang": "caddy",
+    "line": 849
+  },
+  {
+    "file": "caddyfile__options__41.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 41,
+    "lang": "caddy",
+    "line": 871
+  },
+  {
+    "file": "caddyfile__options__42.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 42,
+    "lang": "caddy",
+    "line": 905
+  },
+  {
+    "file": "caddyfile__options__43.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 43,
+    "lang": "caddy",
+    "line": 939
+  },
+  {
+    "file": "caddyfile__options__44.caddy-d",
+    "page": "caddyfile/options.md",
+    "index": 44,
+    "lang": "caddy-d",
+    "line": 956
+  },
+  {
+    "file": "caddyfile__options__45.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 45,
+    "lang": "caddy",
+    "line": 981
+  },
+  {
+    "file": "caddyfile__options__46.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 46,
+    "lang": "caddy",
+    "line": 1022
+  },
+  {
+    "file": "caddyfile__options__47.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 47,
+    "lang": "caddy",
+    "line": 1042
+  },
+  {
+    "file": "caddyfile__options__48.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 48,
+    "lang": "caddy",
+    "line": 1055
+  },
+  {
+    "file": "caddyfile__options__49.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 49,
+    "lang": "caddy",
+    "line": 1068
+  },
+  {
+    "file": "caddyfile__options__50.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 50,
+    "lang": "caddy",
+    "line": 1083
+  },
+  {
+    "file": "caddyfile__options__51.caddy-d",
+    "page": "caddyfile/options.md",
+    "index": 51,
+    "lang": "caddy-d",
+    "line": 1111
+  },
+  {
+    "file": "caddyfile__options__52.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 52,
+    "lang": "caddy",
+    "line": 1117
+  },
+  {
+    "file": "caddyfile__options__53.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 53,
+    "lang": "caddy",
+    "line": 1131
+  },
+  {
+    "file": "caddyfile__options__54.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 54,
+    "lang": "caddy",
+    "line": 1150
+  },
+  {
+    "file": "caddyfile__options__55.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 55,
+    "lang": "caddy",
+    "line": 1162
+  },
+  {
+    "file": "caddyfile__options__56.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 56,
+    "lang": "caddy",
+    "line": 1176
+  },
+  {
+    "file": "caddyfile__options__57.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 57,
+    "lang": "caddy",
+    "line": 1184
+  },
+  {
+    "file": "caddyfile__options__58.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 58,
+    "lang": "caddy",
+    "line": 1194
+  },
+  {
+    "file": "caddyfile__options__59.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 59,
+    "lang": "caddy",
+    "line": 1205
+  },
+  {
+    "file": "caddyfile__options__60.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 60,
+    "lang": "caddy",
+    "line": 1231
+  },
+  {
+    "file": "caddyfile__options__61.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 61,
+    "lang": "caddy",
+    "line": 1244
+  },
+  {
+    "file": "caddyfile__options__62.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 62,
+    "lang": "caddy",
+    "line": 1265
+  },
+  {
+    "file": "caddyfile__options__63.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 63,
+    "lang": "caddy",
+    "line": 1284
+  },
+  {
+    "file": "caddyfile__options__64.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 64,
+    "lang": "caddy",
+    "line": 1303
+  },
+  {
+    "file": "caddyfile__options__65.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 65,
+    "lang": "caddy",
+    "line": 1318
+  },
+  {
+    "file": "caddyfile__options__66.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 66,
+    "lang": "caddy",
+    "line": 1344
+  },
+  {
+    "file": "caddyfile__options__67.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 67,
+    "lang": "caddy",
+    "line": 1360
+  },
+  {
+    "file": "caddyfile__options__68.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 68,
+    "lang": "caddy",
+    "line": 1384
+  },
+  {
+    "file": "caddyfile__options__69.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 69,
+    "lang": "caddy",
+    "line": 1419
+  },
+  {
+    "file": "caddyfile__options__70.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 70,
+    "lang": "caddy",
+    "line": 1434
+  },
+  {
+    "file": "caddyfile__options__71.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 71,
+    "lang": "caddy",
+    "line": 1449
+  },
+  {
+    "file": "caddyfile__options__72.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 72,
+    "lang": "caddy",
+    "line": 1464
+  },
+  {
+    "file": "caddyfile__options__73.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 73,
+    "lang": "caddy",
+    "line": 1479
+  },
+  {
+    "file": "caddyfile__options__74.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 74,
+    "lang": "caddy",
+    "line": 1492
+  },
+  {
+    "file": "caddyfile__options__75.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 75,
+    "lang": "caddy",
+    "line": 1517
+  },
+  {
+    "file": "caddyfile__options__76.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 76,
+    "lang": "caddy",
+    "line": 1547
+  },
+  {
+    "file": "caddyfile__options__77.caddyfile",
+    "page": "caddyfile/options.md",
+    "index": 77,
+    "lang": "caddy",
+    "line": 1587
+  },
+  {
+    "file": "caddyfile__patterns__00.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 0,
+    "lang": "caddy",
+    "line": 23
+  },
+  {
+    "file": "caddyfile__patterns__01.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 38
+  },
+  {
+    "file": "caddyfile__patterns__02.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 46
+  },
+  {
+    "file": "caddyfile__patterns__03.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 58
+  },
+  {
+    "file": "caddyfile__patterns__04.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 4,
+    "lang": "caddy",
+    "line": 76
+  },
+  {
+    "file": "caddyfile__patterns__05.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 5,
+    "lang": "caddy",
+    "line": 100
+  },
+  {
+    "file": "caddyfile__patterns__06.caddy-d",
+    "page": "caddyfile/patterns.md",
+    "index": 6,
+    "lang": "caddy-d",
+    "line": 113
+  },
+  {
+    "file": "caddyfile__patterns__07.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 7,
+    "lang": "caddy",
+    "line": 121
+  },
+  {
+    "file": "caddyfile__patterns__08.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 8,
+    "lang": "caddy",
+    "line": 140
+  },
+  {
+    "file": "caddyfile__patterns__09.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 9,
+    "lang": "caddy",
+    "line": 153
+  },
+  {
+    "file": "caddyfile__patterns__10.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 10,
+    "lang": "caddy",
+    "line": 165
+  },
+  {
+    "file": "caddyfile__patterns__11.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 11,
+    "lang": "caddy",
+    "line": 177
+  },
+  {
+    "file": "caddyfile__patterns__12.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 12,
+    "lang": "caddy",
+    "line": 198
+  },
+  {
+    "file": "caddyfile__patterns__13.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 13,
+    "lang": "caddy",
+    "line": 212
+  },
+  {
+    "file": "caddyfile__patterns__14.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 14,
+    "lang": "caddy",
+    "line": 231
+  },
+  {
+    "file": "caddyfile__patterns__15.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 15,
+    "lang": "caddy",
+    "line": 248
+  },
+  {
+    "file": "caddyfile__patterns__16.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 16,
+    "lang": "caddy",
+    "line": 280
+  },
+  {
+    "file": "caddyfile__patterns__17.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 17,
+    "lang": "caddy",
+    "line": 291
+  },
+  {
+    "file": "caddyfile__patterns__18.caddy-d",
+    "page": "caddyfile/patterns.md",
+    "index": 18,
+    "lang": "caddy-d",
+    "line": 309
+  },
+  {
+    "file": "caddyfile__patterns__19.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 19,
+    "lang": "caddy",
+    "line": 323
+  },
+  {
+    "file": "caddyfile__patterns__20.caddyfile",
+    "page": "caddyfile/patterns.md",
+    "index": 20,
+    "lang": "caddy",
+    "line": 331
+  },
+  {
+    "file": "caddyfile__response-matchers__00.caddy-d",
+    "page": "caddyfile/response-matchers.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 55
+  },
+  {
+    "file": "caddyfile__response-matchers__01.caddy-d",
+    "page": "caddyfile/response-matchers.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 63
+  },
+  {
+    "file": "caddyfile__response-matchers__02.caddy-d",
+    "page": "caddyfile/response-matchers.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 69
+  },
+  {
+    "file": "caddyfile__response-matchers__03.caddy-d",
+    "page": "caddyfile/response-matchers.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 75
+  },
+  {
+    "file": "caddyfile__response-matchers__04.caddy-d",
+    "page": "caddyfile/response-matchers.md",
+    "index": 4,
+    "lang": "caddy-d",
+    "line": 78
+  },
+  {
+    "file": "caddyfile__response-matchers__05.caddy-d",
+    "page": "caddyfile/response-matchers.md",
+    "index": 5,
+    "lang": "caddy-d",
+    "line": 86
+  },
+  {
+    "file": "caddyfile__response-matchers__06.caddy-d",
+    "page": "caddyfile/response-matchers.md",
+    "index": 6,
+    "lang": "caddy-d",
+    "line": 96
+  },
+  {
+    "file": "caddyfile__response-matchers__07.caddy-d",
+    "page": "caddyfile/response-matchers.md",
+    "index": 7,
+    "lang": "caddy-d",
+    "line": 104
+  },
+  {
+    "file": "caddyfile__response-matchers__08.caddy-d",
+    "page": "caddyfile/response-matchers.md",
+    "index": 8,
+    "lang": "caddy-d",
+    "line": 126
+  },
+  {
+    "file": "caddyfile__response-matchers__09.caddy-d",
+    "page": "caddyfile/response-matchers.md",
+    "index": 9,
+    "lang": "caddy-d",
+    "line": 132
+  },
+  {
+    "file": "caddyfile__response-matchers__10.caddy-d",
+    "page": "caddyfile/response-matchers.md",
+    "index": 10,
+    "lang": "caddy-d",
+    "line": 141
+  },
+  {
+    "file": "quick-starts__reverse-proxy__00.caddyfile",
+    "page": "quick-starts/reverse-proxy.md",
+    "index": 0,
+    "lang": "caddy",
+    "line": 37
+  },
+  {
+    "file": "quick-starts__reverse-proxy__01.caddyfile",
+    "page": "quick-starts/reverse-proxy.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 87
+  },
+  {
+    "file": "quick-starts__static-files__00.caddyfile",
+    "page": "quick-starts/static-files.md",
+    "index": 0,
+    "lang": "caddy",
+    "line": 44
+  },
+  {
+    "file": "quick-starts__static-files__01.caddyfile",
+    "page": "quick-starts/static-files.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 62
+  },
+  {
+    "file": "quick-starts__static-files__02.caddyfile",
+    "page": "quick-starts/static-files.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 70
+  },
+  {
+    "file": "quick-starts__https__00.caddyfile",
+    "page": "quick-starts/https.md",
+    "index": 0,
+    "lang": "caddy",
+    "line": 45
+  },
+  {
+    "file": "quick-starts__caddyfile__00.caddyfile",
+    "page": "quick-starts/caddyfile.md",
+    "index": 0,
+    "lang": "caddy",
+    "line": 11
+  },
+  {
+    "file": "quick-starts__caddyfile__01.caddyfile",
+    "page": "quick-starts/caddyfile.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 23
+  },
+  {
+    "file": "quick-starts__caddyfile__02.caddyfile",
+    "page": "quick-starts/caddyfile.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 50
+  },
+  {
+    "file": "caddyfile__directives__abort__00.caddy-d",
+    "page": "caddyfile/directives/abort.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 12
+  },
+  {
+    "file": "caddyfile__directives__abort__01.caddyfile",
+    "page": "caddyfile/directives/abort.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 20
+  },
+  {
+    "file": "caddyfile__directives__acme_server__00.caddy-d",
+    "page": "caddyfile/directives/acme_server.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 21
+  },
+  {
+    "file": "caddyfile__directives__acme_server__01.caddyfile",
+    "page": "caddyfile/directives/acme_server.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 65
+  },
+  {
+    "file": "caddyfile__directives__acme_server__02.caddyfile",
+    "page": "caddyfile/directives/acme_server.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 88
+  },
+  {
+    "file": "caddyfile__directives__basic_auth__00.caddy-d",
+    "page": "caddyfile/directives/basic_auth.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 22
+  },
+  {
+    "file": "caddyfile__directives__basic_auth__01.caddyfile",
+    "page": "caddyfile/directives/basic_auth.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 44
+  },
+  {
+    "file": "caddyfile__directives__basic_auth__02.caddyfile",
+    "page": "caddyfile/directives/basic_auth.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 56
+  },
+  {
+    "file": "caddyfile__directives__basic_auth__03.caddyfile",
+    "page": "caddyfile/directives/basic_auth.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 71
+  },
+  {
+    "file": "caddyfile__directives__bind__00.caddy-d",
+    "page": "caddyfile/directives/bind.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 18
+  },
+  {
+    "file": "caddyfile__directives__bind__01.caddyfile",
+    "page": "caddyfile/directives/bind.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 29
+  },
+  {
+    "file": "caddyfile__directives__bind__02.caddyfile",
+    "page": "caddyfile/directives/bind.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 37
+  },
+  {
+    "file": "caddyfile__directives__bind__03.caddyfile",
+    "page": "caddyfile/directives/bind.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 45
+  },
+  {
+    "file": "caddyfile__directives__bind__04.caddyfile",
+    "page": "caddyfile/directives/bind.md",
+    "index": 4,
+    "lang": "caddy",
+    "line": 53
+  },
+  {
+    "file": "caddyfile__directives__bind__05.caddyfile",
+    "page": "caddyfile/directives/bind.md",
+    "index": 5,
+    "lang": "caddy",
+    "line": 61
+  },
+  {
+    "file": "caddyfile__directives__bind__06.caddyfile",
+    "page": "caddyfile/directives/bind.md",
+    "index": 6,
+    "lang": "caddy",
+    "line": 69
+  },
+  {
+    "file": "caddyfile__directives__encode__00.caddy-d",
+    "page": "caddyfile/directives/encode.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 31
+  },
+  {
+    "file": "caddyfile__directives__encode__01.caddy-d",
+    "page": "caddyfile/directives/encode.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 102
+  },
+  {
+    "file": "caddyfile__directives__encode__02.caddy-d",
+    "page": "caddyfile/directives/encode.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 108
+  },
+  {
+    "file": "caddyfile__directives__encode__03.caddy-d",
+    "page": "caddyfile/directives/encode.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 114
+  },
+  {
+    "file": "caddyfile__directives__encode__04.caddyfile",
+    "page": "caddyfile/directives/encode.md",
+    "index": 4,
+    "lang": "caddy",
+    "line": 120
+  },
+  {
+    "file": "caddyfile__directives__error__00.caddy-d",
+    "page": "caddyfile/directives/error.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 14
+  },
+  {
+    "file": "caddyfile__directives__error__01.caddyfile",
+    "page": "caddyfile/directives/error.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 31
+  },
+  {
+    "file": "caddyfile__directives__file_server__00.caddy-d",
+    "page": "caddyfile/directives/file_server.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 39
+  },
+  {
+    "file": "caddyfile__directives__file_server__01.caddy-d",
+    "page": "caddyfile/directives/file_server.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 92
+  },
+  {
+    "file": "caddyfile__directives__file_server__02.caddy-d",
+    "page": "caddyfile/directives/file_server.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 98
+  },
+  {
+    "file": "caddyfile__directives__file_server__03.caddy-d",
+    "page": "caddyfile/directives/file_server.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 104
+  },
+  {
+    "file": "caddyfile__directives__file_server__04.caddyfile",
+    "page": "caddyfile/directives/file_server.md",
+    "index": 4,
+    "lang": "caddy",
+    "line": 110
+  },
+  {
+    "file": "caddyfile__directives__file_server__05.caddy-d",
+    "page": "caddyfile/directives/file_server.md",
+    "index": 5,
+    "lang": "caddy-d",
+    "line": 126
+  },
+  {
+    "file": "caddyfile__directives__file_server__06.caddy-d",
+    "page": "caddyfile/directives/file_server.md",
+    "index": 6,
+    "lang": "caddy-d",
+    "line": 134
+  },
+  {
+    "file": "caddyfile__directives__forward_auth__00.caddy-d",
+    "page": "caddyfile/directives/forward_auth.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 52
+  },
+  {
+    "file": "caddyfile__directives__forward_auth__01.caddy-d",
+    "page": "caddyfile/directives/forward_auth.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 78
+  },
+  {
+    "file": "caddyfile__directives__forward_auth__02.caddyfile",
+    "page": "caddyfile/directives/forward_auth.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 113
+  },
+  {
+    "file": "caddyfile__directives__forward_auth__03.caddy-d",
+    "page": "caddyfile/directives/forward_auth.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 137
+  },
+  {
+    "file": "caddyfile__directives__fs__00.caddy-d",
+    "page": "caddyfile/directives/fs.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 18
+  },
+  {
+    "file": "caddyfile__directives__fs__01.caddyfile",
+    "page": "caddyfile/directives/fs.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 26
+  },
+  {
+    "file": "caddyfile__directives__fs__02.caddyfile",
+    "page": "caddyfile/directives/fs.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 42
+  },
+  {
+    "file": "caddyfile__directives__handle__00.caddy-d",
+    "page": "caddyfile/directives/handle.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 17
+  },
+  {
+    "file": "caddyfile__directives__handle__01.caddyfile",
+    "page": "caddyfile/directives/handle.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 45
+  },
+  {
+    "file": "caddyfile__directives__handle__02.caddyfile",
+    "page": "caddyfile/directives/handle.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 59
+  },
+  {
+    "file": "caddyfile__directives__handle__03.caddyfile",
+    "page": "caddyfile/directives/handle.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 73
+  },
+  {
+    "file": "caddyfile__directives__handle_errors__00.caddy-d",
+    "page": "caddyfile/directives/handle_errors.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 22
+  },
+  {
+    "file": "caddyfile__directives__handle_errors__01.caddy-d",
+    "page": "caddyfile/directives/handle_errors.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 50
+  },
+  {
+    "file": "caddyfile__directives__handle_errors__02.caddy-d",
+    "page": "caddyfile/directives/handle_errors.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 59
+  },
+  {
+    "file": "caddyfile__directives__handle_errors__03.caddy-d",
+    "page": "caddyfile/directives/handle_errors.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 69
+  },
+  {
+    "file": "caddyfile__directives__handle_errors__04.caddy-d",
+    "page": "caddyfile/directives/handle_errors.md",
+    "index": 4,
+    "lang": "caddy-d",
+    "line": 82
+  },
+  {
+    "file": "caddyfile__directives__handle_errors__05.caddy-d",
+    "page": "caddyfile/directives/handle_errors.md",
+    "index": 5,
+    "lang": "caddy-d",
+    "line": 93
+  },
+  {
+    "file": "caddyfile__directives__handle_errors__06.caddy-d",
+    "page": "caddyfile/directives/handle_errors.md",
+    "index": 6,
+    "lang": "caddy-d",
+    "line": 101
+  },
+  {
+    "file": "caddyfile__directives__handle_errors__07.caddy-d",
+    "page": "caddyfile/directives/handle_errors.md",
+    "index": 7,
+    "lang": "caddy-d",
+    "line": 117
+  },
+  {
+    "file": "caddyfile__directives__handle_path__00.caddy-d",
+    "page": "caddyfile/directives/handle_path.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 30
+  },
+  {
+    "file": "caddyfile__directives__handle_path__01.caddy-d",
+    "page": "caddyfile/directives/handle_path.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 46
+  },
+  {
+    "file": "caddyfile__directives__handle_path__02.caddy-d",
+    "page": "caddyfile/directives/handle_path.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 54
+  },
+  {
+    "file": "caddyfile__directives__handle_path__03.caddyfile",
+    "page": "caddyfile/directives/handle_path.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 63
+  },
+  {
+    "file": "caddyfile__directives__header__00.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 16
+  },
+  {
+    "file": "caddyfile__directives__header__01.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 80
+  },
+  {
+    "file": "caddyfile__directives__header__02.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 86
+  },
+  {
+    "file": "caddyfile__directives__header__03.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 92
+  },
+  {
+    "file": "caddyfile__directives__header__04.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 4,
+    "lang": "caddy-d",
+    "line": 98
+  },
+  {
+    "file": "caddyfile__directives__header__05.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 5,
+    "lang": "caddy-d",
+    "line": 113
+  },
+  {
+    "file": "caddyfile__directives__header__06.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 6,
+    "lang": "caddy-d",
+    "line": 122
+  },
+  {
+    "file": "caddyfile__directives__header__07.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 7,
+    "lang": "caddy-d",
+    "line": 129
+  },
+  {
+    "file": "caddyfile__directives__header__08.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 8,
+    "lang": "caddy-d",
+    "line": 139
+  },
+  {
+    "file": "caddyfile__directives__header__09.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 9,
+    "lang": "caddy-d",
+    "line": 149
+  },
+  {
+    "file": "caddyfile__directives__header__10.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 10,
+    "lang": "caddy-d",
+    "line": 162
+  },
+  {
+    "file": "caddyfile__directives__header__11.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 11,
+    "lang": "caddy-d",
+    "line": 169
+  },
+  {
+    "file": "caddyfile__directives__header__12.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 12,
+    "lang": "caddy-d",
+    "line": 178
+  },
+  {
+    "file": "caddyfile__directives__header__13.caddy-d",
+    "page": "caddyfile/directives/header.md",
+    "index": 13,
+    "lang": "caddy-d",
+    "line": 185
+  },
+  {
+    "file": "caddyfile__directives__import__00.caddy-d",
+    "page": "caddyfile/directives/import.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 13
+  },
+  {
+    "file": "caddyfile__directives__import__01.caddy-d",
+    "page": "caddyfile/directives/import.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 47
+  },
+  {
+    "file": "caddyfile__directives__import__02.caddyfile",
+    "page": "caddyfile/directives/import.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 53
+  },
+  {
+    "file": "caddyfile__directives__import__03.caddyfile",
+    "page": "caddyfile/directives/import.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 67
+  },
+  {
+    "file": "caddyfile__directives__import__04.caddyfile",
+    "page": "caddyfile/directives/import.md",
+    "index": 4,
+    "lang": "caddy",
+    "line": 83
+  },
+  {
+    "file": "caddyfile__directives__import__05.caddyfile",
+    "page": "caddyfile/directives/import.md",
+    "index": 5,
+    "lang": "caddy",
+    "line": 99
+  },
+  {
+    "file": "caddyfile__directives__import__06.caddyfile",
+    "page": "caddyfile/directives/import.md",
+    "index": 6,
+    "lang": "caddy",
+    "line": 125
+  },
+  {
+    "file": "caddyfile__directives__import__07.caddyfile",
+    "page": "caddyfile/directives/import.md",
+    "index": 7,
+    "lang": "caddy",
+    "line": 149
+  },
+  {
+    "file": "caddyfile__directives__intercept__00.caddy-d",
+    "page": "caddyfile/directives/intercept.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 58
+  },
+  {
+    "file": "caddyfile__directives__intercept__01.caddyfile",
+    "page": "caddyfile/directives/intercept.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 90
+  },
+  {
+    "file": "caddyfile__directives__invoke__00.caddy-d",
+    "page": "caddyfile/directives/invoke.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 21
+  },
+  {
+    "file": "caddyfile__directives__invoke__01.caddyfile",
+    "page": "caddyfile/directives/invoke.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 34
+  },
+  {
+    "file": "caddyfile__directives__log__00.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 70
+  },
+  {
+    "file": "caddyfile__directives__log__01.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 130
+  },
+  {
+    "file": "caddyfile__directives__log__02.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 138
+  },
+  {
+    "file": "caddyfile__directives__log__03.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 146
+  },
+  {
+    "file": "caddyfile__directives__log__04.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 4,
+    "lang": "caddy-d",
+    "line": 163
+  },
+  {
+    "file": "caddyfile__directives__log__05.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 5,
+    "lang": "caddy-d",
+    "line": 246
+  },
+  {
+    "file": "caddyfile__directives__log__06.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 6,
+    "lang": "caddy-d",
+    "line": 273
+  },
+  {
+    "file": "caddyfile__directives__log__07.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 7,
+    "lang": "caddy-d",
+    "line": 346
+  },
+  {
+    "file": "caddyfile__directives__log__08.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 8,
+    "lang": "caddy-d",
+    "line": 354
+  },
+  {
+    "file": "caddyfile__directives__log__09.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 9,
+    "lang": "caddy-d",
+    "line": 363
+  },
+  {
+    "file": "caddyfile__directives__log__10.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 10,
+    "lang": "caddy-d",
+    "line": 388
+  },
+  {
+    "file": "caddyfile__directives__log__11.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 11,
+    "lang": "caddy-d",
+    "line": 397
+  },
+  {
+    "file": "caddyfile__directives__log__12.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 12,
+    "lang": "caddy-d",
+    "line": 406
+  },
+  {
+    "file": "caddyfile__directives__log__13.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 13,
+    "lang": "caddy-d",
+    "line": 422
+  },
+  {
+    "file": "caddyfile__directives__log__14.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 14,
+    "lang": "caddy-d",
+    "line": 436
+  },
+  {
+    "file": "caddyfile__directives__log__15.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 15,
+    "lang": "caddy-d",
+    "line": 457
+  },
+  {
+    "file": "caddyfile__directives__log__16.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 16,
+    "lang": "caddy-d",
+    "line": 480
+  },
+  {
+    "file": "caddyfile__directives__log__17.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 17,
+    "lang": "caddy-d",
+    "line": 503
+  },
+  {
+    "file": "caddyfile__directives__log__18.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 18,
+    "lang": "caddy-d",
+    "line": 518
+  },
+  {
+    "file": "caddyfile__directives__log__19.caddy-d",
+    "page": "caddyfile/directives/log.md",
+    "index": 19,
+    "lang": "caddy-d",
+    "line": 526
+  },
+  {
+    "file": "caddyfile__directives__log__20.caddyfile",
+    "page": "caddyfile/directives/log.md",
+    "index": 20,
+    "lang": "caddy",
+    "line": 550
+  },
+  {
+    "file": "caddyfile__directives__log__21.caddyfile",
+    "page": "caddyfile/directives/log.md",
+    "index": 21,
+    "lang": "caddy",
+    "line": 559
+  },
+  {
+    "file": "caddyfile__directives__log__22.caddyfile",
+    "page": "caddyfile/directives/log.md",
+    "index": 22,
+    "lang": "caddy",
+    "line": 570
+  },
+  {
+    "file": "caddyfile__directives__log__23.caddyfile",
+    "page": "caddyfile/directives/log.md",
+    "index": 23,
+    "lang": "caddy",
+    "line": 586
+  },
+  {
+    "file": "caddyfile__directives__log__24.caddyfile",
+    "page": "caddyfile/directives/log.md",
+    "index": 24,
+    "lang": "caddy",
+    "line": 599
+  },
+  {
+    "file": "caddyfile__directives__log__25.caddyfile",
+    "page": "caddyfile/directives/log.md",
+    "index": 25,
+    "lang": "caddy",
+    "line": 615
+  },
+  {
+    "file": "caddyfile__directives__log__26.caddyfile",
+    "page": "caddyfile/directives/log.md",
+    "index": 26,
+    "lang": "caddy",
+    "line": 632
+  },
+  {
+    "file": "caddyfile__directives__log__27.caddyfile",
+    "page": "caddyfile/directives/log.md",
+    "index": 27,
+    "lang": "caddy",
+    "line": 646
+  },
+  {
+    "file": "caddyfile__directives__log__28.caddyfile",
+    "page": "caddyfile/directives/log.md",
+    "index": 28,
+    "lang": "caddy",
+    "line": 662
+  },
+  {
+    "file": "caddyfile__directives__log__29.caddyfile",
+    "page": "caddyfile/directives/log.md",
+    "index": 29,
+    "lang": "caddy",
+    "line": 689
+  },
+  {
+    "file": "caddyfile__directives__log__30.caddyfile",
+    "page": "caddyfile/directives/log.md",
+    "index": 30,
+    "lang": "caddy",
+    "line": 711
+  },
+  {
+    "file": "caddyfile__directives__log_append__00.caddy-d",
+    "page": "caddyfile/directives/log_append.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 16
+  },
+  {
+    "file": "caddyfile__directives__log_append__01.caddyfile",
+    "page": "caddyfile/directives/log_append.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 31
+  },
+  {
+    "file": "caddyfile__directives__log_append__02.caddyfile",
+    "page": "caddyfile/directives/log_append.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 50
+  },
+  {
+    "file": "caddyfile__directives__log_append__03.caddyfile",
+    "page": "caddyfile/directives/log_append.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 67
+  },
+  {
+    "file": "caddyfile__directives__log_append__04.caddyfile",
+    "page": "caddyfile/directives/log_append.md",
+    "index": 4,
+    "lang": "caddy",
+    "line": 78
+  },
+  {
+    "file": "caddyfile__directives__log_level__00.caddy-d",
+    "page": "caddyfile/directives/log_level.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 16
+  },
+  {
+    "file": "caddyfile__directives__log_level__01.caddyfile",
+    "page": "caddyfile/directives/log_level.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 29
+  },
+  {
+    "file": "caddyfile__directives__log_level__02.caddy-d",
+    "page": "caddyfile/directives/log_level.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 39
+  },
+  {
+    "file": "caddyfile__directives__log_name__00.caddy-d",
+    "page": "caddyfile/directives/log_name.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 18
+  },
+  {
+    "file": "caddyfile__directives__log_name__01.caddyfile",
+    "page": "caddyfile/directives/log_name.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 29
+  },
+  {
+    "file": "caddyfile__directives__log_skip__00.caddy-d",
+    "page": "caddyfile/directives/log_skip.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 16
+  },
+  {
+    "file": "caddyfile__directives__log_skip__01.caddyfile",
+    "page": "caddyfile/directives/log_skip.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 25
+  },
+  {
+    "file": "caddyfile__directives__log_skip__02.caddy-d",
+    "page": "caddyfile/directives/log_skip.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 39
+  },
+  {
+    "file": "caddyfile__directives__log_skip__03.caddy-d",
+    "page": "caddyfile/directives/log_skip.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 47
+  },
+  {
+    "file": "caddyfile__directives__map__00.caddy-d",
+    "page": "caddyfile/directives/map.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 15
+  },
+  {
+    "file": "caddyfile__directives__map__01.caddy-d",
+    "page": "caddyfile/directives/map.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 47
+  },
+  {
+    "file": "caddyfile__directives__method__00.caddy-d",
+    "page": "caddyfile/directives/method.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 12
+  },
+  {
+    "file": "caddyfile__directives__method__01.caddy-d",
+    "page": "caddyfile/directives/method.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 23
+  },
+  {
+    "file": "caddyfile__directives__metrics__00.caddy-d",
+    "page": "caddyfile/directives/metrics.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 21
+  },
+  {
+    "file": "caddyfile__directives__metrics__01.caddy-d",
+    "page": "caddyfile/directives/metrics.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 34
+  },
+  {
+    "file": "caddyfile__directives__metrics__02.caddy-d",
+    "page": "caddyfile/directives/metrics.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 40
+  },
+  {
+    "file": "caddyfile__directives__metrics__03.caddyfile",
+    "page": "caddyfile/directives/metrics.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 46
+  },
+  {
+    "file": "caddyfile__directives__metrics__04.caddy-d",
+    "page": "caddyfile/directives/metrics.md",
+    "index": 4,
+    "lang": "caddy-d",
+    "line": 54
+  },
+  {
+    "file": "caddyfile__directives__php_fastcgi__00.caddy-d",
+    "page": "caddyfile/directives/php_fastcgi.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 31
+  },
+  {
+    "file": "caddyfile__directives__php_fastcgi__01.caddy-d",
+    "page": "caddyfile/directives/php_fastcgi.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 84
+  },
+  {
+    "file": "caddyfile__directives__php_fastcgi__02.caddy-d",
+    "page": "caddyfile/directives/php_fastcgi.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 141
+  },
+  {
+    "file": "caddyfile__directives__php_fastcgi__03.caddy-d",
+    "page": "caddyfile/directives/php_fastcgi.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 147
+  },
+  {
+    "file": "caddyfile__directives__php_fastcgi__04.caddy-d",
+    "page": "caddyfile/directives/php_fastcgi.md",
+    "index": 4,
+    "lang": "caddy-d",
+    "line": 153
+  },
+  {
+    "file": "caddyfile__directives__php_fastcgi__05.caddyfile",
+    "page": "caddyfile/directives/php_fastcgi.md",
+    "index": 5,
+    "lang": "caddy",
+    "line": 159
+  },
+  {
+    "file": "caddyfile__directives__php_fastcgi__06.caddyfile",
+    "page": "caddyfile/directives/php_fastcgi.md",
+    "index": 6,
+    "lang": "caddy",
+    "line": 171
+  },
+  {
+    "file": "caddyfile__directives__php_fastcgi__07.caddyfile",
+    "page": "caddyfile/directives/php_fastcgi.md",
+    "index": 7,
+    "lang": "caddy",
+    "line": 191
+  },
+  {
+    "file": "caddyfile__directives__push__00.caddy-d",
+    "page": "caddyfile/directives/push.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 33
+  },
+  {
+    "file": "caddyfile__directives__push__01.caddy-d",
+    "page": "caddyfile/directives/push.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 52
+  },
+  {
+    "file": "caddyfile__directives__push__02.caddy-d",
+    "page": "caddyfile/directives/push.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 58
+  },
+  {
+    "file": "caddyfile__directives__push__03.caddy-d",
+    "page": "caddyfile/directives/push.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 64
+  },
+  {
+    "file": "caddyfile__directives__redir__00.caddy-d",
+    "page": "caddyfile/directives/redir.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 14
+  },
+  {
+    "file": "caddyfile__directives__redir__01.caddyfile",
+    "page": "caddyfile/directives/redir.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 42
+  },
+  {
+    "file": "caddyfile__directives__redir__02.caddyfile",
+    "page": "caddyfile/directives/redir.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 50
+  },
+  {
+    "file": "caddyfile__directives__redir__03.caddyfile",
+    "page": "caddyfile/directives/redir.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 58
+  },
+  {
+    "file": "caddyfile__directives__redir__04.caddyfile",
+    "page": "caddyfile/directives/redir.md",
+    "index": 4,
+    "lang": "caddy",
+    "line": 66
+  },
+  {
+    "file": "caddyfile__directives__request_body__00.caddy-d",
+    "page": "caddyfile/directives/request_body.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 11
+  },
+  {
+    "file": "caddyfile__directives__request_body__01.caddyfile",
+    "page": "caddyfile/directives/request_body.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 29
+  },
+  {
+    "file": "caddyfile__directives__request_body__02.caddyfile",
+    "page": "caddyfile/directives/request_body.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 40
+  },
+  {
+    "file": "caddyfile__directives__request_header__00.caddy-d",
+    "page": "caddyfile/directives/request_header.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 16
+  },
+  {
+    "file": "caddyfile__directives__request_header__01.caddy-d",
+    "page": "caddyfile/directives/request_header.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 39
+  },
+  {
+    "file": "caddyfile__directives__request_header__02.caddy-d",
+    "page": "caddyfile/directives/request_header.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 45
+  },
+  {
+    "file": "caddyfile__directives__respond__00.caddy-d",
+    "page": "caddyfile/directives/respond.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 14
+  },
+  {
+    "file": "caddyfile__directives__respond__01.caddyfile",
+    "page": "caddyfile/directives/respond.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 46
+  },
+  {
+    "file": "caddyfile__directives__respond__02.caddyfile",
+    "page": "caddyfile/directives/respond.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 61
+  },
+  {
+    "file": "caddyfile__directives__respond__03.caddyfile",
+    "page": "caddyfile/directives/respond.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 71
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__00.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 87
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__01.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 221
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__02.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 248
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__03.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 273
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__04.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 4,
+    "lang": "caddy-d",
+    "line": 471
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__05.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 5,
+    "lang": "caddy-d",
+    "line": 477
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__06.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 6,
+    "lang": "caddy-d",
+    "line": 484
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__07.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 7,
+    "lang": "caddy-d",
+    "line": 490
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__08.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 8,
+    "lang": "caddy-d",
+    "line": 496
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__09.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 9,
+    "lang": "caddy-d",
+    "line": 502
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__10.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 10,
+    "lang": "caddy-d",
+    "line": 536
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__11.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 11,
+    "lang": "caddy-d",
+    "line": 544
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__12.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 12,
+    "lang": "caddy-d",
+    "line": 583
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__13.caddy-d",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 13,
+    "lang": "caddy-d",
+    "line": 691
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__14.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 14,
+    "lang": "caddy",
+    "line": 763
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__15.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 15,
+    "lang": "caddy",
+    "line": 772
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__16.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 16,
+    "lang": "caddy",
+    "line": 781
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__17.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 17,
+    "lang": "caddy",
+    "line": 792
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__18.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 18,
+    "lang": "caddy",
+    "line": 804
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__19.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 19,
+    "lang": "caddy",
+    "line": 818
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__20.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 20,
+    "lang": "caddy",
+    "line": 827
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__21.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 21,
+    "lang": "caddy",
+    "line": 840
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__22.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 22,
+    "lang": "caddy",
+    "line": 855
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__23.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 23,
+    "lang": "caddy",
+    "line": 866
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__24.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 24,
+    "lang": "caddy",
+    "line": 878
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__25.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 25,
+    "lang": "caddy",
+    "line": 895
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__26.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 26,
+    "lang": "caddy",
+    "line": 911
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__27.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 27,
+    "lang": "caddy",
+    "line": 922
+  },
+  {
+    "file": "caddyfile__directives__reverse_proxy__28.caddyfile",
+    "page": "caddyfile/directives/reverse_proxy.md",
+    "index": 28,
+    "lang": "caddy",
+    "line": 933
+  },
+  {
+    "file": "caddyfile__directives__rewrite__00.caddy-d",
+    "page": "caddyfile/directives/rewrite.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 20
+  },
+  {
+    "file": "caddyfile__directives__rewrite__01.caddyfile",
+    "page": "caddyfile/directives/rewrite.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 45
+  },
+  {
+    "file": "caddyfile__directives__rewrite__02.caddyfile",
+    "page": "caddyfile/directives/rewrite.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 59
+  },
+  {
+    "file": "caddyfile__directives__rewrite__03.caddyfile",
+    "page": "caddyfile/directives/rewrite.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 68
+  },
+  {
+    "file": "caddyfile__directives__rewrite__04.caddyfile",
+    "page": "caddyfile/directives/rewrite.md",
+    "index": 4,
+    "lang": "caddy",
+    "line": 76
+  },
+  {
+    "file": "caddyfile__directives__rewrite__05.caddyfile",
+    "page": "caddyfile/directives/rewrite.md",
+    "index": 5,
+    "lang": "caddy",
+    "line": 84
+  },
+  {
+    "file": "caddyfile__directives__root__00.caddy-d",
+    "page": "caddyfile/directives/root.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 16
+  },
+  {
+    "file": "caddyfile__directives__root__01.caddy-d",
+    "page": "caddyfile/directives/root.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 36
+  },
+  {
+    "file": "caddyfile__directives__root__02.caddy-d",
+    "page": "caddyfile/directives/root.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 50
+  },
+  {
+    "file": "caddyfile__directives__root__03.caddy-d",
+    "page": "caddyfile/directives/root.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 56
+  },
+  {
+    "file": "caddyfile__directives__root__04.caddyfile",
+    "page": "caddyfile/directives/root.md",
+    "index": 4,
+    "lang": "caddy",
+    "line": 62
+  },
+  {
+    "file": "caddyfile__directives__route__00.caddy-d",
+    "page": "caddyfile/directives/route.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 16
+  },
+  {
+    "file": "caddyfile__directives__route__01.caddyfile",
+    "page": "caddyfile/directives/route.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 40
+  },
+  {
+    "file": "caddyfile__directives__route__02.caddyfile",
+    "page": "caddyfile/directives/route.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 53
+  },
+  {
+    "file": "caddyfile__directives__route__03.caddyfile",
+    "page": "caddyfile/directives/route.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 90
+  },
+  {
+    "file": "caddyfile__directives__templates__00.caddy-d",
+    "page": "caddyfile/directives/templates.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 18
+  },
+  {
+    "file": "caddyfile__directives__templates__01.caddyfile",
+    "page": "caddyfile/directives/templates.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 57
+  },
+  {
+    "file": "caddyfile__directives__templates__02.caddyfile",
+    "page": "caddyfile/directives/templates.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 67
+  },
+  {
+    "file": "caddyfile__directives__templates__03.caddyfile",
+    "page": "caddyfile/directives/templates.md",
+    "index": 3,
+    "lang": "caddy",
+    "line": 77
+  },
+  {
+    "file": "caddyfile__directives__timeouts__00.caddy-d",
+    "page": "caddyfile/directives/timeouts.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 16
+  },
+  {
+    "file": "caddyfile__directives__timeouts__01.caddyfile",
+    "page": "caddyfile/directives/timeouts.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 45
+  },
+  {
+    "file": "caddyfile__directives__timeouts__02.caddyfile",
+    "page": "caddyfile/directives/timeouts.md",
+    "index": 2,
+    "lang": "caddy",
+    "line": 56
+  },
+  {
+    "file": "caddyfile__directives__tls__00.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 23
+  },
+  {
+    "file": "caddyfile__directives__tls__01.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 184
+  },
+  {
+    "file": "caddyfile__directives__tls__02.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 196
+  },
+  {
+    "file": "caddyfile__directives__tls__03.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 208
+  },
+  {
+    "file": "caddyfile__directives__tls__04.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 4,
+    "lang": "caddy-d",
+    "line": 220
+  },
+  {
+    "file": "caddyfile__directives__tls__05.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 5,
+    "lang": "caddy-d",
+    "line": 232
+  },
+  {
+    "file": "caddyfile__directives__tls__06.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 6,
+    "lang": "caddy-d",
+    "line": 247
+  },
+  {
+    "file": "caddyfile__directives__tls__07.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 7,
+    "lang": "caddy-d",
+    "line": 260
+  },
+  {
+    "file": "caddyfile__directives__tls__08.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 8,
+    "lang": "caddy-d",
+    "line": 299
+  },
+  {
+    "file": "caddyfile__directives__tls__09.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 9,
+    "lang": "caddy-d",
+    "line": 307
+  },
+  {
+    "file": "caddyfile__directives__tls__10.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 10,
+    "lang": "caddy-d",
+    "line": 315
+  },
+  {
+    "file": "caddyfile__directives__tls__11.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 11,
+    "lang": "caddy-d",
+    "line": 327
+  },
+  {
+    "file": "caddyfile__directives__tls__12.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 12,
+    "lang": "caddy-d",
+    "line": 415
+  },
+  {
+    "file": "caddyfile__directives__tls__13.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 13,
+    "lang": "caddy-d",
+    "line": 444
+  },
+  {
+    "file": "caddyfile__directives__tls__14.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 14,
+    "lang": "caddy-d",
+    "line": 476
+  },
+  {
+    "file": "caddyfile__directives__tls__15.caddy-d",
+    "page": "caddyfile/directives/tls.md",
+    "index": 15,
+    "lang": "caddy-d",
+    "line": 485
+  },
+  {
+    "file": "caddyfile__directives__tls__16.caddyfile",
+    "page": "caddyfile/directives/tls.md",
+    "index": 16,
+    "lang": "caddy",
+    "line": 502
+  },
+  {
+    "file": "caddyfile__directives__tls__17.caddyfile",
+    "page": "caddyfile/directives/tls.md",
+    "index": 17,
+    "lang": "caddy",
+    "line": 510
+  },
+  {
+    "file": "caddyfile__directives__tls__18.caddyfile",
+    "page": "caddyfile/directives/tls.md",
+    "index": 18,
+    "lang": "caddy",
+    "line": 518
+  },
+  {
+    "file": "caddyfile__directives__tls__19.caddyfile",
+    "page": "caddyfile/directives/tls.md",
+    "index": 19,
+    "lang": "caddy",
+    "line": 528
+  },
+  {
+    "file": "caddyfile__directives__tls__20.caddyfile",
+    "page": "caddyfile/directives/tls.md",
+    "index": 20,
+    "lang": "caddy",
+    "line": 540
+  },
+  {
+    "file": "caddyfile__directives__tls__21.caddyfile",
+    "page": "caddyfile/directives/tls.md",
+    "index": 21,
+    "lang": "caddy",
+    "line": 548
+  },
+  {
+    "file": "caddyfile__directives__tls__22.caddyfile",
+    "page": "caddyfile/directives/tls.md",
+    "index": 22,
+    "lang": "caddy",
+    "line": 558
+  },
+  {
+    "file": "caddyfile__directives__tls__23.caddyfile",
+    "page": "caddyfile/directives/tls.md",
+    "index": 23,
+    "lang": "caddy",
+    "line": 568
+  },
+  {
+    "file": "caddyfile__directives__tracing__00.caddy-d",
+    "page": "caddyfile/directives/tracing.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 19
+  },
+  {
+    "file": "caddyfile__directives__tracing__01.caddyfile",
+    "page": "caddyfile/directives/tracing.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 59
+  },
+  {
+    "file": "caddyfile__directives__try_files__00.caddy-d",
+    "page": "caddyfile/directives/try_files.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 12
+  },
+  {
+    "file": "caddyfile__directives__try_files__01.caddy-d",
+    "page": "caddyfile/directives/try_files.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 36
+  },
+  {
+    "file": "caddyfile__directives__try_files__02.caddy-d",
+    "page": "caddyfile/directives/try_files.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 51
+  },
+  {
+    "file": "caddyfile__directives__try_files__03.caddy-d",
+    "page": "caddyfile/directives/try_files.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 57
+  },
+  {
+    "file": "caddyfile__directives__try_files__04.caddy-d",
+    "page": "caddyfile/directives/try_files.md",
+    "index": 4,
+    "lang": "caddy-d",
+    "line": 63
+  },
+  {
+    "file": "caddyfile__directives__try_files__05.caddy-d",
+    "page": "caddyfile/directives/try_files.md",
+    "index": 5,
+    "lang": "caddy-d",
+    "line": 69
+  },
+  {
+    "file": "caddyfile__directives__try_files__06.caddy-d",
+    "page": "caddyfile/directives/try_files.md",
+    "index": 6,
+    "lang": "caddy-d",
+    "line": 75
+  },
+  {
+    "file": "caddyfile__directives__uri__00.caddy-d",
+    "page": "caddyfile/directives/uri.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 18
+  },
+  {
+    "file": "caddyfile__directives__uri__01.caddy-d",
+    "page": "caddyfile/directives/uri.md",
+    "index": 1,
+    "lang": "caddy-d",
+    "line": 93
+  },
+  {
+    "file": "caddyfile__directives__uri__02.caddy-d",
+    "page": "caddyfile/directives/uri.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 99
+  },
+  {
+    "file": "caddyfile__directives__uri__03.caddy-d",
+    "page": "caddyfile/directives/uri.md",
+    "index": 3,
+    "lang": "caddy-d",
+    "line": 105
+  },
+  {
+    "file": "caddyfile__directives__uri__04.caddy-d",
+    "page": "caddyfile/directives/uri.md",
+    "index": 4,
+    "lang": "caddy-d",
+    "line": 111
+  },
+  {
+    "file": "caddyfile__directives__uri__05.caddy-d",
+    "page": "caddyfile/directives/uri.md",
+    "index": 5,
+    "lang": "caddy-d",
+    "line": 117
+  },
+  {
+    "file": "caddyfile__directives__uri__06.caddy-d",
+    "page": "caddyfile/directives/uri.md",
+    "index": 6,
+    "lang": "caddy-d",
+    "line": 123
+  },
+  {
+    "file": "caddyfile__directives__uri__07.caddy-d",
+    "page": "caddyfile/directives/uri.md",
+    "index": 7,
+    "lang": "caddy-d",
+    "line": 129
+  },
+  {
+    "file": "caddyfile__directives__uri__08.caddy-d",
+    "page": "caddyfile/directives/uri.md",
+    "index": 8,
+    "lang": "caddy-d",
+    "line": 135
+  },
+  {
+    "file": "caddyfile__directives__uri__09.caddy-d",
+    "page": "caddyfile/directives/uri.md",
+    "index": 9,
+    "lang": "caddy-d",
+    "line": 141
+  },
+  {
+    "file": "caddyfile__directives__uri__10.caddy-d",
+    "page": "caddyfile/directives/uri.md",
+    "index": 10,
+    "lang": "caddy-d",
+    "line": 147
+  },
+  {
+    "file": "caddyfile__directives__vars__00.caddy-d",
+    "page": "caddyfile/directives/vars.md",
+    "index": 0,
+    "lang": "caddy-d",
+    "line": 18
+  },
+  {
+    "file": "caddyfile__directives__vars__01.caddyfile",
+    "page": "caddyfile/directives/vars.md",
+    "index": 1,
+    "lang": "caddy",
+    "line": 35
+  },
+  {
+    "file": "caddyfile__directives__vars__02.caddy-d",
+    "page": "caddyfile/directives/vars.md",
+    "index": 2,
+    "lang": "caddy-d",
+    "line": 46
+  }
+]

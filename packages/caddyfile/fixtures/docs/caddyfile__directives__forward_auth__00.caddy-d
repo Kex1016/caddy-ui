@@ -1,0 +1,6 @@
+forward_auth [<matcher>] [<upstreams...>] {
+	uri          <to>
+	copy_headers <fields...> {
+		<fields...>
+	}
+}

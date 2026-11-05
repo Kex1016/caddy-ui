@@ -1,0 +1,5 @@
+example.com {
+	reverse_proxy {
+		dynamic srv _api._tcp.example.com
+	}
+}

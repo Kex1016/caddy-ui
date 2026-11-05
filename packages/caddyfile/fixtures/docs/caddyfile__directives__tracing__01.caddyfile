@@ -1,0 +1,19 @@
+example.com {
+	handle /api* {
+		tracing {
+			span api
+		}
+		request_header X-Trace-Id {http.vars.trace_id}
+		reverse_proxy localhost:8081
+	}
+
+	handle {
+		tracing {
+			span app
+			span_attributes {
+				user_id {http.request.cookie.user-id}
+			}
+		}
+		reverse_proxy localhost:8080
+	}
+}

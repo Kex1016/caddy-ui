@@ -1,0 +1,9 @@
+(cors) {
+	@origin header Origin {args[0]}
+	header @origin Access-Control-Allow-Origin "{args[0]}"
+	header @origin Access-Control-Allow-Methods "OPTIONS,HEAD,GET,POST,PUT,PATCH,DELETE"
+}
+
+example.com {
+	import cors example.com
+}

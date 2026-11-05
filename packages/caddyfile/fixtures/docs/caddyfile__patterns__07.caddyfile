@@ -1,0 +1,9 @@
+example.com {
+	root /var/www/wordpress
+	encode
+	php_fastcgi unix//run/php/php8.5-fpm.sock
+	file_server
+
+	@blocked path /xmlrpc.php *.sql /wp-content/uploads/*.php
+	rewrite @blocked /index.php
+}

@@ -1,0 +1,6 @@
+example.com {
+	reverse_proxy node1:80 node2:80 node3:80 {
+		health_uri /healthz
+		lb_try_duration 5s
+	}
+}

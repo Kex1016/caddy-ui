@@ -1,0 +1,3 @@
+{
+	ocsp_interval 2h
+}

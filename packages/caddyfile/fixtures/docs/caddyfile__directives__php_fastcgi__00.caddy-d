@@ -1,0 +1,14 @@
+php_fastcgi [<matcher>] <php-fpm_gateways...> {
+	root <path>
+	split <substrings...>
+	index <filename>|off
+	try_files <files...>
+	env [<key> <value>]
+	resolve_root_symlink
+	capture_stderr
+	dial_timeout  <duration>
+	read_timeout  <duration>
+	write_timeout <duration>
+
+	<any other reverse_proxy subdirectives...>
+}

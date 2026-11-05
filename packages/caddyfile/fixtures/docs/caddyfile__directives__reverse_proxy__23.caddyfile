@@ -1,0 +1,6 @@
+example.com {
+	handle_path /old-prefix/* {
+		rewrite /new-prefix{path}
+		reverse_proxy localhost:9000
+	}
+}
