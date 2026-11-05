@@ -1,3 +1,4 @@
+import { adminFetch } from '../caddy/admin-fetch';
 import { readFileSync, statSync } from 'node:fs';
 import type { Config } from '../env';
 import type { Db } from '../db';
@@ -207,7 +208,7 @@ export class Collector {
 		const st = this.status.metrics;
 		st.lastRun = this.now();
 		try {
-			const res = await fetch(`${this.cfg.adminUrl}/metrics`, { signal: AbortSignal.timeout(10_000) });
+			const res = await adminFetch(`${this.cfg.adminUrl}/metrics`, { signal: AbortSignal.timeout(10_000) });
 			if (!res.ok) throw new Error(`${this.cfg.adminUrl}/metrics answered HTTP ${res.status}`);
 			const rows = this.metrics.feed(parsePrometheus(await res.text()), this.now());
 			insertMetricRows(this.db, rows);

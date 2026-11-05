@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatDateTime, formatElapsed, formatNumber, formatTime } from './format';
+import {
+	formatBytes,
+	formatClock,
+	formatCompact,
+	formatDate,
+	formatDateTime,
+	formatDay,
+	formatDayTime,
+	formatElapsed,
+	formatMs,
+	formatNumber,
+	formatPercent,
+	formatTime
+} from './format';
 
 describe('formatElapsed', () => {
 	it.each([
@@ -27,5 +40,42 @@ describe('dates and times', () => {
 	});
 	it('groups digits', () => {
 		expect(formatNumber(1234567)).toBe('1,234,567');
+	});
+});
+
+describe('stats formatting', () => {
+	it('formats bytes in decimal units', () => {
+		expect(formatBytes(0)).toBe('0 B');
+		expect(formatBytes(999)).toBe('999 B');
+		expect(formatBytes(1500)).toBe('1.5 kB');
+		expect(formatBytes(12_400_000)).toBe('12.4 MB');
+		expect(formatBytes(3_210_000_000)).toBe('3.21 GB');
+	});
+	it('formats latency', () => {
+		expect(formatMs(0.42)).toBe('0.42 ms');
+		expect(formatMs(4.25)).toBe('4.3 ms');
+		expect(formatMs(84.4)).toBe('84 ms');
+		expect(formatMs(1240)).toBe('1.24 s');
+	});
+	it('never rounds an almost-perfect ratio to 100%', () => {
+		expect(formatPercent(1)).toBe('100%');
+		expect(formatPercent(0)).toBe('0%');
+		expect(formatPercent(0.99996)).toBe('99.99%');
+		expect(formatPercent(0.9935)).toBe('99.35%');
+		expect(formatPercent(0.5)).toBe('50%');
+		expect(formatPercent(0.1234)).toBe('12.3%');
+		expect(formatPercent(0.00001)).toBe('<0.01%');
+	});
+	it('compacts counts for axes', () => {
+		expect(formatCompact(950)).toBe('950');
+		expect(formatCompact(1500)).toBe('1.5k');
+		expect(formatCompact(25_000)).toBe('25k');
+		expect(formatCompact(3_400_000)).toBe('3.4M');
+	});
+	it('formats chart ticks', () => {
+		const ts = Date.UTC(2026, 10, 4, 16, 44);
+		expect(formatClock(ts, 'Europe/Budapest')).toBe('17:44');
+		expect(formatDay(ts, 'UTC')).toBe('4 Nov');
+		expect(formatDayTime(ts, 'Europe/Budapest')).toBe('4 Nov, 17:44 CET');
 	});
 });

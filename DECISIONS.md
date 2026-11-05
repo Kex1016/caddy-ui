@@ -287,3 +287,26 @@ Format: date · workstream · decision · why · how to reverse.
   (`scanCaddyfile`, `siteId`) is unchanged and its tests still pass · one parser in the
   codebase · the persisted site id stays W4's sha256 of the comma-joined normalised address
   list; `packages/caddyfile` exports that key as `siteKey()` and no hash of its own.
+- 2026-11-05 · W7 · Chart components live in `apps/ui/src/lib/design/charts` (LineChart, Sparkline, UptimeStrip,
+  StripPlot, BarList, DataTable, ChartCard, RangeSwitch, ViewSwitch), written from Fishnet's chart previews and
+  `index.d.ts` because the Fishnet Svelte sources are not in this repo · same markup and `fp-plot` classes W0
+  ported · swap for the Fishnet components if they are ever vendored.
+- 2026-11-05 · W7 · All time-series charts are LineCharts (no ColumnChart): 24h has 288 buckets, too many for
+  columns at Fishnet's widths. Errors draw 5xx with 4xx as the shadow series; latency draws p95 with p50 as the
+  shadow · one hue per chart, per Fishnet · add ColumnChart for daily totals if a page needs them.
+- 2026-11-05 · W7 · Stats pages read the collector in-process in `+page.server.ts` (same functions as
+  `/api/overview`, `/api/sites`, `/api/sites/:id/stats`) and re-run every 30 s while the tab is visible
+  (`invalidate('app:stats')`). The range is `?range=` (default 24h) and the one Charts | Tables switch is
+  `?view=tables` · server-rendered SVG, no client fetch layer · none.
+- 2026-11-05 · W7 · A chart is "stale" when its source is failing now (metrics or log error, probes more than three
+  intervals late); its as-of time becomes the source's last good time with "last good data". Fewer than two known
+  points shows the frame with an EmptyState that names the fix (`metrics { per_host }`, a `log` directive,
+  `CADDY_DATA_PATH`) · Fishnet's empty and stale rules · none.
+- 2026-11-05 · W7 · The per-site page is `/sites/[id]` (W8 owns the `/sites` index). Its "open in the editor"
+  link is `/editor?site=<id>`; W5/W6 can honour `site` to open that block · none.
+- 2026-11-05 · W7 (fix in W3/W4 code) · Calls to Caddy's admin API now go through `adminFetch`
+  (`lib/server/caddy/admin-fetch.ts`, node:http) instead of Node's fetch, in the W3 admin client and the W4 metrics
+  scrape and upstream lookup. Node's fetch always sends `Sec-Fetch-Mode: cors`, and Caddy 2.11 (`caddy:latest`)
+  then enforces the admin origin list and answers 403, so metrics, upstream counts and apply all failed against
+  2.11; CI pinned 2.10 for W3 and the W4 check only looked at log data · the collector CI check now also fails when
+  `/metrics` cannot be read · none needed; the test fakes 2.11's rule.
