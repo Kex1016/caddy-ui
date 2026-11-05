@@ -315,3 +315,6 @@ Format: date · workstream · decision · why · how to reverse.
   (`scanCaddyfile`, `siteId`) is unchanged and its tests still pass · one parser in the
   codebase · the persisted site id stays W4's sha256 of the comma-joined normalised address
   list; `packages/caddyfile` exports that key as `siteKey()` and no hash of its own.
+- 2026-11-05 · W8 · W1 merged while this PR was open. `scanBlocks` stays text-based for now (it is covered by 31
+  tests, including the fixture's every-site disable/enable round trip) · moving it onto `packages/caddyfile`
+  is a follow-up that changes no behaviour · whoever wires W1 into the editor can swap it and keep the tests.
