@@ -44,3 +44,6 @@ Format: date · workstream · decision · why · how to reverse.
   (already in this plan) but drops the commented `X-Idp-Key` line and any secret-looking
   value · a realistic fixture matters for round-trip tests; secrets never enter the repo ·
   none.
+- 2026-11-05 · Plan · Visual editor shape is B, tree outline + inspector, with recipes
+  (E) for adding sites · David chose it on the decision card in the planning thread ·
+  David can change it in the thread before W5 starts; after that it is a rewrite.

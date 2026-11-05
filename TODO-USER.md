@@ -5,9 +5,10 @@ Newest at the bottom. Format: date · workstream · what · why.
 
 - [ ] 2026-11-05 · Plan · Approve [PLAN.md](PLAN.md) (merge the planning PR or say so in
   the project chat) · the coordinator launches workstreams only after approval.
-- [ ] 2026-11-05 · Plan · Answer the five visual editor questions at the end of
-  [docs/visual-editor-options.md](docs/visual-editor-options.md) · W5 waits for them;
-  everything else starts without them.
+- [ ] 2026-11-05 · Plan · Answer questions 2–5 at the end of
+  [docs/visual-editor-options.md](docs/visual-editor-options.md) (text mode, round trip,
+  first-release scope, how to disable a site); question 1 is answered: B, tree +
+  inspector · W5 waits for them; everything else starts without them.
 - [ ] 2026-11-05 · Plan · Confirm the accent tweak in PLAN.md §6 (teal-green instead of
   Fishnet's sea blue) or name another colour · the only design change allowed is colour
   and font, so it should be the one you want.
