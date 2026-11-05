@@ -195,7 +195,7 @@ Format: date · workstream · decision · why · how to reverse.
   `PRAGMA user_version`); W3 owns migration 1 (`revisions`, `settings`), W4 appends migration 2 · one file, one
   migration history · none.
 - 2026-11-05 · W4 · Additive changes to the §3.2 tables: a new `sites(id, addresses_json, first_seen, last_seen,
-removed_at)` table, and `state_changes` gains `target` (`''` is the site itself, otherwise an upstream
+  removed_at)` table, and `state_changes` gains `target` (`''` is the site itself, otherwise an upstream
   address) · "a down upstream shows as down" needs a per-upstream "since", and stats for a removed site still
   need its addresses · drop the column and table in a later migration if unused. Existing columns unchanged.
 - 2026-11-05 · W4 · Until `packages/caddyfile` (W1) merges, the collector finds site blocks and upstreams with
