@@ -1,0 +1,29 @@
+# CI fixture for the collector job in .github/workflows/ci.yml. Plain HTTP so no certificates are needed.
+{
+	admin 0.0.0.0:2019
+	auto_https off
+	metrics {
+		per_host
+	}
+}
+
+(access_log) {
+	log {
+		output file /var/log/caddy/access.log
+		format json
+	}
+}
+
+http://up.test {
+	import access_log
+	reverse_proxy 127.0.0.1:8081
+}
+
+http://down.test {
+	import access_log
+	reverse_proxy 127.0.0.1:9
+}
+
+:8081 {
+	respond "upstream ok"
+}
