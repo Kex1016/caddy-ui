@@ -287,3 +287,32 @@ Format: date · workstream · decision · why · how to reverse.
   (`scanCaddyfile`, `siteId`) is unchanged and its tests still pass · one parser in the
   codebase · the persisted site id stays W4's sha256 of the comma-joined normalised address
   list; `packages/caddyfile` exports that key as `siteKey()` and no hash of its own.
+- 2026-11-05 · W6 · The CodeMirror language is a stream tokenizer (`apps/ui/src/lib/editor/language.ts`)
+  rather than a Lezer grammar. It follows Caddy's lexer rules and is tested against W1's `lex()` on all 520
+  docs fixtures, the package fixtures and David's anonymised Caddyfile: every token boundary, brace, quote,
+  heredoc and comment agrees · a second grammar would be a second parser to keep in sync, and the stream
+  tokenizer is incremental · write a Lezer grammar if the visual editor ever needs a syntax tree in the browser.
+- 2026-11-05 · W6 · Lint runs W1's `parse()` and W2's `validateBlocks()` in the browser 150 ms after the last
+  keystroke (measured 191 ms from keystroke to underline in Chromium, inside the 300 ms budget). Caddy's
+  `/adapt` runs only on "Check with Caddy" and on apply, never per keystroke · `/adapt` is a network round
+  trip to Caddy · none.
+- 2026-11-05 · W6 · Schema findings are warnings at most on the server (`GET /api/caddyfile`,
+  `PUT`/`validate` diagnostics, source `schema`), so only the parser and Caddy's `/adapt` can refuse an apply;
+  the editor shows them with the schema's own severity · the schema is generated from docs and may lag Caddy
+  or miss a plugin · make them blocking if the schema proves exact.
+- 2026-11-05 · W6 · `GET /api/schema` (in the §3.2 table, no owner) is served by W6 with an ETag of
+  `schemaVersion` and a one-hour private cache. The browser fetches it once and imports only
+  `@caddy-ui/caddy-schema/validate` and `/types`, two new additive subpath exports of the schema package ·
+  keeps the 480 KB bundle out of the JS chunks · none. `apps/ui/tsconfig.json` gains
+  `allowImportingTsExtensions` because the schema package's sources import with `.ts` extensions.
+- 2026-11-05 · W6 · Editor page behaviour: "Review and apply" (also Ctrl+S) shows a line diff against the
+  file as loaded and applies with `baseHash`; on a 409 the page offers "compare my edits with the file on
+  disk now" (new base, edits kept, diff shown again) or "drop my edits and load it". Unapplied edits are kept
+  in the browser's localStorage, tied to the base hash, and restored on the next visit · losing a long edit
+  to a closed tab is the worst outcome · none.
+- 2026-11-05 · W6 · Syntax colours use only Fishnet tokens (directives `acc-ink`, matchers `warning-ink`,
+  placeholders and env vars `success-ink`, addresses bold `text`, comments `faint`) · PLAN.md §6 allows only
+  colour and font tokens · change the classes in `TextEditor.svelte`.
+- 2026-11-05 · W6 · `/editor?at=<address>` scrolls to the site block with that address, and a "Jump to block"
+  list covers sites, global options, snippets and named routes. Whole-file editing only; per-block text
+  editing is left to W5's inspector · W8 can link a site to its text with `?at=` · none.
