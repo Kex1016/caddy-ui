@@ -62,6 +62,22 @@ Open `http://<host>:9876`. Full steps, including what Caddy needs
 All settings are environment variables, for example `CADDY_UI_PORT`, `CADDY_ADMIN_URL` and
 `CADDYFILE_PATH`. The complete table is in [docs/configuration.md](docs/configuration.md).
 
+## Development
+
+Needs Node 22 and pnpm 10 (`corepack enable`).
+
+```sh
+pnpm install
+pnpm dev          # http://localhost:5173
+pnpm check        # lint, typecheck, unit tests
+pnpm build        # production build of apps/ui
+docker build -t caddy-ui .
+```
+
+The repo is a pnpm workspace: `apps/ui` is the SvelteKit app (UI and API), `packages/*` hold the
+Caddyfile parser and the directive schema. Configuration is by environment variable; see
+[docs/configuration.md](docs/configuration.md).
+
 ## Documentation
 
 | Guide | What it covers |

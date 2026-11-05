@@ -1,0 +1,38 @@
+/* Caddy UI theme: the only place Fishnet is changed (PLAN.md §6). Colour and font tokens only.
+   - Accent: Fishnet's sea blue becomes a Caddy teal-green. acc-ink in light is darkened from the proposed
+     #1f8a70 to #1a7560 so links and the focus ring keep 4.5:1 on bg; #1f8a70 is used for chart marks.
+   - Success: shifted from Fishnet's teal (which now sits next to the accent) to a leaf green, so "up" never
+     reads as "selected". Status colours still travel with a word or an icon.
+   - Fonts: unchanged (Zen Maru Gothic, Zen Kaku Gothic New, JetBrains Mono).
+   After editing the light block, run `pnpm --filter @caddy-ui/ui gen:theme` to refresh theme-system.css. */
+:root,
+[data-theme='dark'] {
+	--acc: #5fd3b4;
+	--acc-ink: #7fdfc4;
+	--acc-soft: rgba(95, 211, 180, 0.16);
+	--acc-viz: #4fc3a5;
+	--acc-heat-1: #1d3f37;
+	--acc-heat-2: #286b5b;
+	--acc-heat-3: #379a82;
+	--acc-heat-4: #5fd3b4;
+	--on-acc: #0b1f1a;
+	--success: #9ccf86;
+	--success-ink: #acd99a;
+	--success-soft: rgba(156, 207, 134, 0.14);
+	--focus-ring: 0 0 0 2px #171613, 0 0 0 4px #7fdfc4;
+}
+[data-theme='light'] {
+	--acc: #5fd3b4;
+	--acc-ink: #1a7560;
+	--acc-soft: rgba(26, 117, 96, 0.12);
+	--acc-viz: #1f8a70;
+	--acc-heat-1: #d2efe6;
+	--acc-heat-2: #a0dccb;
+	--acc-heat-3: #4fb597;
+	--acc-heat-4: #1a7560;
+	--on-acc: #0b1f1a;
+	--success: #9ccf86;
+	--success-ink: #3f6f22;
+	--success-soft: rgba(63, 111, 34, 0.12);
+	--focus-ring: 0 0 0 2px #f5f2ec, 0 0 0 4px #1a7560;
+}
