@@ -114,3 +114,11 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-05 · W0 · Failed sign-ins are limited to 10 per 15 minutes per client address. Behind Caddy all
   clients share Caddy's address unless adapter-node's `ADDRESS_HEADER=x-forwarded-for` is set · acceptable
   for a single-admin UI · documented for W10.
+- 2026-11-05 · W9 · UI `Dockerfile` stays at the repo root (CI and the updater's git source
+  build it there); W9 only adds OCI labels and the `CADDY_UI_VERSION` build arg · moving it
+  would break W0's CI for no gain · move it and update `publish.yml`, `ci.yml`.
+- 2026-11-05 · W9 · `publish.yml` pushes `caddy-ui` and `caddy-ui-updater` for
+  linux/amd64 and linux/arm64 with the GITHUB_TOKEN · one workflow, same tags for both ·
+  drop arm64 from the `platforms` line if builds get slow.
+- 2026-11-05 · W9 · PUID/PGID switch not added · the root default matches the old backend
+  and works with root-owned bind mounts; revisit if David asks · none.
