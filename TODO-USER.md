@@ -53,3 +53,10 @@ Newest at the bottom. Format: date · workstream · what · why.
 - [ ] 2026-11-05 · W0 · Look at the theme once a preview runs and veto it if you dislike it: the accent is
   teal-green and `success` (the "up" colour) moved from Fishnet's teal to a leaf green so the two don't clash ·
   only colour and font may differ from Fishnet, so these are the choices to check.
+- [ ] 2026-11-05 · W4 · Mount Caddy's log directory and data directory into the UI container read-only
+  (`./logs:/var/log/caddy:ro`, `./data:/data/caddy:ro`; if your Caddy mounts `./data` at `/data`, mount it at
+  `/data` and set `CADDY_DATA_PATH=/data`) · access-log stats and certificate expiry read these; the UI only
+  reads them.
+- [ ] 2026-11-05 · W4 · If any site's upstream is only reachable from the Caddy container (not from other
+  containers on the `caddy-ui` network), expect it to show as down; tell the thread so the probe can go
+  through Caddy instead · upstreams are probed directly from the UI container.
