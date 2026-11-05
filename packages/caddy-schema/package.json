@@ -1,0 +1,29 @@
+{
+  "name": "@caddy-ui/caddy-schema",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Machine-readable schema of every standard Caddyfile directive, matcher, global option and placeholder, generated from the Caddy docs.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema.json": "./src/generated/schema.json",
+    "./types": "./src/types.ts"
+  },
+  "files": [
+    "src",
+    "docs-source.json"
+  ],
+  "scripts": {
+    "generate": "tsx scripts/generate.ts",
+    "generate:check": "tsx scripts/generate.ts --check",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.tools.json"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  },
+  "license": "MIT"
+}

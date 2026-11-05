@@ -1,0 +1,215 @@
+{
+        servers {
+                trusted_proxies static 10.0.0.103
+        }
+        admin 0.0.0.0:2019
+        email admin@example.com
+}
+
+(tinyauth_forwarder) {
+        forward_auth 10.0.0.103:8888 {
+                uri /api/auth/caddy
+                copy_headers Remote-User Remote-Name Remote-Email Remote-Groups
+        }
+}
+
+asuka.example.club {
+        reverse_proxy 10.0.0.106:8888
+}
+
+asuka.example.com {
+  redir https://asuka.example.club{uri} permanent
+}
+
+auth.example.com {
+        reverse_proxy 10.0.0.101:8888
+}
+
+me.example.com {
+        reverse_proxy 10.0.0.103:11081
+}
+
+cow.example.org {
+        redir https://github.com/example-org
+}
+
+d.in.example.net {
+  reverse_proxy 10.0.0.101:11003
+  rewrite * ?direct=true
+}
+
+downloads.example.com {
+  redir https://safe.example.com/downloads{uri} permanent
+}
+
+fishnet.example.com {
+        reverse_proxy 10.0.0.103:7777
+}
+
+g.in.example.net {
+  reverse_proxy 10.0.0.101:11003
+  rewrite * ?gallery=true
+}
+
+grimoire.example.com {
+        handle {
+                reverse_proxy 10.0.0.103:5173
+        }
+        handle_errors {
+                try_files {path} /usr/share/caddy/invalid_site/index.html
+                file_server
+        }
+}
+
+example.com, www.example.com {
+      @protected path /edit* /preview* /admin*
+      @project path /~user/project/me /~user/project/raw /~user/project/img/*
+
+      redir /~user/project/archive /~user/project/archive/ 308
+
+      handle /~user/project/archive/* {
+        route {
+          forward_auth 10.0.0.101:8888 {
+            uri /api/auth/caddy
+            copy_headers Remote-User Remote-Name Remote-Email Remote-Groups
+          }
+          uri strip_prefix /~user/project/archive
+          reverse_proxy 10.0.0.103:8788
+        }
+      }
+
+      handle @project {
+        uri strip_prefix /~user/project
+        reverse_proxy 10.0.0.103:8787
+      }
+
+      handle {
+          forward_auth @protected 10.0.0.101:8888 {
+              uri /api/auth/caddy
+              copy_headers Remote-User Remote-Name Remote-Email Remote-Groups
+        }
+        reverse_proxy 10.0.0.103:3000
+      }
+}
+
+in.example.net {
+  reverse_proxy 10.0.0.101:11003
+}
+
+lldap.auth.example.com {
+        reverse_proxy 10.0.0.101:8890
+}
+
+manga.example.com {
+  reverse_proxy 10.0.0.102:4567
+}
+
+map.mc.example.com {
+        reverse_proxy 10.0.0.100:8100
+}
+
+mc.example.com {
+        reverse_proxy 10.0.0.100:8080
+}
+
+agency.example, www.agency.example {
+        reverse_proxy 10.0.0.103:9999
+}
+
+old.mc.example.com {
+        reverse_proxy 10.0.0.111:8080
+}
+
+prom.safe.example.com {
+        handle {
+                reverse_proxy 10.0.0.102:9090
+        }
+        handle_errors {
+                try_files {path} /usr/share/caddy/invalid_site/index.html
+                file_server
+        }
+}
+
+prox.example.com {
+    reverse_proxy * {
+        to https://10.0.0.1:8006
+
+        lb_policy ip_hash
+        health_uri /
+        health_interval 10s
+        health_timeout 2s
+
+        transport http {
+            tls_insecure_skip_verify
+            tls_server_name prox.example.com
+        }
+
+        # Critical for noVNC and terminal consoles
+        header_up Upgrade {http.request.header.Upgrade}
+        header_up Connection {http.request.header.Connection}
+    }
+}   
+
+px.example.net {
+  reverse_proxy 10.0.0.101:11002
+}
+
+router.example.com {
+        reverse_proxy 10.0.0.5:80
+}
+
+rp.example.org {
+        reverse_proxy 10.0.0.100:30080
+}
+
+safe.example.com {
+    #import tinyauth_forwarder
+
+    handle /u/* {
+        # Capture username: first segment after /u/
+        @username path_regexp ^/u/([^/]+)(.*)$
+
+        # Specific: /u/<username>/p → /user/<username>/priv
+        redir /u/{path.1}/p /users/{path.1}/priv 302
+
+        # Specific: /u/<username>/p/* → /user/<username>/priv/*
+        @pstuff path_regexp ^/u/([^/]+)/p/(.*)$
+        redir @pstuff /users/{re.pstuff.1}/priv/{re.pstuff.2} 302
+
+        # Generic catch-all: all other /u/<username>/* → /user/<username>/*
+        redir @username /users/{re.username.1}{re.username.2} 302
+    }
+
+    # Reverse Proxy for all other requests to 10.0.0.102:3923
+    reverse_proxy 10.0.0.102:3923
+    #reverse_proxy 10.0.0.102:3923 {
+    #}
+}
+
+search.example.com {
+        handle {
+                reverse_proxy 10.0.0.103:8080
+        }
+        handle_errors {
+                try_files {path} /usr/share/caddy/invalid_site/index.html
+                file_server
+        }
+}
+
+stats.example.com {
+        handle {
+                reverse_proxy 10.0.0.102:3000
+        }
+        handle_errors {
+                try_files {path} /usr/share/caddy/invalid_site/index.html
+                file_server
+        }
+}
+
+tw.example.net {
+  reverse_proxy 10.0.0.101:11001
+}
+
+yt.example.net {
+  reverse_proxy 10.0.0.101:11004
+}

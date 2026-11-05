@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Caddy UI image. W0 baseline: builds the SvelteKit app and runs it on CADDY_UI_PORT (default 3001).
-# The deploy workstream (W9) owns publishing, tags and the updater; see PLAN.md §5.
+# W9 owns publishing (.github/workflows/publish.yml), tags and the updater (deploy/updater).
 
 FROM node:22-alpine AS build
 WORKDIR /src
@@ -14,6 +14,12 @@ RUN pnpm --filter @caddy-ui/ui build \
 	&& cp -r apps/ui/build apps/ui/server.js /out/
 
 FROM node:22-alpine
+ARG CADDY_UI_VERSION=dev
+LABEL org.opencontainers.image.source="https://github.com/Kex1016/caddy-ui" \
+	org.opencontainers.image.title="caddy-ui" \
+	org.opencontainers.image.description="Web UI for editing and watching a Caddy server" \
+	org.opencontainers.image.version="${CADDY_UI_VERSION}"
+ENV CADDY_UI_VERSION=${CADDY_UI_VERSION}
 WORKDIR /app
 ENV NODE_ENV=production \
 	CADDY_UI_PORT=3001
