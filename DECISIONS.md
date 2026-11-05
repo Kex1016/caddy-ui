@@ -195,7 +195,7 @@ Format: date · workstream · decision · why · how to reverse.
   `PRAGMA user_version`); W3 owns migration 1 (`revisions`, `settings`), W4 appends migration 2 · one file, one
   migration history · none.
 - 2026-11-05 · W4 · Additive changes to the §3.2 tables: a new `sites(id, addresses_json, first_seen, last_seen,
-  removed_at)` table, and `state_changes` gains `target` (`''` is the site itself, otherwise an upstream
+removed_at)` table, and `state_changes` gains `target` (`''` is the site itself, otherwise an upstream
   address) · "a down upstream shows as down" needs a per-upstream "since", and stats for a removed site still
   need its addresses · drop the column and table in a later migration if unused. Existing columns unchanged.
 - 2026-11-05 · W4 · Until `packages/caddyfile` (W1) merges, the collector finds site blocks and upstreams with
@@ -240,3 +240,31 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-05 · W4 · CI gains a `collector` job that runs `caddy:2` and the image in one Docker network with
   `deploy/ci/Caddyfile.collector` (metrics `per_host`, JSON access log) and checks the overview, sites and
   stats APIs · the definition of done is about a real Caddy, which only CI has · none.
+- 2026-11-05 · W8 · Block edits (add, duplicate, delete, disable, reorder) are text splices in
+  `apps/ui/src/lib/server/sites/blocks.ts`, built on a small brace/quote/heredoc scanner like W4's, not on W1's
+  CST · W1 has not merged and W8 must not wait for it; the splices leave every byte outside the block alone, and
+  after each edit the set of site ids is checked against what the edit should produce · when W1 merges,
+  reimplement `scanBlocks` on its CST with the same `Block` output; the tests stay.
+- 2026-11-05 · W8 · Disable comments the block out under a marker line, `# caddy-ui:disabled lines=N`, then N
+  lines each prefixed `# `; enable strips exactly that. Caddy and the W4 scanner see a comment, and enable
+  restores the original bytes, including blank lines, heredocs and CRLF · a block cannot be "disabled" any
+  other way in a Caddyfile · a hand-edited marker whose count no longer matches is treated as a plain comment.
+- 2026-11-05 · W8 · A block carries the comment lines directly above it (no blank line between) when it is
+  deleted, disabled or moved. Duplicate copies the block but not those comments · a "# Jellyfin" note above a
+  site is almost always about that site · a comment separated by a blank line is left where it is.
+- 2026-11-05 · W8 · Reorder swaps a site with its neighbour in the site list; snippets, the global block and
+  all text between blocks stay in place. It is off while a search or status filter is active · Caddy does not
+  care about site order, so this is only for the person reading the file · none.
+- 2026-11-05 · W8 · The Sites page has its own starters (blank, reverse proxy, static files, redirect) for "Add
+  site", because W5's recipe picker does not exist yet · W5 should replace the starter select with its recipe
+  picker, keeping the `add` form action · the list's edit link is `/editor?site=<id>&line=<line>`, which W5/W6
+  should honour; the Globals and Snippets cards link to `/globals` and `/globals#snippets`.
+- 2026-11-05 · W8 · Edits are `POST /sites?/add|duplicate|delete|toggle|move` form actions, not new `/api`
+  routes, so the §3.2 contracts are unchanged. Each reads the file, edits it, and calls the config service's
+  `apply` with the `baseHash` the page was loaded with, so an edit made elsewhere gives the service's 409
+  instead of being overwritten · the page then tells the person to reload.
+- 2026-11-05 · W8 · Brace-less single-site Caddyfiles (a site without `{ }`) are not editable from the list;
+  the page says so and the Editor remains · they cannot be moved or duplicated safely without a real parser ·
+  lift once W1 is wired in.
+- 2026-11-05 · W8 · Added `Dialog` (native `<dialog>`) to `$lib/design/components` · Fishnet's ported set had no
+  modal and three flows need one · W5 can reuse it.
