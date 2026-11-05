@@ -1,7 +1,7 @@
 # Migrating from `zackwag/caddy-ui-frontend` and `-backend`
 
-> **Draft** from [PLAN.md §2](../PLAN.md) and [DECISIONS.md](../DECISIONS.md). The final
-> compose snippet comes from `deploy/compose.example.yml` (W9).
+> The compose snippet comes from [`deploy/compose.example.yml`](../deploy/compose.example.yml).
+> Updater details: [`deploy/updater/README.md`](../deploy/updater/README.md).
 
 The goal is a delete and a rename, not a rewrite: one `caddy-ui` service replaces both old
 services and keeps the same volumes and most env names.
@@ -29,6 +29,14 @@ services and keeps the same volumes and most env names.
 6. `docker compose up -d`. Open port 9876 and sign in.
 7. Check the first screen: it should say the file matches the running config. If your
    proxy referenced port 9877, point it at 9876 instead.
+
+## Optional: automatic updates
+
+The `caddy-ui-updater` service in the example checks for a new image every
+`CADDY_UI_UPDATE_INTERVAL` (default `1h`) and redeploys only `caddy-ui`, rolling back if
+the new container is not healthy. It needs the Docker socket and your compose directory
+mounted at the same absolute path (`CADDY_UI_COMPOSE_DIR`). Leave the service out if you
+do not want that, or use Watchtower instead.
 
 ## What does not carry over
 
