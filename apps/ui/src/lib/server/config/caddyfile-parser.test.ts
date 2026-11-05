@@ -12,6 +12,10 @@ describe('caddyfile parser seam', () => {
 		expect((ok.cst as { blocks: unknown[] }).blocks).toHaveLength(1);
 		const bad = parser!.parse('example.com {\n\trespond "oops\n');
 		expect(bad.diagnostics[0]).toMatchObject({ source: 'parser', severity: 'error', line: 2, column: 10 });
+		const schemaWarn = parser!.parse('example.com {\n\tredir https://a.example permanently\n}\n');
+		expect(schemaWarn.diagnostics).toEqual([
+			expect.objectContaining({ source: 'schema', severity: 'warning', line: 2, directive: 'redir' })
+		]);
 		expect(parser!.format('a.com   {\n    respond ok\n}')).toBe('a.com {\n\trespond ok\n}\n');
 		setParser(null);
 	});

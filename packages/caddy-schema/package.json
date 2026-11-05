@@ -7,7 +7,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema.json": "./src/generated/schema.json",
-    "./types": "./src/types.ts"
+    "./types": "./src/types.ts",
+    "./validate": "./src/validate.ts",
+    "./grammars": "./src/grammars.ts"
   },
   "files": [
     "src",
