@@ -122,3 +122,33 @@ Format: date · workstream · decision · why · how to reverse.
   drop arm64 from the `platforms` line if builds get slow.
 - 2026-11-05 · W9 · PUID/PGID switch not added · the root default matches the old backend
   and works with root-owned bind mounts; revisit if David asks · none.
+- 2026-11-05 · W2 · The schema is generated from a pinned commit of `caddyserver/website`
+  (`packages/caddy-schema/docs-source.json`) and the output `src/generated/schema.json` is committed. Tests fetch
+  the pinned docs at test time; a weekly workflow (`caddy-docs-drift.yml`) checks coverage against the docs'
+  `master` · PR CI stays reproducible while new Caddy directives still surface within a week · move the pin
+  with `CADDY_DOCS_REF=master pnpm --filter @caddy-ui/caddy-schema generate -- --pin`.
+- 2026-11-05 · W2 · Additive extensions to the §3.2 schema contract, all optional: on `DirectiveSchema`
+  `syntax`, `forms`, `variants` (module picked by the first argument: `transport http`, `lb_policy cookie`,
+  `issuer acme`, `uri strip_prefix` …), `freeformBody`, `rows`, `allowsResponseMatchers`, `onlyIn`,
+  `experimental`, `block`; on `ArgSchema` `literals` and `prefixes`; on `MatcherSchema` `summary`, `syntax`,
+  `examples`, `merges`, `subdirectives`, `forms`. `category` gains `'global'` (the contract already implied it
+  for global options) and `order` is `-1` for directives outside Caddy's handler order · W5 needs module
+  variants and free-form rows to build forms for `reverse_proxy`, `tls`, `log` and `header`; nothing in the
+  contract changed shape · drop the extension fields; consumers of the contract fields are unaffected.
+- 2026-11-05 · W2 · Matchers: the schema has the 17 standard request matchers in `matchers.md` plus the three
+  token forms (`*`, `/path`, `@name`) in `matcherTokenForms` and the two response matchers; PLAN.md's "19" was
+  a miscount · the docs are the source of truth · none.
+- 2026-11-05 · W2 · Schema validation (`validateBlocks`, `validateSiteBody`, …) lives in `caddy-schema` and
+  takes a minimal `{ name, args, body, line }` node shape instead of W1's CST, so W2 does not depend on W1; W5
+  and W6 map CST nodes onto it in a few lines. Unknown directives and global options are warnings (plugins);
+  values containing placeholders or `{$ENV}` always pass · `/adapt` stays the final word, this is the instant
+  in-editor check · move it into the editor packages if it grows editor-specific.
+- 2026-11-05 · W2 · `php_fastcgi` and `forward_auth` accept every `reverse_proxy` subdirective (both are
+  `reverse_proxy` with presets; the docs examples use `header_up` inside `forward_auth`) · otherwise valid
+  configs would be flagged · none.
+- 2026-11-05 · W2 · The W2 test fixture of David's Caddyfile anonymises hostnames too (`*.example.com`,
+  `example.net`, …), not only the secret line, and replaces the email and the personal path segment ·
+  AUTOPILOT forbids private hostnames beyond PLAN.md; IPs stay `10.0.0.x` as planned · W1 owns the
+  round-trip fixture and can make its own call.
+- 2026-11-05 · W2 · `src/generated/` is excluded from prettier · the generator owns its formatting so the
+  "re-run produces no diff" check is byte-exact · none.
