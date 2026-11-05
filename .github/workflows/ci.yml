@@ -51,3 +51,34 @@ jobs:
           done
           docker logs caddy-ui
           exit 1
+
+  caddy:
+    name: Config service against a real Caddy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start Caddy with its admin API on the runner
+        run: |
+          echo '{"admin":{"listen":"0.0.0.0:2019"}}' > "$RUNNER_TEMP/caddy.json"
+          docker run -d --name caddy -p 2019:2019 -v "$RUNNER_TEMP/caddy.json:/etc/caddy/caddy.json:ro" \
+            caddy:2.10 caddy run --config /etc/caddy/caddy.json
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:2019/config/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          docker logs caddy
+          exit 1
+      - name: W3 definition of done
+        env:
+          CADDY_TEST_ADMIN_URL: http://127.0.0.1:2019
+        run: pnpm --filter @caddy-ui/ui test:caddy
+      - name: Caddy logs
+        if: failure()
+        run: docker logs caddy

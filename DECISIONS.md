@@ -114,6 +114,45 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-05 · W0 · Failed sign-ins are limited to 10 per 15 minutes per client address. Behind Caddy all
   clients share Caddy's address unless adapter-node's `ADDRESS_HEADER=x-forwarded-for` is set · acceptable
   for a single-admin UI · documented for W10.
+- 2026-11-05 · W3 · One shared SQLite module, `apps/ui/src/lib/server/db` (`openDb`, `getDb`, `migrate`), with an
+  append-only `migrations` array tracked by `PRAGMA user_version`; W3 owns migration 1 (`revisions`, `settings`,
+  columns exactly as PLAN.md §3.2), W4 appends its tables as migration 2. Agreed with W4 before either merged ·
+  two threads were about to write two database modules · none.
+- 2026-11-05 · W3 · The Caddyfile parser (W1) and schema (W2) plug into the config service through
+  `$lib/server/config/parser.ts` (`setParser({ parse, format })`). Until W1 merges, `GET /api/caddyfile` returns
+  `cst: null` and `parser: "unavailable"`, every apply is still validated by Caddy's `/adapt`, and
+  `POST /api/caddyfile/format` answers 501 · W3 started before W1 and must not block on it · whoever merges after
+  W1 (W1 itself, W5 or W6) calls `setParser` in `hooks.server.ts`.
+- 2026-11-05 · W3 · Parser errors block an apply just like `/adapt` errors · a file the parser cannot read would
+  break the visual editor's round trip even if Caddy accepts it · drop the parser check in `ConfigService.validate`.
+- 2026-11-05 · W3 · Applying is a no-op (no write, no backup, no `/load`, no revision) when the text equals the file
+  and its adapted JSON equals Caddy's running config, compared with object keys sorted. A comment-only edit is
+  written and recorded but does not reload Caddy · PLAN.md §5.1: applying the file unchanged must change nothing ·
+  none.
+- 2026-11-05 · W3 · The Caddyfile is rewritten in place (truncate and write the same inode), never written to a temp
+  file and renamed. If `/load` fails after the write, the old text is written back · the file is normally a
+  single-file bind mount; a rename fails with EBUSY or detaches the file from the Caddy container · none.
+- 2026-11-05 · W3 · Before each write the old file is copied to `$CADDY_UI_DATA/backups/Caddyfile-<UTC stamp>.bak`
+  (mode 600, newest 50 kept); SQLite keeps the newest 200 revisions · backups survive a lost or corrupt database ·
+  change `keepBackups` / `keepRevisions` in `ConfigService`.
+- 2026-11-05 · W3 · Outside edits are found by polling the file's stat every 2 s (`fs.watchFile`), not inotify.
+  Each one is stored as a revision by "outside the UI" and flagged as `externalChange`; it is never applied to
+  Caddy automatically. `PUT /api/caddyfile` takes an optional `baseHash` (the `hash` from `GET`) and answers 409
+  when the file changed since, which is how the editors "ask before overwriting" · inotify does not cross bind
+  mounts reliably; applying someone's half-finished hand edit could take sites down · none.
+- 2026-11-05 · W3 · Additions to the §3.2 API (nothing removed or renamed): `GET /api/caddyfile/revisions/:id`
+  returns one revision with its text; response shapes for all W3 routes are typed in `$lib/api/config.ts`; error
+  bodies are `{ message, code, diagnostics }` with 400/409/422 (invalid)/502 (Caddy refused the load)/503 (admin
+  unreachable) · the History page and the editors need the text and a stable error shape · none.
+- 2026-11-05 · W3 · `GET /api/caddy/status` reads Caddy's start time and last reload from its own `/metrics`;
+  `version` is filled only if Caddy exports a `*_build_info` metric with a `version` label, and is otherwise null ·
+  the admin API has no version endpoint · W4's scraper may fill it another way.
+- 2026-11-05 · W3 · The History page (revision list, diff against the previous revision or the file on disk,
+  restore) ships with W3 · rollback is in W3's definition of done and no other workstream owns that page · none.
+- 2026-11-05 · W3 · CI gains a "Config service against a real Caddy" job: it runs `caddy:2.10` with only its admin
+  API exposed and runs `pnpm --filter @caddy-ui/ui test:caddy` (the §5.1 W3 checks) against it, using
+  `src/lib/server/config/fixtures/sample.Caddyfile`, a file shaped like David's with `.localhost` hosts · there is
+  no sanitised copy of David's file yet; W1's fixture can replace it · none.
 - 2026-11-05 · W9 · UI `Dockerfile` stays at the repo root (CI and the updater's git source
   build it there); W9 only adds OCI labels and the `CADDY_UI_VERSION` build arg · moving it
   would break W0's CI for no gain · move it and update `publish.yml`, `ci.yml`.

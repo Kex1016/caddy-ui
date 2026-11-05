@@ -1,5 +1,6 @@
 import { json, type Handle, type HandleServerError, type ServerInit } from '@sveltejs/kit';
 import { identify } from '$lib/server/auth';
+import { startConfigService } from '$lib/server/config';
 import { ConfigError } from '$lib/server/env';
 import { isApiPath, isPublicPath, sameOrigin } from '$lib/server/guard';
 import { getRuntime } from '$lib/server/runtime';
@@ -11,7 +12,7 @@ function seeOther(location: string): Response {
 }
 
 /** Read and validate the environment once at boot, so a bad variable stops the container with its name. */
-export const init: ServerInit = () => {
+export const init: ServerInit = async () => {
 	try {
 		const { auth } = getRuntime();
 		if (auth.mode === 'local-disabled') {
@@ -26,6 +27,7 @@ export const init: ServerInit = () => {
 		}
 		throw err;
 	}
+	await startConfigService();
 };
 
 export const handle: Handle = async ({ event, resolve }) => {

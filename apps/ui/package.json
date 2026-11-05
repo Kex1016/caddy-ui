@@ -11,6 +11,7 @@
     "sync": "svelte-kit sync",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
     "test": "vitest run",
+    "test:caddy": "vitest run --config vitest.caddy.config.ts",
     "gen:theme": "node scripts/gen-theme-system.mjs"
   },
   "devDependencies": {
@@ -18,11 +19,15 @@
     "@sveltejs/adapter-node": "5.5.8",
     "@sveltejs/kit": "2.70.4",
     "@sveltejs/vite-plugin-svelte": "6.2.4",
+    "@types/better-sqlite3": "9.6.0",
     "@types/node": "22.20.5",
     "svelte": "5.57.3",
     "svelte-check": "4.7.8",
     "typescript": "5.9.3",
     "vite": "7.3.7",
     "vitest": "3.2.7"
+  },
+  "dependencies": {
+    "better-sqlite3": "12.11.1"
   }
 }
