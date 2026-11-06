@@ -5,6 +5,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CaddyAdmin } from '../caddy/admin';
 import { configHash, processFacts } from '../caddy/inspect';
 import { openDb } from '../db';
+import { installCaddyfileParser } from './caddyfile-parser';
+import { getParser } from './parser';
 import { ApplyError, ConfigService } from './service';
 
 /**
@@ -108,5 +110,39 @@ describe('W3 definition of done, against real Caddy', () => {
 		expect((err as ApplyError).status).toBe(409);
 		await svc.apply(SAMPLE, { author: 'ci' });
 		expect((await svc.drift()).state).toBe('in_sync');
+	});
+
+	it('every save is written in caddy fmt style without changing what Caddy runs', async () => {
+		installCaddyfileParser();
+		const fmt = new ConfigService({
+			admin,
+			db: openDb(':memory:'),
+			caddyfilePath: file,
+			backupDir: join(dir, 'backups'),
+			parser: getParser
+		});
+		await fmt.init();
+		const configBefore = configHash(await admin.getConfig());
+		const reloadBefore = await lastReloadAt();
+		// Spaces for tabs, extra blank lines and trailing whitespace, as a hand edit might leave it.
+		const messy = SAMPLE.replace(/\t/g, '    ').replace('# Media\n', '\n\n\n# Media   \n');
+		await writeFile(file, messy);
+		await fmt.checkForExternalEdit();
+
+		const res = await fmt.apply(messy, { author: 'ci' });
+		expect(res).toMatchObject({ changed: true, written: true, loaded: false, formatted: true, text: SAMPLE });
+		expect(await readFile(file, 'utf8')).toBe(SAMPLE);
+		expect(configHash(await admin.getConfig())).toBe(configBefore);
+		expect(await lastReloadAt()).toBe(reloadBefore);
+
+		const again = await fmt.apply(SAMPLE, { author: 'ci' });
+		expect(again).toMatchObject({ changed: false, written: false, loaded: false });
+
+		const edited = messy.replace('reverse_proxy 10.0.0.20:8096', 'reverse_proxy 10.0.0.20:8097');
+		const res2 = await fmt.apply(edited, { author: 'ci' });
+		expect(res2).toMatchObject({ written: true, loaded: true, formatted: true });
+		expect(await readFile(file, 'utf8')).toBe(SAMPLE.replace('10.0.0.20:8096', '10.0.0.20:8097'));
+		await fmt.apply(SAMPLE, { author: 'ci' });
+		expect(configHash(await admin.getConfig())).toBe(configBefore);
 	});
 });

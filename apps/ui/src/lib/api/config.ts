@@ -56,6 +56,9 @@ export type ApplyResult = {
 	changed: boolean;
 	written: boolean;
 	loaded: boolean;
+	/** What is on disk now: the text as sent, or its `caddy fmt` form when `formatted` (every save is formatted). */
+	text: string;
+	formatted: boolean;
 	hash: string;
 	revision: RevisionSummary | null;
 	diagnostics: Diagnostic[];
