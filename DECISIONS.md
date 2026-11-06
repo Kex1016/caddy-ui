@@ -394,3 +394,30 @@ Format: date · workstream · decision · why · how to reverse.
   `ApplyResult` gains `text` (what is on disk now) and `formatted`, and the text editor takes `text` as its new
   base · a formatter bug must never change what Caddy runs · switch it off with the `formatOnSave: false` option
   in `lib/server/config/index.ts`.
+- 2026-11-06 · W5a · The visual editor treats the text as the document: every edit mutates W1's syntax tree,
+  prints it and parses the result again, so spans stay fresh and the outline always shows exactly what the text
+  says. Nodes are addressed by path (`block:index.index`), not by object identity, so a selection survives the
+  re-parse · one source of truth keeps Visual, Text and Split modes in step without a second model · W5b and
+  W11 can rely on `print(parse(text)) === text` for every edit that changes nothing.
+- 2026-11-06 · W5a · The inspector form API is declarative: a form is a list of fields, each with `get`/`set`
+  over the directive node (`lib/visual/forms/types.ts`), built with helpers (`arg`, `subText`, `flag`,
+  `subList`, `rows`, `group`, `variant`, `section`). Bespoke forms register by name; the schema-generated form
+  is the fallback and raw text the last resort. A form is testable without a DOM by reading every field and
+  writing the value back · W5b writes 29 forms against this API in parallel · adding a field kind means one
+  type, one helper and one input component.
+- 2026-11-06 · W5a · Recipes (`lib/visual/recipes.ts`) replace W8's Add-site starters. The same pure function
+  renders the block for the Sites page (server side, form post) and for the editor's Add block dialog, so
+  the two never drift. The recipes are the shapes in David's Caddyfile: reverse proxy, redirect, static, PHP,
+  protected by tinyauth (inline or via a snippet), proxy with a custom error page, snippet, blank · one list
+  to extend · `starterBlock` and `STARTERS` are gone from `lib/server/sites/blocks.ts`.
+- 2026-11-06 · W5a · The Globals page is the visual editor scoped to the non-site blocks (global options,
+  snippets, named routes); its text mode shows the whole file. The editor and Globals share one workbench
+  component with the Visual | Text switch, an optional Split view, review, apply, drafts and conflict handling ·
+  one place to fix save and conflict behaviour · `?mode=text` opens text mode; `?site=`, `?at=`, `?line=` and
+  `?block=global|snippets` select the matching node.
+- 2026-11-06 · W5a · The review diff compares the file on disk with the formatted text (what the save will
+  write), not with the text as typed. The first save of a hand-indented file therefore shows the whole file
+  re-indented; the panel says why · the diff must show what lands on disk · none needed.
+- 2026-11-06 · W5a · Placeholder suggestions for regexp captures use the matcher's name when the regexp has
+  none (`@user path_regexp …` offers `{re.user.1}`), as Caddy ≥ 2.8 does; `{re.1}` is offered too for older
+  servers · David's Caddyfile relies on this form · the catalogue entries stay for files without captures.

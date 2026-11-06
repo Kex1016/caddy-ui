@@ -56,13 +56,36 @@ describe('sites actions', () => {
 	it('add writes the block, loads it into Caddy and records a revision', async () => {
 		const r = await run('add', {
 			addresses: 'c.example.com',
-			starter: 'reverse_proxy',
-			value: '10.0.0.9:80'
+			recipe: 'reverse_proxy',
+			f_upstream: '10.0.0.9:80'
 		});
 		expect(r.ok).toBe(true);
 		expect(await disk()).toBe(TEXT + '\nc.example.com {\n\treverse_proxy 10.0.0.9:80\n}\n');
 		expect(admin.loads).toHaveLength(1);
 		expect(svc.listRevisions()[0]?.note).toBe('Added site c.example.com');
+	});
+
+	it('add renders recipe fields, including toggles and selects', async () => {
+		const r = await run('add', {
+			addresses: 'files.example.com',
+			recipe: 'static',
+			f_root: '/srv/www',
+			f_browse: 'on',
+			f_encode: 'on'
+		});
+		expect(r.ok).toBe(true);
+		expect(await disk()).toContain(
+			'files.example.com {\n\troot * /srv/www\n\tencode zstd gzip\n\tfile_server browse\n}\n'
+		);
+		const redirect = await run('add', {
+			addresses: 'old.example.com',
+			recipe: 'redirect',
+			f_target: 'https://new.example.com',
+			f_keepPath: 'on',
+			f_code: 'temporary'
+		});
+		expect(redirect.ok).toBe(true);
+		expect(await disk()).toContain('old.example.com {\n\tredir https://new.example.com{uri}\n}\n');
 	});
 
 	it('duplicate, disable, enable, move and delete each round-trip through the service', async () => {
@@ -98,9 +121,12 @@ describe('sites actions', () => {
 	});
 
 	it('rejects bad input with 400 and a duplicate with 409', async () => {
-		expect((await run('add', { addresses: '', starter: 'blank' })).status).toBe(400);
-		expect((await run('add', { addresses: 'a.example.com', starter: 'blank' })).status).toBe(409);
-		expect((await run('add', { addresses: 'z.com', starter: 'nope' })).status).toBe(400);
+		expect((await run('add', { addresses: '', recipe: 'blank' })).status).toBe(400);
+		expect((await run('add', { addresses: 'a.example.com', recipe: 'blank' })).status).toBe(409);
+		expect((await run('add', { addresses: 'z.com', recipe: 'nope' })).status).toBe(400);
+		const missing = await run('add', { addresses: 'z.com', recipe: 'reverse_proxy', f_upstream: '' });
+		expect(missing.status).toBe(400);
+		expect((missing.data as { field?: string } | undefined)?.field).toBe('upstream');
 		expect((await run('delete', { id: 'unknown' })).status).toBe(404);
 		expect(await disk()).toBe(TEXT);
 	});
