@@ -421,3 +421,28 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-06 · W5a · Placeholder suggestions for regexp captures use the matcher's name when the regexp has
   none (`@user path_regexp …` offers `{re.user.1}`), as Caddy ≥ 2.8 does; `{re.1}` is offered too for older
   servers · David's Caddyfile relies on this form · the catalogue entries stay for files without captures.
+- 2026-11-06 · W5b · Every directive and matcher module in the schema now has a bespoke form: the 29 directives
+  W5a left (one file per category under `lib/visual/forms/directives/`: `logging`, `headers`, `responses`,
+  `static`, `tls`) and the 13 matcher modules (`forms/matchers/more.ts`). The schema has 17 matcher modules;
+  with the matcher slot's named, path-token and wildcard forms that covers the 19+ matcher forms PLAN.md
+  counts. A test fails if the schema gains a directive or matcher without a bespoke form · PLAN.md §5.1 W5b ·
+  the generic schema form stays as the fallback for plugin directives.
+- 2026-11-06 · W5b · Two additive form API extensions (not §3.2 contracts): `RowsField.columnsFor(node)` for
+  columns that depend on the node (`map` has one output column per destination), and
+  `FormSpec.claimsAllLines` for forms whose rows field models every body line (`header`, `map`, `vars`,
+  `basic_auth`, `push`, and W5a's `uri query { … }`), so those lines are no longer listed twice under "Other
+  lines". Shared helpers for W5b's shapes live in `forms/directives/helpers.ts` (`subArg`, `subArgList`,
+  `lineRows`, `optionalNameFields`) · the existing helpers could not edit one argument of a multi-argument
+  line or rows that exclude some names · none.
+- 2026-11-06 · W5b · Rows fields write a row to the file only once every required column has a value; until
+  then the row lives in the inspector. "Add" used to write a line with no arguments (`header_up` alone, which
+  Caddy rejects) or nothing at all for free-form bodies, and clearing a cell to retype it deleted the line and
+  the comment above it. The rows grid also sizes to its real column count · applies to W5a's rows too ·
+  `components/fields/RowsInput.svelte`.
+- 2026-11-06 · W5b · Modelling choices: `respond` and `error` read a lone three-digit argument as the status
+  and anything else as the body or message, as Caddy does; `tls` shows one "Certificate" choice (automatic,
+  with an email, internal CA, files, force_automate) derived from its arguments; setting a gzip or zstd level
+  moves that format from the `encode` line into its block, where a level can go; `php_fastcgi` reuses the
+  `reverse_proxy` sections except Transport, which php_fastcgi sets itself; `query` matcher pairs are
+  key/value rows and `query ""` is a toggle; `log_append`'s `<` prefix is a toggle · each mirrors the
+  directive's syntax without making the user learn it · change the form file of that category.

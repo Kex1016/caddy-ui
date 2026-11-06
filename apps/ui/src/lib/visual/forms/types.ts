@@ -99,6 +99,8 @@ export type Column = {
 export type RowsField = Base & {
 	kind: 'rows';
 	columns: readonly Column[];
+	/** Columns that depend on the node (`map` has one output column per destination); `columns` otherwise. */
+	columnsFor?: (node: Directive) => readonly Column[];
 	addLabel?: string;
 	get(node: Directive): string[][];
 	set(node: Directive, rows: string[][]): void;
@@ -183,6 +185,11 @@ export type FormSpec = {
 	 * found automatically: every directive name a field claims is listed in `claims`.
 	 */
 	claims?: readonly string[];
+	/**
+	 * Every directive line of the body is modelled by a rows field (free-form bodies such as `basic_auth`
+	 * users or `header` operations), so none of them is an "other line". Only raw lines are left over.
+	 */
+	claimsAllLines?: boolean | ((node: Directive) => boolean);
 	/** A short one-line description for the tree, when the default (arguments joined) is not helpful. */
 	describe?: (node: Directive) => string;
 };
@@ -190,5 +197,7 @@ export type FormSpec = {
 /** Which body lines of `node` no field of `spec` models. */
 export function unclaimedLines(spec: FormSpec, node: Directive): Node[] {
 	const claimed = new Set(spec.claims ?? []);
-	return (node.body ?? []).filter((n) => !(n.kind === 'directive' && claimed.has(n.name.text)));
+	const all =
+		typeof spec.claimsAllLines === 'function' ? spec.claimsAllLines(node) : spec.claimsAllLines === true;
+	return (node.body ?? []).filter((n) => !(n.kind === 'directive' && (all || claimed.has(n.name.text))));
 }
