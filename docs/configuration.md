@@ -1,10 +1,8 @@
 # Configuration
 
-> **Draft.** The variable names and defaults below are the contract from
-> [PLAN.md §3.2](../PLAN.md). If a name changes, the change is logged in
-> [DECISIONS.md](../DECISIONS.md) and this page is updated in the final pass.
-
-All configuration is by environment variables. The UI never logs their values.
+All configuration is by environment variables, read once at start. A bad value stops the UI
+with a message naming the variable. The UI never logs their values; the About page shows
+secrets only as set or unset.
 
 ## Variables
 
@@ -19,34 +17,47 @@ All configuration is by environment variables. The UI never logs their values.
 | `CADDY_UI_USER`, `CADDY_UI_PASSWORD` | unset | Local login; both unset disables local auth |
 | `CADDY_UI_AUTH_MODE` | `local` | `local`, `forward` or `none` |
 | `CADDY_UI_SESSION_SECRET` | random at boot | Cookie signing; set it to keep sessions across restarts |
-| `CADDY_UI_PROBE_INTERVAL` | `30s` | Site and upstream probes |
-| `CADDY_UI_SCRAPE_INTERVAL` | `15s` | Caddy `/metrics` scrape |
-| `CADDY_UI_RETENTION_DAYS` | `90` | Raw sample retention; minute rollups are kept |
-| `CADDY_UI_PUBLIC_URL` | unset | Used in links and for the probe's own address |
-| `CADDY_UI_UPDATE_INTERVAL` | `1h` | Updater poll period |
-| `CADDY_UI_UPDATE_WEBHOOK_PORT` | unset | Updater listens for a GitHub push webhook when set |
+| `CADDY_UI_PROBE_INTERVAL` | `30s` | Site and upstream probes (minimum 1s) |
+| `CADDY_UI_SCRAPE_INTERVAL` | `15s` | Caddy `/metrics` scrape (minimum 1s) |
+| `CADDY_UI_RETENTION_DAYS` | `90` | Days of probe results and metric samples kept |
+| `CADDY_UI_PUBLIC_URL` | unset | Used in links |
+| `CADDY_UI_UPDATE_INTERVAL` | `1h` | Updater poll period (minimum 1m in the UI; 30s in the sidecar) |
+| `CADDY_UI_UPDATE_WEBHOOK_PORT` | unset | Updater listens for a push webhook when set |
 | `CADDY_UI_UPDATE_SOURCE` | `ghcr` | `ghcr` (pull image) or `git` (clone and build) |
-| `TZ` | `UTC` | Display timezone |
+| `TZ` | `UTC` | Display timezone (an IANA name such as `Europe/Budapest`) |
 
-Durations use Go style: `30s`, `5m`, `1h`.
+Durations use `30s`, `5m`, `1h` style. The `CADDY_UI_UPDATE_*` variables are read by the
+updater sidecar; the full list is in [`deploy/updater/README.md`](../deploy/updater/README.md).
+
+The example compose file also reads `CADDY_UI_TAG`, `CADDY_UI_HOST_PORT` and
+`CADDY_UI_COMPOSE_DIR`; those are compose variables, not settings of the app.
 
 ## Authentication
 
-- **`local`**: username and password from `CADDY_UI_USER` and `CADDY_UI_PASSWORD`. Set
-  `CADDY_UI_SESSION_SECRET` so sessions survive restarts.
+- **`local`** (default): username and password from `CADDY_UI_USER` and `CADDY_UI_PASSWORD`.
+  If only one of the two is set, the UI refuses everyone rather than run open. Sessions are
+  signed cookies lasting 7 days; set `CADDY_UI_SESSION_SECRET` so they survive restarts.
+  Changing the user or the secret signs everyone out. Failed sign-ins are limited to 10 per
+  15 minutes per client address.
 - **`forward`**: trust the `Remote-User` header set by a forward-auth provider such as
-  tinyauth. Only use this when the UI is reachable solely through that proxy.
-- **`none`**: no login. Only for a trusted network.
+  tinyauth. Anyone who can reach the port directly can send that header, so do not publish
+  the port on the host; reach the UI only through Caddy with `forward_auth`.
+- **`none`**: no login. Only for a network you trust.
 
 `GET /api/health` is always unauthenticated so health checks work.
 
 ## Volumes
 
 See the mount table in [install.md](install.md#2-add-the-service). The UI writes only to the
-Caddyfile and to `CADDY_UI_DATA`. Every apply stores a backup revision first (last 200
-kept).
+Caddyfile and to `CADDY_UI_DATA`. Before every write the old file is copied to
+`CADDY_UI_DATA/backups/`, and each applied version is kept as a revision (see History).
 
-## Updater
+## Behaviour worth knowing
 
-The updater is a separate sidecar, not part of the UI container. Its variables are the
-`CADDY_UI_UPDATE_*` ones above. (Draft: exact service definition arrives with W9.)
+- **Saving normalises the file** to `caddy fmt` style: comments are kept, indentation and
+  spacing are rewritten. If the normalised text would change the config Caddy builds, the UI
+  saves your text as typed and warns.
+- **Outside edits** are noticed within a couple of seconds (the file is polled). The UI asks
+  before overwriting.
+- **Caddy 2.11 and later** enforce the admin origin check. The UI talks to the admin API in a
+  way that passes it; no change to `admin` is needed beyond a reachable address.
