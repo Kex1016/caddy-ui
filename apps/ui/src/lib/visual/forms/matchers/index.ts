@@ -1,8 +1,8 @@
 /**
  * Bespoke forms for the matcher modules David's Caddyfile uses (`path`, `path_regexp`) and the two the
  * builder needs special handling for (`expression`, `not`). The named, path-token and wildcard forms are
- * the directive's matcher slot, handled by `MatcherSlot.svelte`. The other 13 modules get generic
- * schema forms until W5b replaces them.
+ * the directive's matcher slot, handled by `MatcherSlot.svelte`. W5b's forms for the other 13 modules
+ * are in `more.ts`.
  */
 import type { SchemaBundle } from '@caddy-ui/caddy-schema/types';
 import type { Directive } from '@caddy-ui/caddyfile';
@@ -10,6 +10,7 @@ import { argList, note } from '../fields';
 import { getArg, replaceArgs as setArgs } from '../node';
 import { registerMatcherForm } from '../registry';
 import type { FormSpec, TextField } from '../types';
+import './more';
 
 const matcherDocs = (schema: SchemaBundle | null, name: string) =>
 	schema?.matchers[name]?.docsUrl ??

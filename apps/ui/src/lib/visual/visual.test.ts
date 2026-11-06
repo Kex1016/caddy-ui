@@ -13,15 +13,15 @@ import {
 	type NodePath
 } from './document';
 import { flattenTree } from './tree';
+import { roundTrip } from './testing';
 import {
 	bespokeDirectiveNames,
 	bespokeMatcherNames,
 	formForDirective,
 	formForGlobalOption,
 	formForMatcher,
-	type FieldSpec,
-	type FormContext,
-	type FormSpec
+	genericForm,
+	type FieldSpec
 } from './forms';
 import { celOf, celOfSet, captureGroups, matcherPreview, readMatcherDef, writeMatcherDef } from './matcher';
 import { availablePlaceholders, placeholderContext } from './placeholders';
@@ -45,58 +45,8 @@ const sample = readFileSync(
 	'utf8'
 );
 
-const ctx: FormContext = {
-	matcherNames: [],
-	snippetNames: [],
-	placeholders: [],
-	inSnippet: false,
-	holdsDirectives: true
-};
-
 const site = (text: string, name: string) =>
 	parse(text).file.blocks.find((b): b is SiteBlock => b.kind === 'site' && b.addresses[0]?.text === name)!;
-
-/** Read every visible field and write the same value back; the text must not change. */
-function roundTrip(spec: FormSpec, node: Directive) {
-	const visit = (fields: readonly FieldSpec[], target: Directive) => {
-		for (const f of fields) {
-			if ('when' in f && f.when && !f.when(target, ctx)) continue;
-			switch (f.kind) {
-				case 'text':
-				case 'select':
-					f.set(target, f.get(target));
-					break;
-				case 'toggle':
-					f.set(target, f.get(target));
-					break;
-				case 'list':
-					f.set(target, f.get(target));
-					break;
-				case 'rows':
-					f.set(target, f.get(target));
-					break;
-				case 'group': {
-					const sub = f.get(target);
-					if (sub) visit(f.fields, sub);
-					break;
-				}
-				case 'variant': {
-					const cur = f.get(target);
-					if (cur) {
-						const sub = f.set(target, cur.value);
-						const opt = f.options.find((o) => o.value === cur.value);
-						if (sub && opt) visit(opt.fields, sub);
-					}
-					break;
-				}
-				case 'section':
-					visit(f.fields, target);
-					break;
-			}
-		}
-	};
-	visit(spec.fields, node);
-}
 
 const DAVIDS_DIRECTIVES = [
 	'reverse_proxy',
@@ -192,11 +142,11 @@ describe('tree', () => {
 describe('bespoke forms', () => {
 	it('exist for the 12 directives and the matchers David uses', () => {
 		for (const d of DAVIDS_DIRECTIVES) expect(formForDirective(schema, d).source, d).toBe('bespoke');
-		expect(bespokeDirectiveNames()).toEqual([...DAVIDS_DIRECTIVES].sort());
+		// W5b added the rest: every directive and matcher in the schema now has a bespoke form
+		expect(bespokeDirectiveNames()).toEqual(Object.keys(schema.directives).sort());
 		for (const m of ['path', 'path_regexp', 'expression', 'not'])
 			expect(formForMatcher(schema, m).source, m).toBe('bespoke');
-		expect(bespokeMatcherNames()).toEqual(['expression', 'not', 'path', 'path_regexp']);
-		expect(formForDirective(schema, 'respond').source).toBe('schema');
+		expect(bespokeMatcherNames()).toEqual(Object.keys(schema.matchers).sort());
 		expect(formForDirective(schema, 'my_plugin').source).toBe('unknown');
 		expect(formForGlobalOption(schema, 'servers').source).toBe('bespoke');
 		expect(formForGlobalOption(schema, 'debug').source).toBe('schema');
@@ -396,12 +346,12 @@ describe('bespoke forms', () => {
 	it('generic schema forms cover a directive without a bespoke form', () => {
 		const r = parse('a.com {\n\trespond "hello" 200\n\tencode zstd gzip {\n\t\tminimum_length 512\n\t}\n}\n');
 		const [respond, encode] = (r.file.blocks[0] as SiteBlock).body as [Directive, Directive];
-		roundTrip(formForDirective(schema, 'respond').spec, respond);
-		roundTrip(formForDirective(schema, 'encode').spec, encode);
+		roundTrip(genericForm(schema.directives.respond!), respond);
+		roundTrip(genericForm(schema.directives.encode!), encode);
 		expect(print(r.file)).toBe(
 			'a.com {\n\trespond "hello" 200\n\tencode zstd gzip {\n\t\tminimum_length 512\n\t}\n}\n'
 		);
-		const enc = formForDirective(schema, 'encode').spec;
+		const enc = genericForm(schema.directives.encode!);
 		const min = enc.fields.find((f) => f.id === 'minimum_length') as Extract<FieldSpec, { kind: 'text' }>;
 		expect(min.get(encode)).toBe('512');
 	});

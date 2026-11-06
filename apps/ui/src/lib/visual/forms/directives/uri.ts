@@ -120,7 +120,9 @@ export function uriForm(schema: SchemaBundle | null): FormSpec {
 		summary: 'Strip, replace or rewrite parts of the request URI.',
 		docsUrl: docsUrlOf(schema, 'uri'),
 		fields,
-		claims: []
+		claims: [],
+		// `uri query { … }`: every line is a query operation row
+		claimsAllLines: (n) => op(n) === 'query'
 	};
 }
 

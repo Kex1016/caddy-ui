@@ -8,41 +8,72 @@
 	let { field, node, ctx, commit }: Props = $props();
 
 	const rows = $derived(field.get(node));
+	const columns = $derived(field.columnsFor?.(node) ?? field.columns);
 	const id = `fld-${Math.random().toString(36).slice(2, 8)}`;
+
+	/**
+	 * Rows are written to the file only once every required column has a value, so "Add" shows an empty
+	 * row to fill in (instead of writing a line with no arguments), and clearing a cell to retype it does
+	 * not delete the line and the comments above it. Until then the row lives here.
+	 */
+	let drafts = $state<string[][]>([]);
+	let pending = $state<Record<number, string[]>>({});
+	const shown = $derived([...rows.map((row, i) => pending[i] ?? row), ...drafts]);
+	const ready = (row: readonly string[]) => columns.every((col, i) => col.optional || (row[i] ?? '') !== '');
 
 	function set(next: string[][]) {
 		field.set(node, next);
 		commit();
 	}
 	function cell(r: number, c: number, v: string) {
-		const next = rows.map((row) => [...row]);
-		while ((next[r] as string[]).length <= c) (next[r] as string[]).push('');
-		(next[r] as string[])[c] = v;
-		set(next);
+		const row = [...(shown[r] ?? [])];
+		while (row.length <= c) row.push('');
+		row[c] = v;
+		if (r < rows.length) {
+			if (!ready(row)) {
+				pending = { ...pending, [r]: row };
+				return;
+			}
+			pending = Object.fromEntries(Object.entries(pending).filter(([k]) => Number(k) !== r));
+			set(rows.map((x, i) => (i === r ? row : [...x])));
+			return;
+		}
+		const d = r - rows.length;
+		if (!ready(row)) {
+			drafts = drafts.map((x, i) => (i === d ? row : x));
+			return;
+		}
+		drafts = drafts.filter((_, i) => i !== d);
+		set([...rows.map((x) => [...x]), row]);
 	}
 	function add() {
-		set([...rows, field.columns.map(() => '')]);
+		drafts = [...drafts, columns.map(() => '')];
 	}
 	function remove(r: number) {
+		if (r >= rows.length) {
+			drafts = drafts.filter((_, i) => i !== r - rows.length);
+			return;
+		}
+		pending = {};
 		set(rows.filter((_, i) => i !== r));
 	}
 </script>
 
 <div class="rws">
 	<p class="t-ui rws__label" id="{id}-label">{field.label}</p>
-	{#if rows.length}
-		<div class="rws__table" role="table" aria-labelledby="{id}-label">
+	{#if shown.length}
+		<div class="rws__table" role="table" aria-labelledby="{id}-label" style="--cols: {columns.length}">
 			<div class="rws__head" role="row">
-				{#each field.columns as col (col.id)}
+				{#each columns as col (col.id)}
 					<span class="t-kicker rws__th" role="columnheader"
 						>{col.label}{#if col.optional}<span class="t-faint"> ?</span>{/if}</span
 					>
 				{/each}
 				<span class="rws__th" aria-hidden="true"></span>
 			</div>
-			{#each rows as row, r (r)}
+			{#each shown as row, r (r)}
 				<div class="rws__row" role="row">
-					{#each field.columns as col, c (col.id)}
+					{#each columns as col, c (col.id)}
 						{#if col.options}
 							<span class="fp-select rws__sel" role="cell">
 								<select
