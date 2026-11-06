@@ -6,7 +6,7 @@
 //   CADDY_BIN        a caddy binary this script starts itself (local runs).
 // Either way the script loads the e2e Caddyfile into it through the admin API, so Caddy never needs the file.
 import { spawn } from 'node:child_process';
-import { mkdirSync, openSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import { baseCaddyfile, paths, UI_PORT } from './paths.mjs';
 
@@ -54,7 +54,8 @@ async function waitFor(what, fn, ms = 30_000) {
 rmSync(paths.dir, { recursive: true, force: true });
 mkdirSync(paths.uiData, { recursive: true });
 mkdirSync(paths.caddyData, { recursive: true });
-const text = baseCaddyfile();
+// E2E_CADDYFILE swaps the starting file; screenshots/demo.mjs uses it. The tests always start from the base one.
+const text = process.env.E2E_CADDYFILE ? readFileSync(process.env.E2E_CADDYFILE, 'utf8') : baseCaddyfile();
 writeFileSync(paths.caddyfile, text);
 writeFileSync(paths.accessLog, '');
 

@@ -26,6 +26,53 @@ It replaces `zackwag/caddy-ui-frontend` and `zackwag/caddy-ui-backend` with a si
 - **Updater**: an optional sidecar that redeploys the UI when a new image is published.
 - Built on the Fishnet design system, with a teal-green accent.
 
+## Screenshots
+
+The screenshots follow your GitHub theme (light or dark). They show the anonymised sample Caddyfile with
+made-up traffic; see [docs/testing.md](docs/testing.md#screenshots) for how they are taken.
+
+**Overview**: what needs attention first, then requests, errors and latency for the whole server.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/overview-dark.png">
+  <img alt="Overview page: three sites down, tiles for sites and upstreams up, requests, error rate, latency, Caddy uptime and certificate expiry, then traffic charts" src="docs/screenshots/overview.png">
+</picture>
+
+**Sites**: every site block with its status, how long it has been up, upstreams, 24 hour uptime and certificate.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/sites-dark.png">
+  <img alt="Sites page: a table of site blocks with status, up-for time, upstream count, 24 hour uptime and days left on the certificate, with actions to reorder, edit, duplicate, disable and delete" src="docs/screenshots/sites.png">
+</picture>
+
+**A site**: uptime, traffic and each upstream for one site block.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/site-dark.png">
+  <img alt="Site page for example.com: last probe, certificate and Caddyfile line, 24 hour tiles, an uptime strip and the four upstreams with their own strips" src="docs/screenshots/site.png">
+</picture>
+
+**Visual editor**: the Caddyfile as an outline, with a form for the selected directive.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/editor-visual-dark.png">
+  <img alt="Visual editor: the outline of the Caddyfile on the left, the forward_auth form on the right" src="docs/screenshots/editor-visual.png">
+</picture>
+
+**Split view**: outline, form and text side by side; an edit in one shows up in the others.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/editor-split-dark.png">
+  <img alt="Split view: the outline, the reverse_proxy form and the text editor side by side" src="docs/screenshots/editor-split.png">
+</picture>
+
+**Text editor**: CodeMirror with Caddyfile highlighting, lint and hover docs.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/editor-text-dark.png">
+  <img alt="Text editor showing the example.com site block with named matchers, handle and route blocks" src="docs/screenshots/editor-text.png">
+</picture>
+
 ## Quick start
 
 1. Make sure Caddy's global options include `admin 0.0.0.0:2019` and that Caddy and the UI

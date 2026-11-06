@@ -191,8 +191,8 @@
 							>
 							<td class="num">
 								{#if r.certDays === null}—{:else if r.certDays <= 14}
-									<Tag kind={r.certDays <= 0 ? 'error' : 'warning'}
-										>{r.certDays <= 0 ? 'expired' : `${r.certDays} d`}</Tag
+									<Tag kind={r.certDays < 0 ? 'error' : 'warning'}
+										>{r.certDays < 0 ? 'expired' : `${r.certDays} d`}</Tag
 									>
 								{:else}{r.certDays} d{/if}
 							</td>
