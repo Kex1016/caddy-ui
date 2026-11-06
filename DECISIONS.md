@@ -387,3 +387,10 @@ Format: date · workstream · decision · why · how to reverse.
   for plugin directives.
 - 2026-11-06 · Plan · "Disable a site" comments the block out · David confirmed the
   recommendation on the decision card · none needed.
+- 2026-11-06 · W3 · Format on save, following David's choice above. `ConfigService.apply` (and therefore restore)
+  validates the text as sent, so error lines match the editor, then writes `format()` of it. The formatted text is
+  adapted again and must give exactly the same JSON config. If it does not, or if the formatter throws, the text is
+  saved as sent with a warning. A save that only changes layout is written but does not reload Caddy.
+  `ApplyResult` gains `text` (what is on disk now) and `formatted`, and the text editor takes `text` as its new
+  base · a formatter bug must never change what Caddy runs · switch it off with the `formatOnSave: false` option
+  in `lib/server/config/index.ts`.
