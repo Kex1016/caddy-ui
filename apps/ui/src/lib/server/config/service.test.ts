@@ -2,6 +2,7 @@ import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { format } from '@caddy-ui/caddyfile';
 import { openDb } from '../db';
 import { sha256 } from '../caddy/inspect';
 import { FakeAdmin } from './fake-admin';
@@ -300,5 +301,91 @@ describe('reading', () => {
 		expect(ups).toEqual([
 			{ address: '10.0.0.20:8096', numRequests: 2, fails: 0, sites: [{ hosts: ['media.home.localhost'] }] }
 		]);
+	});
+});
+
+describe('format on save', () => {
+	const fmtParser =
+		(fmt: (t: string) => string = format) =>
+		() => ({
+			parse: () => ({ cst: null, diagnostics: [] }),
+			format: fmt
+		});
+	// Spaces for tabs, a run of blank lines and trailing whitespace: what a hand edit often looks like.
+	const messy = SAMPLE.replace(/\t/g, '    ').replace('# Media\n', '\n\n\n# Media   \n');
+
+	it('writes the caddy fmt form, returns it, and saving it again changes nothing', async () => {
+		const fmt = make({ parser: fmtParser() });
+		await fmt.init();
+		const res = await fmt.apply(messy, { author: 'david' });
+		expect(res).toMatchObject({
+			changed: false,
+			written: false,
+			loaded: false,
+			formatted: true,
+			text: SAMPLE
+		});
+		const edited = messy.replace('10.0.0.20:8096', '10.0.0.20:8097');
+		const res2 = await fmt.apply(edited, { author: 'david' });
+		expect(res2).toMatchObject({ changed: true, written: true, loaded: true, formatted: true });
+		expect(await readFile(file, 'utf8')).toBe(SAMPLE.replace('10.0.0.20:8096', '10.0.0.20:8097'));
+		expect(res2.hash).toBe(sha256(res2.text));
+		const again = await fmt.apply(res2.text, { author: 'david' });
+		expect(again).toMatchObject({ changed: false, written: false, loaded: false, formatted: false });
+	});
+
+	it('formats a file whose only difference is layout without reloading Caddy', async () => {
+		await writeFile(file, messy);
+		const fmt = make({ parser: fmtParser() });
+		await fmt.init();
+		const res = await fmt.apply(messy, { author: 'david' });
+		expect(res).toMatchObject({ changed: true, written: true, loaded: false, formatted: true });
+		expect(await readFile(file, 'utf8')).toBe(SAMPLE);
+		expect(admin.loads).toHaveLength(0);
+	});
+
+	it('reports errors on the lines of the text as sent, not the formatted text', async () => {
+		const fmt = make({ parser: fmtParser() });
+		const bad = '\n\n\n' + SAMPLE + 'bogus\n';
+		const err = await applyError(fmt.apply(bad, { author: 'david' }));
+		expect(err.body.diagnostics[0]).toMatchObject({ line: 91 });
+	});
+
+	it('saves the text as sent, with a warning, when formatting would change the config', async () => {
+		const fmt = make({ parser: fmtParser((t) => t.replace('10.0.0.20:8096', '10.0.0.20:1')) });
+		const next = SAMPLE + '# note\n';
+		const res = await fmt.apply(next, { author: 'david' });
+		expect(res).toMatchObject({ written: true, formatted: false, text: next });
+		expect(res.diagnostics).toContainEqual(
+			expect.objectContaining({ severity: 'warning', source: 'service' })
+		);
+		expect(await readFile(file, 'utf8')).toBe(next);
+	});
+
+	it('saves the text as sent when the formatter throws', async () => {
+		const fmt = make({
+			parser: fmtParser(() => {
+				throw new Error('boom');
+			})
+		});
+		const res = await fmt.apply(SAMPLE + '#x\n', { author: 'david' });
+		expect(res).toMatchObject({ formatted: false, text: SAMPLE + '#x\n' });
+		expect(res.diagnostics[0]?.message).toMatch(/formatter failed: boom/);
+	});
+
+	it('can be switched off', async () => {
+		const plain = make({ parser: fmtParser(), formatOnSave: false });
+		const res = await plain.apply(messy, { author: 'david' });
+		expect(res).toMatchObject({ written: true, formatted: false, text: messy });
+	});
+
+	it('restoring an old unformatted revision writes its formatted form', async () => {
+		await writeFile(file, messy);
+		const fmt = make({ parser: fmtParser() });
+		await fmt.init();
+		const first = fmt.listRevisions()[0]!.id;
+		await fmt.apply(SAMPLE.replace('8096', '8097'), { author: 'david' });
+		const res = await fmt.restore(first, 'david');
+		expect(res).toMatchObject({ written: true, formatted: true, text: SAMPLE });
 	});
 });

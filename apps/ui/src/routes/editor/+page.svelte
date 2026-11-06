@@ -173,17 +173,22 @@
 		busy = null;
 		switch (r.kind) {
 			case 'applied': {
-				base = { text, hash: r.result.hash };
+				// Every save is written in caddy fmt style, so the file may differ from what was sent.
+				base = { text: r.result.text, hash: r.result.hash };
+				if (r.result.text !== text) editor.setText(r.result.text);
 				writeDraft(storage(), null);
 				restoredDraft = false;
 				conflict = false;
 				note = '';
 				mode = 'edit';
 				const rev = r.result.revision ? ` Saved as revision #${r.result.revision.id}.` : '';
-				message = r.result.changed
-					? { kind: 'success', text: `Applied. Caddy reloaded the new config.${rev}` }
-					: { kind: 'info', text: 'Nothing changed: the file and the running config already match.' };
-				const warn = caddyDiagnostics(text, r.result.diagnostics);
+				const fmt = r.result.formatted ? ' The file was saved in caddy fmt style.' : '';
+				message = !r.result.changed
+					? { kind: 'info', text: `Nothing changed: the file and the running config already match.${fmt}` }
+					: r.result.loaded
+						? { kind: 'success', text: `Applied. Caddy reloaded the new config.${fmt}${rev}` }
+						: { kind: 'success', text: `Saved. Caddy's running config is unchanged.${fmt}${rev}` };
+				const warn = caddyDiagnostics(r.result.text, r.result.diagnostics);
 				if (warn.length) editor.showCaddyDiagnostics(warn);
 				break;
 			}

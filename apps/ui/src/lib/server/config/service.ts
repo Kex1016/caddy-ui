@@ -41,7 +41,12 @@ export type ConfigServiceOptions = {
 	keepRevisions?: number;
 	/** Backup files kept on disk next to the database. */
 	keepBackups?: number;
+	/** Write every save in `caddy fmt` style using the parser's `format()` (default true). */
+	formatOnSave?: boolean;
 };
+
+/** When `formatted`, `diagnostics` describe the formatted text and replace the validation's. */
+type Normalised = { text: string; formatted: boolean; diagnostics: Diagnostic[] };
 
 export class ApplyError extends Error {
 	constructor(
@@ -88,6 +93,7 @@ export class ConfigService {
 	private readonly now: () => number;
 	private readonly keepRevisions: number;
 	private readonly keepBackups: number;
+	private readonly formatOnSave: boolean;
 
 	/** Hash of the file as this service last wrote or accepted it; anything else on disk is an outside edit. */
 	private knownHash: string | null = null;
@@ -111,6 +117,7 @@ export class ConfigService {
 		this.now = opts.now ?? Date.now;
 		this.keepRevisions = opts.keepRevisions ?? 200;
 		this.keepBackups = opts.keepBackups ?? 50;
+		this.formatOnSave = opts.formatOnSave ?? true;
 	}
 
 	/** Run one state-changing step at a time, so two applies or an apply and the watcher never interleave. */
@@ -322,6 +329,17 @@ export class ConfigService {
 			});
 		}
 
+		let normal: Normalised;
+		try {
+			normal = await this.normalise(text, validation.config);
+		} catch (err) {
+			if (err instanceof AdminUnreachableError) throw unreachable(err, 'nothing was written');
+			throw err;
+		}
+		const diagnostics = normal.formatted
+			? normal.diagnostics
+			: [...validation.diagnostics, ...normal.diagnostics];
+		text = normal.text;
 		const hash = sha256(text);
 		const needsWrite = !before.exists || before.text !== text;
 		const needsLoad = !sameConfig(validation.config, running);
@@ -330,11 +348,13 @@ export class ConfigService {
 			const latest = this.latestRow();
 			return {
 				changed: false,
+				text,
+				formatted: normal.formatted,
 				written: false,
 				loaded: false,
 				hash,
 				revision: latest ? summarize(latest) : null,
-				diagnostics: validation.diagnostics
+				diagnostics
 			};
 		}
 
@@ -372,11 +392,58 @@ export class ConfigService {
 		this.accept(hash);
 		return {
 			changed: true,
+			text,
+			formatted: normal.formatted,
 			written: needsWrite,
 			loaded: needsLoad,
 			hash,
 			revision: summarize(revision),
-			diagnostics: validation.diagnostics
+			diagnostics
+		};
+	}
+
+	/**
+	 * Every save is written in `caddy fmt` style (DECISIONS.md, 6 Nov). The formatted text is adapted again
+	 * and must give exactly the config the text as sent gives; if it does not (a formatter bug), the text is
+	 * saved as sent with a warning rather than changing what Caddy runs.
+	 */
+	private async normalise(text: string, config: unknown): Promise<Normalised> {
+		const parser = this.formatOnSave ? this.parser() : null;
+		if (!parser) return { text, formatted: false, diagnostics: [] };
+		let formatted: string;
+		try {
+			formatted = parser.format(text);
+		} catch (err) {
+			return this.keepAsSent(
+				text,
+				`the formatter failed: ${err instanceof Error ? err.message : String(err)}`
+			);
+		}
+		if (formatted === text) return { text, formatted: false, diagnostics: [] };
+		const adapted = await this.admin.adapt(formatted);
+		if (!adapted.ok) return this.keepAsSent(text, 'Caddy refused the formatted text');
+		if (!sameConfig(adapted.config, config))
+			return this.keepAsSent(text, 'formatting changed the adapted config');
+		// Diagnostics for the text that is written, so their line numbers match the file on disk.
+		return {
+			text: formatted,
+			formatted: true,
+			diagnostics: [...this.parse(formatted).diagnostics, ...adapted.diagnostics]
+		};
+	}
+
+	private keepAsSent(text: string, why: string): Normalised {
+		console.error(`caddy-ui: not formatting the Caddyfile on save: ${why}`);
+		return {
+			text,
+			formatted: false,
+			diagnostics: [
+				{
+					severity: 'warning',
+					source: 'service',
+					message: `Saved as written, not in caddy fmt style, because ${why}`
+				}
+			]
 		};
 	}
 
