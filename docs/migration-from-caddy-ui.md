@@ -41,7 +41,7 @@ do not want that, or use Watchtower instead.
 ## What does not carry over
 
 History and settings kept by the old backend are not imported. The new UI starts its own
-history from the first apply. (Draft: confirm whether an import is worth building.)
+history from the first apply.
 
 ## Rolling back
 

@@ -446,3 +446,12 @@ Format: date · workstream · decision · why · how to reverse.
   `reverse_proxy` sections except Transport, which php_fastcgi sets itself; `query` matcher pairs are
   key/value rows and `query ""` is a toggle; `log_append`'s `<` prefix is a toggle · each mirrors the
   directive's syntax without making the user learn it · change the form file of that category.
+- 2026-11-06 · W10 · Final docs pass: removed every draft marker, wrote docs from the code and the
+  W0–W8 DECISIONS entries instead of the plan. Two corrections to the drafts: the Settings page has
+  no "enable metrics / access log" helpers yet (it is a placeholder), so the docs show the Caddyfile
+  snippets to add by hand or in the editor; the UI does not use the Docker socket at all, only the
+  updater sidecar does · docs must match what ships · if the helpers are built later, update
+  docs/install.md, docs/stats.md and docs/faq.md.
+- 2026-11-06 · W10 · The compose swap in TODO-USER.md pins `caddy-ui:1.0.0` rather than `latest` and
+  leaves the updater optional · a pinned tag makes the first swap reproducible, and the updater
+  needs root-equivalent socket access · switch the tag to `latest` for rolling updates.

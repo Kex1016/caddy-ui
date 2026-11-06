@@ -24,10 +24,8 @@ Newest at the bottom. Format: date · workstream · what · why.
 - [ ] 2026-11-05 · W9 · Make the GitHub Container Registry package
   `ghcr.io/kex1016/caddy-ui` public, or add a pull secret on the server · the updater
   pulls from it.
-- [ ] 2026-11-05 · W9 · When 1.0 is tagged, replace `caddy-ui-backend` and
-  `caddy-ui-frontend` in `compose.yml` with the `caddy-ui` service from
-  `deploy/compose.example.yml`, set `CADDY_UI_SESSION_SECRET`, and remove `JWT_SECRET` ·
-  the goal of the project.
+- [ ] 2026-11-05 · W9 · When 1.0 is tagged, swap the two zackwag services for `caddy-ui` ·
+  the goal of the project; exact steps are the last item in this file.
 - [ ] 2026-11-05 · W0 · Decide `CADDY_UI_AUTH_MODE`: `local` (username/password as today),
   `forward` (put the UI behind tinyauth like your other services), or `none` on a
   trusted network · auth ships with all three; the default is `local`.
@@ -71,3 +69,63 @@ Newest at the bottom. Format: date · workstream · what · why.
       and keep every comment; applying again should say nothing changed. Then edit one site through its form and
       check the text mode shows exactly the change you expect · the sample copy of your Caddyfile round-trips in
       the tests, but only the real file proves it, and anything the forms do not model shows under "Other lines".
+
+- [ ] 2026-11-06 · W10 · **Swap `caddy-ui-backend` and `caddy-ui-frontend` for `caddy-ui` in
+  your compose file** (do this last; it is the end of the project). Do it once `v1.0.0` is
+  tagged and its image is on GHCR.
+  1. Check that `ghcr.io/kex1016/caddy-ui` and `ghcr.io/kex1016/caddy-ui-updater` are public
+     (GitHub profile → Packages → the package → Package settings → Change visibility), or run
+     `docker login ghcr.io` on the server. A private package cannot be pulled.
+  2. Back up `Caddyfile` and the directories the old backend used (`cp -a` is enough).
+  3. Generate a session secret: `openssl rand -hex 32`. Keep it in `.env` next to your compose
+     file as `CADDY_UI_SESSION_SECRET=...`, together with `CADDY_UI_PASSWORD=...`. Do not
+     commit `.env`.
+  4. In `compose.yml`, delete the `caddy-ui-backend` and `caddy-ui-frontend` services. Delete
+     `JWT_SECRET` wherever it is set.
+  5. Add this service (it is `deploy/compose.example.yml` trimmed to what you run; keep your
+     own network name, which the plan assumes is `caddy-ui`):
+
+     ```yaml
+     caddy-ui:
+       image: ghcr.io/kex1016/caddy-ui:1.0.0
+       restart: unless-stopped
+       depends_on: [caddy]
+       ports: ['9876:3001']
+       environment:
+         TZ: Europe/Budapest
+         CADDY_ADMIN_URL: http://caddy:2019
+         CADDYFILE_PATH: /etc/caddy/Caddyfile
+         CADDY_LOG_PATH: /var/log/caddy/access.log
+         CADDY_DATA_PATH: /data/caddy
+         CADDY_UI_USER: admin
+         CADDY_UI_PASSWORD: ${CADDY_UI_PASSWORD:?set it in .env}
+         CADDY_UI_SESSION_SECRET: ${CADDY_UI_SESSION_SECRET:?set it in .env}
+       volumes:
+         - ./Caddyfile:/etc/caddy/Caddyfile
+         - ./data:/data:ro
+         - ./logs:/var/log/caddy:ro
+         - ./caddy-ui:/etc/caddy-ui
+       healthcheck:
+         test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3001/api/health >/dev/null || exit 1']
+         interval: 15s
+         timeout: 5s
+         retries: 5
+         start_period: 20s
+       networks: [caddy-ui]
+     ```
+
+     Adjust the left side of `./data:/data:ro` so Caddy's `certificates/` folder ends up at
+     `/data/caddy/certificates` inside the container (if your `./data` holds `certificates/`
+     directly, use `./data:/data/caddy:ro`). Use your old `CADDY_UI_USER` if you want the
+     same login.
+  6. Optional, for automatic updates: add the `caddy-ui-updater` service from
+     `deploy/compose.example.yml` and set `CADDY_UI_COMPOSE_DIR` to the absolute path of the
+     directory holding your compose file. It mounts the Docker socket, which is
+     root-equivalent on the host; skip it if you would rather update by hand.
+  7. Run `docker compose config` to check the file, then `docker compose up -d`. The old
+     services are removed with `docker compose up -d --remove-orphans`.
+  8. Open `http://<server>:9876`, sign in, and open Sites. If anything in your proxy pointed
+     at the old frontend port 9877, change it to 9876.
+  9. Rollback if needed: put the two old services back, remove `caddy-ui`, run
+     `docker compose up -d --remove-orphans`. Your Caddyfile is the same file; the UI keeps
+     its backups in `./caddy-ui/backups/`.
