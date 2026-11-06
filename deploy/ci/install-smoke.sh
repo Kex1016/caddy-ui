@@ -115,7 +115,8 @@ curl -fsS "$BASE/api/health"
 echo
 code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/sites")
 [ "$code" = 303 ] || [ "$code" = 302 ] || fail "/sites without a session answered $code, expected a redirect to sign-in"
-code=$(curl -s -o /dev/null -w '%{http_code}' -c jar -H "Origin: $BASE" \
+# Accept: text/html, as a browser sends; with curl's */* SvelteKit answers a form action with JSON and a 200.
+code=$(curl -s -o /dev/null -w '%{http_code}' -c jar -H "Origin: $BASE" -H 'Accept: text/html' \
 	--data-urlencode 'user=admin' --data-urlencode 'password=smoke-password' "$BASE/login")
 [ "$code" = 303 ] || [ "$code" = 302 ] || fail "sign-in answered $code"
 sites=$(curl -fsS -b jar "$BASE/sites")
