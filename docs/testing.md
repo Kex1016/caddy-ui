@@ -72,3 +72,25 @@ CADDY_BIN=/path/to/caddy pnpm --filter @caddy-ui/caddyfile exec vitest run test/
 ```
 
 Without `CADDY_BIN` the test is skipped.
+
+## Screenshots
+
+The README screenshots in `docs/screenshots/` are taken by a Playwright script against a demo
+version of the e2e stack. It is not part of the test suite or CI. To retake them after a UI
+change:
+
+```sh
+pnpm build
+CADDY_BIN=/path/to/caddy pnpm --filter @caddy-ui/e2e screenshots
+```
+
+Run it as root in a throwaway container or VM: `e2e/screenshots/demo.mjs` binds port 443 and
+adds the sample's `10.0.0.x` addresses to the loopback interface so stub upstreams can answer
+on them (two stay down on purpose). It starts the stack from `demoCaddyfile()` in
+`e2e/support/paths.mjs`, which is the anonymised sample plus `metrics { per_host }` and
+certificates from Caddy's internal CA. It then appends a made-up access log for the last 24
+hours (client IPs from the documentation ranges) and keeps a trickle of real requests going for
+the metrics charts. `e2e/screenshots/capture.spec.ts` waits for the probes and a metrics scrape,
+then writes each page in light and dark. The README shows the dark versions to readers whose
+GitHub theme is dark.
+

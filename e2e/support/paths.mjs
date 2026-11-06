@@ -39,3 +39,17 @@ export function e2eCaddyfile(text = sampleCaddyfile()) {
 }
 
 export const baseCaddyfile = () => e2eCaddyfile();
+
+/**
+ * The README screenshots' Caddyfile (screenshots/): the sample with per-site metrics on and certificates from
+ * Caddy's internal CA (with lifetimes like a public CA's, so the certificate column looks ordinary), so every
+ * site answers on 443 without the internet. Port 80 is taken by the stub for
+ * 10.0.0.5:80, so plain HTTP moves to 18080.
+ */
+export function demoCaddyfile(text = sampleCaddyfile()) {
+	if (!text.startsWith('{\n')) throw new Error('the sample Caddyfile no longer starts with a global block');
+	return text.replace(
+		'{\n',
+		'{\n\thttp_port 18080\n\tmetrics {\n\t\tper_host\n\t}\n\tcert_issuer internal {\n\t\tlifetime 60d\n\t}\n\tskip_install_trust\n\tpki {\n\t\tca local {\n\t\t\tintermediate_lifetime 90d\n\t\t}\n\t}\n'
+	);
+}

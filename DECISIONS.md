@@ -494,3 +494,12 @@ Format: date · workstream · decision · why · how to reverse.
   `ubuntu-24.04-arm`) and merged into one multi-arch tag; the updater image still builds under QEMU ·
   the first publish run hung for 30 minutes building `better-sqlite3` for arm64 under QEMU · switch back
   to one `build-push-action` with both platforms if the native module stops needing a compile.
+- 2026-11-06 · README screenshots · Taken with Playwright against a demo stack (`e2e/screenshots/`) rather than
+  by hand, so they can be retaken after UI changes: the anonymised sample Caddyfile, stub upstreams on loopback
+  aliases, a made-up 24 hour access log and Caddy's internal CA. Light and dark PNGs at 1x (about 100–200 KB
+  each), shown with `<picture>` so GitHub picks the one matching the reader's theme. The demo's extra global
+  options (`metrics`, `cert_issuer internal`, `pki`, `http_port 18080`) show in the editor shots; they are real
+  Caddy options, and hiding them would mean faking the page · David asked for screenshots in the README · none.
+- 2026-11-06 · README screenshots · The Sites table showed "expired" for a certificate with less than a day left
+  (`certDays <= 0`), while Overview already used `< 0`. Sites now uses `< 0` too, so a certificate expiring later
+  today reads "0 d" with the warning tag · found while taking the screenshots · none.
