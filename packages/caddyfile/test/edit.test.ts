@@ -189,7 +189,7 @@ describe('format', () => {
 		const src =
 			'\n\n  a.com,   b.com   {   # c\n\n\n      respond    "x"   # t\n\n\n      handle   {\n        respond y\n\n      }\n  }\n\n\n# end\n\n';
 		expect(format(src)).toBe(
-			'a.com, b.com { # c\n\n\trespond "x" # t\n\n\thandle {\n\t\trespond y\n\n\t}\n}\n\n# end\n'
+			'a.com, b.com { # c\n\n\trespond "x" # t\n\n\thandle {\n\t\trespond y\n\t}\n}\n\n# end\n'
 		);
 	});
 

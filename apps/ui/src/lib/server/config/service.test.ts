@@ -311,8 +311,11 @@ describe('format on save', () => {
 			parse: () => ({ cst: null, diagnostics: [] }),
 			format: fmt
 		});
-	// Spaces for tabs, a run of blank lines and trailing whitespace: what a hand edit often looks like.
-	const messy = SAMPLE.replace(/\t/g, '    ').replace('# Media\n', '\n\n\n# Media   \n');
+	// Spaces for tabs, a run of blank lines and trailing whitespace: what a hand edit often looks like. (Trailing
+	// whitespace after a directive: caddy fmt keeps it inside a comment, so format() does too.)
+	const messy = SAMPLE.replace(/\t/g, '    ')
+		.replace('# Media\n', '\n\n\n# Media\n')
+		.replace('10.0.0.20:8096\n', '10.0.0.20:8096   \n');
 
 	it('writes the caddy fmt form, returns it, and saving it again changes nothing', async () => {
 		const fmt = make({ parser: fmtParser() });

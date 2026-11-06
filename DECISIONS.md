@@ -455,3 +455,38 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-06 · W10 · The compose swap in TODO-USER.md pins `caddy-ui:1.0.0` rather than `latest` and
   leaves the updater optional · a pinned tag makes the first swap reproducible, and the updater
   needs root-equivalent socket access · switch the tag to `latest` for rolling updates.
+- 2026-11-06 · W11 · The e2e suite (`e2e/`, Playwright + Chromium) runs the built UI as a Node process against a
+  real Caddy: in CI the official `caddy` image started with `docker run`, matrixed over `caddy:2.10` and `caddy:2`
+  (latest); locally a `caddy` binary from `CADDY_BIN`. The image itself is covered by the existing image and
+  collector jobs and the new install job · one stack script for CI and laptops, and a failing test points at UI
+  code rather than container plumbing · none.
+- 2026-11-06 · W11 · The W3 "Config service against a real Caddy" job is now matrixed over `caddy:2.10` and
+  `caddy:2` as well, since David runs `caddy:latest` (2.11+) · the note from W3/W7 that CI only pinned 2.10 · none.
+- 2026-11-06 · W11 (fix in W1 code) · `format()` now matches `caddy fmt` byte for byte on every docs example and
+  David's file, checked against a real binary (`test/caddy-differential.test.ts`, CI job "Formatter against caddy
+  fmt"). Three differences fixed: blank lines right after `{` and right before `}` are dropped, and comments keep
+  their trailing spaces (caddy fmt does not trim comments). W1's and W3's tests that expected trimmed comments now
+  put the trailing spaces after a directive instead. Known differences left on purpose, listed in the test:
+  `\` line continuations (format() joins them, caddy fmt keeps them; same config) and a Caddy 2.10 fmt bug after
+  `{blocks.*}` placeholder lines · the UI promises caddy fmt style on save · none.
+- 2026-11-06 · W11 · Accessibility (axe, WCAG 2.1 A/AA, serious and critical): Fishnet's faint text colour failed
+  4.5:1 at 11-12 px on the sidebar, chips, tags and diff rows, and light `acc-ink` failed on accent-soft tags. Fixed
+  in `theme-caddy.css` only (colour tokens, as PLAN.md §6 allows): `--faint` #78716a → #5f5850 (light), #867d71 →
+  #a0978a (dark); light `--acc-ink` #1a7560 → #166a57. Scroll containers that can hold no focusable content
+  (`main`, the diff views) get `tabindex="0"` so keyboard users can scroll them; the "sites are down" links on
+  Overview are underlined. CodeMirror's scroller is excluded from the scan (its contenteditable is focusable; axe
+  does not count it) · PLAN.md §5.1 W11 · if David vetoes the darker faint text, the axe test fails, so pick
+  another value that keeps 4.5:1.
+- 2026-11-06 · W11 · Performance budget set in `e2e/tests/perf.spec.ts` and `docs/testing.md`: first byte 500 ms,
+  load 1.5 s (editor 2 s), JavaScript 120 KB (editor 450 KB), everything 600 KB (editor 1.4 MB), editor ready in
+  2 s on David's file, one form keystroke to the outline in 300 ms · about twice what was measured, so it catches
+  regressions and not runner noise · none.
+- 2026-11-06 · W11 · docs/install.md and the W5a item in TODO-USER.md said to press "Review and apply" without
+  changing anything; that button is disabled until the text differs from the file. Both now say "Format", then
+  "Review and apply" · found by the e2e round trip · none.
+- 2026-11-06 · W11 · `deploy/ci/install-smoke.sh` (CI job "Install docs and compose swap") follows the compose
+  swap in TODO-USER.md on a runner: David-shaped compose with stand-ins for the two zackwag services, the
+  `caddy-ui` service block copied verbatim from TODO-USER.md (image swapped for the CI build), `docker compose
+  config`, `up -d --remove-orphans`, health, sign-in on 9876, Sites, a save that reaches the bind-mounted file and
+  Caddy, and the rollback in step 9 · the coordinator asked for the swap steps to be proven, and a doc change
+  that breaks them now fails CI · none.

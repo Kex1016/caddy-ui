@@ -135,7 +135,8 @@
 						Compared with {data.base.label}: <span class="add-ink">+{stats.added}</span>
 						<span class="del-ink">−{stats.removed}</span> lines.
 					</p>
-					<div class="diff" role="table" aria-label="Line differences">
+					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+					<div class="diff" role="table" aria-label="Line differences" tabindex="0">
 						{#each shown as hunk, h (h)}
 							{#if hunk.skippedBefore}
 								<div class="diff__skip" role="row">

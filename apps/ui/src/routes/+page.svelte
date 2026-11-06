@@ -51,7 +51,9 @@
 	<section class="fp-section">
 		<Notice kind="error">
 			<b>{data.down.length === 1 ? 'One site is down.' : `${data.down.length} sites are down.`}</b>
-			{#each data.down as s, i (s.id)}{i > 0 ? ', ' : ' '}<a href="/sites/{s.id}">{s.label}</a>
+			{#each data.down as s, i (s.id)}{i > 0 ? ', ' : ' '}<a class="inline-link" href="/sites/{s.id}"
+					>{s.label}</a
+				>
 				<span class="t-muted">({statusLine('down', s.since, now).toLowerCase()})</span>{/each}
 		</Notice>
 	</section>
@@ -321,6 +323,10 @@
 </section>
 
 <style>
+	/* Links inside a sentence need more than colour to stand out (WCAG 1.4.1). */
+	.inline-link {
+		text-decoration: underline;
+	}
 	.controls {
 		display: flex;
 		gap: var(--space-2);

@@ -124,8 +124,11 @@ describe('W3 definition of done, against real Caddy', () => {
 		await fmt.init();
 		const configBefore = configHash(await admin.getConfig());
 		const reloadBefore = await lastReloadAt();
-		// Spaces for tabs, extra blank lines and trailing whitespace, as a hand edit might leave it.
-		const messy = SAMPLE.replace(/\t/g, '    ').replace('# Media\n', '\n\n\n# Media   \n');
+		// Spaces for tabs, extra blank lines and trailing whitespace, as a hand edit might leave it. (Trailing
+		// whitespace after a directive: caddy fmt keeps it inside a comment, so format() does too.)
+		const messy = SAMPLE.replace(/\t/g, '    ')
+			.replace('# Media\n', '\n\n\n# Media\n')
+			.replace('10.0.0.20:8096\n', '10.0.0.20:8096   \n');
 		await writeFile(file, messy);
 		await fmt.checkForExternalEdit();
 
