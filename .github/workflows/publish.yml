@@ -2,7 +2,10 @@ name: publish
 
 # Publishes ghcr.io/kex1016/caddy-ui and ghcr.io/kex1016/caddy-ui-updater.
 #   push to main  -> :edge and :sha-<short>
-#   tag vX.Y.Z    -> :X.Y.Z, :X.Y, :latest
+#   tag vX.Y.Z    -> :X.Y.Z, :X.Y and :latest
+#
+# The UI image is native-built per architecture (better-sqlite3 compiles from source on
+# alpine; doing that for arm64 under QEMU timed out), then merged into one multi-arch tag.
 on:
   push:
     branches: [main]
@@ -19,22 +22,101 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
+  UI_IMAGE: ghcr.io/kex1016/caddy-ui
 
 jobs:
-  image:
-    name: ${{ matrix.name }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  ui-build:
+    name: caddy-ui (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         include:
-          - name: caddy-ui
-            context: .
-            file: Dockerfile
-          - name: caddy-ui-updater
-            context: deploy/updater
-            file: deploy/updater/Dockerfile
+          - arch: amd64
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.UI_IMAGE }}
+          tags: |
+            type=edge,branch=main
+            type=semver,pattern={{version}}
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.UI_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          build-args: |
+            CADDY_UI_VERSION=${{ steps.meta.outputs.version }}
+          cache-from: type=gha,scope=ui-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=ui-${{ matrix.arch }}
+      - run: |
+          mkdir -p /tmp/digests
+          digest='${{ steps.build.outputs.digest }}'
+          touch "/tmp/digests/${digest#sha256:}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  ui-merge:
+    name: caddy-ui (multi-arch tags)
+    runs-on: ubuntu-latest
+    needs: ui-build
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.UI_IMAGE }}
+          tags: |
+            type=edge,branch=main
+            type=sha,prefix=sha-,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          # shellcheck disable=SC2046
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<<"$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf "${UI_IMAGE}@sha256:%s " *)
+      - run: docker buildx imagetools inspect "${UI_IMAGE}:${{ steps.meta.outputs.version }}"
+
+  updater:
+    name: caddy-ui-updater
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v3
@@ -47,7 +129,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.name }}
+          images: ${{ env.REGISTRY }}/kex1016/caddy-ui-updater
           tags: |
             type=edge,branch=main
             type=sha,prefix=sha-,format=short
@@ -56,13 +138,11 @@ jobs:
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
       - uses: docker/build-push-action@v6
         with:
-          context: ${{ matrix.context }}
-          file: ${{ matrix.file }}
+          context: deploy/updater
+          file: deploy/updater/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            CADDY_UI_VERSION=${{ steps.meta.outputs.version }}
-          cache-from: type=gha,scope=${{ matrix.name }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          cache-from: type=gha,scope=updater
+          cache-to: type=gha,mode=max,scope=updater

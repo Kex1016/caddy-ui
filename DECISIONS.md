@@ -490,6 +490,10 @@ Format: date · workstream · decision · why · how to reverse.
   config`, `up -d --remove-orphans`, health, sign-in on 9876, Sites, a save that reaches the bind-mounted file and
   Caddy, and the rollback in step 9 · the coordinator asked for the swap steps to be proven, and a doc change
   that breaks them now fails CI · none.
+- 2026-11-06 · W9 · The UI image is built per architecture on native runners (`ubuntu-latest`,
+  `ubuntu-24.04-arm`) and merged into one multi-arch tag; the updater image still builds under QEMU ·
+  the first publish run hung for 30 minutes building `better-sqlite3` for arm64 under QEMU · switch back
+  to one `build-push-action` with both platforms if the native module stops needing a compile.
 - 2026-11-06 · README screenshots · Taken with Playwright against a demo stack (`e2e/screenshots/`) rather than
   by hand, so they can be retaken after UI changes: the anonymised sample Caddyfile, stub upstreams on loopback
   aliases, a made-up 24 hour access log and Caddy's internal CA. Light and dark PNGs at 1x (about 100–200 KB
