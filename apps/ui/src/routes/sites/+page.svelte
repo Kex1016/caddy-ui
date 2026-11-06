@@ -3,6 +3,8 @@
 	import { ArrowDown, ArrowUp, Copy, Pencil, Plus, Power, PowerOff, Search, Trash2 } from '@lucide/svelte';
 	import { Dialog, EmptyState, Notice, PageHero, Tag } from '$lib/design/components';
 	import { formatElapsed, formatNumber } from '$lib/format';
+	import RecipePicker from '$lib/visual/components/RecipePicker.svelte';
+	import { recipeDefaults, type Recipe } from '$lib/visual/recipes';
 	import type { SiteRow } from './+page.server';
 
 	let { data, form } = $props();
@@ -44,8 +46,18 @@
 	let adding = $state(false);
 	let copying = $state<SiteRow | null>(null);
 	let deleting = $state<SiteRow | null>(null);
-	let starter = $state('reverse_proxy');
-	const starterDef = $derived(data.starters.find((s) => s.id === starter));
+	// The Add dialog: the same recipes the visual editor offers, rendered on the server by the `add` action.
+	const recipes = $derived(data.recipes.map((r) => ({ ...r, body: () => [] })) as Recipe[]);
+	let recipe = $state('reverse_proxy');
+	// svelte-ignore state_referenced_locally
+	let values = $state<Record<string, string>>(
+		recipeDefaults(recipes.find((r) => r.id === 'reverse_proxy') ?? recipes[0]!)
+	);
+	const addError = $derived(
+		form?.message && !('ok' in form) && 'field' in form && typeof form.field === 'string'
+			? { field: form.field, message: form.message }
+			: null
+	);
 
 	function submit(close: () => void) {
 		return () => {
@@ -307,23 +319,8 @@
 			>
 			<span class="t-caption t-muted">Several addresses can be separated by commas.</span>
 		</label>
-		<label class="lbl">
-			<span class="t-ui">Start from</span>
-			<span class="fp-select">
-				<select name="starter" bind:value={starter}>
-					{#each data.starters as s (s.id)}<option value={s.id}>{s.label}</option>{/each}
-				</select>
-			</span>
-		</label>
-		{#if starterDef?.field}
-			<label class="lbl">
-				<span class="t-ui">{starterDef.field.label}</span>
-				<span class="fp-field"
-					><input name="value" placeholder={starterDef.field.placeholder} required autocomplete="off" /></span
-				>
-			</label>
-		{/if}
-		{#if form?.message && !('ok' in form)}<Notice kind="error">{form.message}</Notice>{/if}
+		<RecipePicker {recipes} bind:recipe bind:values kinds={['site']} error={addError} />
+		{#if form?.message && !('ok' in form) && !addError}<Notice kind="error">{form.message}</Notice>{/if}
 		<div class="foot">
 			<button class="fp-btn" type="button" onclick={() => (adding = false)}>Cancel</button>
 			<button class="fp-btn fp-btn--primary" disabled={busy}>{busy ? 'Adding…' : 'Add site'}</button>

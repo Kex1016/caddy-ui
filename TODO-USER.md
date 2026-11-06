@@ -66,3 +66,8 @@ Newest at the bottom. Format: date · workstream · what · why.
       re-enable and delete a throwaway site (for example `test.example.com`). Each change is validated by Caddy and
       kept in History, so a mistake is one click to undo · the unit tests cover the file edits, but only your
       Caddyfile proves they sit well with its comments and layout.
+- [ ] 2026-11-06 · W5a · Open your real Caddyfile in the visual editor, expand every block, change nothing and
+      "Review and apply": the diff should only re-indent (every save is written in `caddy fmt` style, as you chose)
+      and keep every comment; applying again should say nothing changed. Then edit one site through its form and
+      check the text mode shows exactly the change you expect · the sample copy of your Caddyfile round-trips in
+      the tests, but only the real file proves it, and anything the forms do not model shows under "Other lines".

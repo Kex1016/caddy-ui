@@ -9,8 +9,7 @@ import {
 	moveSite,
 	parseAddresses,
 	scanBlocks,
-	setSiteDisabled,
-	starterBlock
+	setSiteDisabled
 } from './blocks';
 
 const fixture = readFileSync(new URL('../collector/fixtures/Caddyfile', import.meta.url), 'utf8');
@@ -84,7 +83,7 @@ describe('parseAddresses', () => {
 
 describe('addSite', () => {
 	it('appends after the last site with one blank line and leaves the rest alone', () => {
-		const block = starterBlock(['new.example.com'], 'reverse_proxy', '10.0.0.50:3000');
+		const block = 'new.example.com {\n\treverse_proxy 10.0.0.50:3000\n}';
 		const out = addSite(SIMPLE, block, ['new.example.com']);
 		expect(out.startsWith(SIMPLE.slice(0, SIMPLE.lastIndexOf('}\n') + 1))).toBe(true);
 		expect(labels(out)).toEqual([
@@ -96,20 +95,10 @@ describe('addSite', () => {
 		expect(out.endsWith('\treverse_proxy 10.0.0.50:3000\n}\n')).toBe(true);
 	});
 	it('works on an empty file', () => {
-		expect(addSite('', starterBlock(['a.com'], 'blank'), ['a.com'])).toBe('a.com {\n}\n');
+		expect(addSite('', 'a.com {\n}', ['a.com'])).toBe('a.com {\n}\n');
 	});
 	it('refuses an address that is already a site, in any order or case', () => {
 		expect(() => addSite(SIMPLE, 'x', ['C.example.com', 'b.example.com'])).toThrow(/already a site/);
-	});
-	it('builds each starter', () => {
-		expect(starterBlock(['a.com'], 'file_server', '/srv/www')).toBe(
-			'a.com {\n\troot * /srv/www\n\tfile_server\n}'
-		);
-		expect(starterBlock(['a.com'], 'redirect', 'https://b.com')).toBe(
-			'a.com {\n\tredir https://b.com{uri} permanent\n}'
-		);
-		expect(() => starterBlock(['a.com'], 'reverse_proxy', '')).toThrow(/upstream/);
-		expect(() => starterBlock(['a.com'], 'reverse_proxy', 'a b')).toThrow(BlockError);
 	});
 });
 

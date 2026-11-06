@@ -8,17 +8,15 @@ import { getDb } from '$lib/server/db';
 import { config } from '$lib/server/env';
 import {
 	BlockError,
-	STARTERS,
 	addSite,
 	deleteSite,
 	duplicateSite,
 	moveSite,
 	parseAddresses,
 	scanBlocks,
-	setSiteDisabled,
-	starterBlock,
-	type Starter
+	setSiteDisabled
 } from '$lib/server/sites/blocks';
+import { RECIPES, RecipeError, recipeById, renderRecipe } from '$lib/visual/recipes';
 import type { Actions, PageServerLoad } from './$types';
 
 export type SiteRow = {
@@ -70,7 +68,13 @@ export const load: PageServerLoad = async () => {
 		rows,
 		globals: scan.blocks.some((b) => b.kind === 'global'),
 		snippets: scan.blocks.filter((b) => b.kind === 'snippet').map((b) => b.addresses[0] as string),
-		starters: STARTERS,
+		recipes: RECIPES.filter((r) => r.kind === 'site').map(({ id, title, line, kind, fields }) => ({
+			id,
+			title,
+			line,
+			kind,
+			fields
+		})),
 		caddyfileError: payload.sources.caddyfile.error,
 		probing: payload.sources.probes.ok
 	};
@@ -104,6 +108,7 @@ async function edit(
 				err.code === 'not_found' ? 404 : err.code === 'duplicate' ? 409 : err.code === 'bug' ? 500 : 400;
 			return fail(status, { message: err.message });
 		}
+		if (err instanceof RecipeError) return fail(400, { message: err.message, field: err.field });
 		if (err instanceof ApplyError) {
 			return fail(err.status, { message: err.body.message, conflict: err.body.code === 'conflict' });
 		}
@@ -121,10 +126,14 @@ export const actions: Actions = {
 	add: ({ request, locals }) =>
 		edit(request, locals, (text, form) => {
 			const addresses = parseAddresses(str(form, 'addresses'));
-			const starter = str(form, 'starter') as Starter;
-			if (!STARTERS.some((s) => s.id === starter))
+			const recipe = recipeById(str(form, 'recipe'));
+			if (!recipe || recipe.kind !== 'site')
 				throw new BlockError('invalid', 'Pick a starting point for the new site.');
-			const block = starterBlock(addresses, starter, str(form, 'value'), scanBlocks(text).eol);
+			// Recipe fields arrive as `f_<id>`; toggles are "on" when checked.
+			const values: Record<string, string> = {};
+			for (const [k, v] of form.entries())
+				if (k.startsWith('f_') && typeof v === 'string') values[k.slice(2)] = v;
+			const block = renderRecipe(recipe, { addresses }, values, scanBlocks(text).eol);
 			return {
 				text: addSite(text, block, addresses),
 				note: `Added site ${label(addresses)}`,

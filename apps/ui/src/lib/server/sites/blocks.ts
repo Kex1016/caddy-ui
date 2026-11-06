@@ -320,56 +320,6 @@ export function parseAddresses(input: string): string[] {
 	return parts;
 }
 
-export type Starter = 'blank' | 'reverse_proxy' | 'file_server' | 'redirect';
-
-export const STARTERS: { id: Starter; label: string; field?: { label: string; placeholder: string } }[] = [
-	{ id: 'blank', label: 'Blank block' },
-	{
-		id: 'reverse_proxy',
-		label: 'Reverse proxy',
-		field: { label: 'Upstream', placeholder: '10.0.0.10:8080' }
-	},
-	{ id: 'file_server', label: 'Static files', field: { label: 'Folder', placeholder: '/srv/www' } },
-	{
-		id: 'redirect',
-		label: 'Redirect',
-		field: { label: 'Send visitors to', placeholder: 'https://example.com' }
-	}
-];
-
-function oneToken(value: string, what: string): string {
-	const v = value.trim();
-	if (v === '') throw new BlockError('invalid', `Enter ${what}.`);
-	if (/[\s{}"`#]/.test(v))
-		throw new BlockError(
-			'invalid',
-			`${what[0]?.toUpperCase()}${what.slice(1)} cannot contain spaces, quotes or braces.`
-		);
-	return v;
-}
-
-/** A new site block from a starter. Indented with tabs, as `caddy fmt` writes it. */
-export function starterBlock(addresses: string[], starter: Starter, value = '', eol = '\n'): string {
-	let body: string[];
-	switch (starter) {
-		case 'blank':
-			body = [];
-			break;
-		case 'reverse_proxy':
-			body = [`reverse_proxy ${oneToken(value, 'an upstream address')}`];
-			break;
-		case 'file_server':
-			body = [`root * ${oneToken(value, 'a folder')}`, 'file_server'];
-			break;
-		case 'redirect':
-			body = [`redir ${oneToken(value, 'a URL')}{uri} permanent`];
-			break;
-		default:
-			throw new BlockError('invalid', 'Pick a starting point for the new site.');
-	}
-	return [`${addresses.join(', ')} {`, ...body.map((l) => `\t${l}`), '}'].join(eol);
-}
-
 // ── edits ────────────────────────────────────────────────────────────────────────────────────
 
 function assertNewSite(scan: Scan, addresses: string[]) {
