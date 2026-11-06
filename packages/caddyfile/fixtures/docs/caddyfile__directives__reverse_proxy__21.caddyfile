@@ -1,0 +1,8 @@
+example.com {
+	reverse_proxy 10.0.0.1:443 {
+		transport http {
+			tls_trust_pool file /path/to/cert.pem
+			tls_server_name app.example.com
+		}
+	}
+}

@@ -1,0 +1,7 @@
+{
+	pki {
+		ca local {
+			root_cn "My Local CA - 2024 ECC Root"
+		}
+	}
+}

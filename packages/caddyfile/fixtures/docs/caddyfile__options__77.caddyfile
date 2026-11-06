@@ -1,0 +1,5 @@
+{
+	events {
+		on cert_obtained exec ./my-script.sh {event.data.certificate_path}
+	}
+}

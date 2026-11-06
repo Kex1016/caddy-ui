@@ -1,0 +1,1 @@
+@subdomain url_pattern https://:sub.example.com/*

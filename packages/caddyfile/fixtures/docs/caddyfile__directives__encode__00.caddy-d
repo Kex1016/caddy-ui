@@ -1,0 +1,9 @@
+encode [<matcher>] [<formats...>] {
+	# encoding formats
+	gzip [<level>]
+	zstd [<level>]
+	
+	minimum_length <length>
+
+	match <inline_response_matcher>
+}

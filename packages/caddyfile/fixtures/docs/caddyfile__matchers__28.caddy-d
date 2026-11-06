@@ -1,0 +1,3 @@
+@file `file()`
+@first `file({'try_files': [{path}, {path} + '/', 'index.html']})`
+@smallest `file({'try_policy': 'smallest_size', 'try_files': ['a.txt', 'b.txt']})`

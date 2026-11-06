@@ -1,0 +1,4 @@
+basic_auth [<matcher>] [<hash_algorithm> [<realm>]] {
+	<username> <hashed_password>
+	...
+}

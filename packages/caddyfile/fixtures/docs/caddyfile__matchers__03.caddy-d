@@ -1,0 +1,5 @@
+@postfoo {
+	method POST
+	path /foo/*
+}
+reverse_proxy @postfoo localhost:9000

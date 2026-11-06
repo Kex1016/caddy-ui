@@ -1,0 +1,6 @@
+example.com {
+	@denied not client_ip private_ranges
+	abort @denied
+
+	respond "Hello, you must be from a private network!"
+}

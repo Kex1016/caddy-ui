@@ -1,0 +1,20 @@
+(subdomain-log) {
+	log {
+		hostnames {args[0]}
+		output file /var/log/{args[0]}.log
+	}
+}
+
+*.example.com {
+	import subdomain-log foo.example.com
+	@foo host foo.example.com
+	handle @foo {
+		respond "foo"
+	}
+
+	import subdomain-log bar.example.com
+	@bar host bar.example.com
+	handle @bar {
+		respond "bar"
+	}
+}

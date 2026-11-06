@@ -1,0 +1,15 @@
+acme_server [<matcher>] {
+	ca         <id>
+	lifetime   <duration>
+	resolvers  <resolvers...>
+	challenges <challenges...>
+	allow_wildcard_names
+	allow {
+		domains <domains...>
+		ip_ranges <addresses...>
+	}
+	deny {
+		domains <domains...>
+		ip_ranges <addresses...>
+	}
+}

@@ -1,0 +1,2 @@
+@early_data tls early_data
+respond @early_data 425 "Too Early"

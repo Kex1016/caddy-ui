@@ -1,0 +1,3 @@
+handle_errors [<status_codes...>] {
+	<directives...>
+}

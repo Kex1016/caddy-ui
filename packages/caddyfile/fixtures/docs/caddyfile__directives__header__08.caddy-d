@@ -1,0 +1,6 @@
+header {
+	-Cache-Control
+	-CDN-Cache-Control
+	match status 500
+}
+reverse_proxy upstream:443

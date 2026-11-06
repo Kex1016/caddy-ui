@@ -1,0 +1,4 @@
+<field> ip_mask [<ipv4> [<ipv6>]] {
+	ipv4 <cidr>
+	ipv6 <cidr>
+}

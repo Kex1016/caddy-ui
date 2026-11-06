@@ -1,0 +1,63 @@
+# Representative of a home-lab Caddyfile: placeholder hosts, 10.0.0.x upstreams, no secrets.
+{
+	email admin@example.com
+	admin 0.0.0.0:2019
+	servers {
+		trusted_proxies static 10.0.0.0/24
+	}
+}
+
+(auth_forwarder) {
+	forward_auth 10.0.0.101:8888 {
+		uri /api/auth/caddy
+		copy_headers Remote-User Remote-Email
+	}
+}
+
+app.example.com {
+	reverse_proxy 10.0.0.10:8080
+}
+
+# A commented-out site must not show up:
+# old.example.com {
+# 	reverse_proxy 10.0.0.99:80
+# }
+
+media.example.com, tv.example.com {
+	import auth_forwarder
+	reverse_proxy {
+		to 10.0.0.20:8096 10.0.0.21:8096
+		lb_policy first
+		health_uri /health
+	}
+}
+
+files.example.com,
+	share.example.com {
+	handle /api/* {
+		reverse_proxy @api https://10.0.0.30:9443 {
+			transport http {
+				tls_insecure_skip_verify
+			}
+		}
+	}
+	handle {
+		root * /srv/files
+		file_server
+	}
+	respond "closing brace in a string } is not a block end"
+}
+
+static.example.com {
+	respond <<HTML
+	<h1>{ not a block }</h1>
+	HTML 200
+}
+
+*.wild.example.com {
+	reverse_proxy {http.request.host.labels.3}:80
+}
+
+:8080 {
+	reverse_proxy localhost:3000
+}

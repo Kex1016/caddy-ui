@@ -1,0 +1,5 @@
+handle_errors {
+	rewrite /error.html
+	templates
+	file_server
+}

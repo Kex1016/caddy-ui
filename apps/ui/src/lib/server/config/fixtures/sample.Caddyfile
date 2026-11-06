@@ -1,0 +1,87 @@
+# Shaped like the Caddyfile described in PLAN.md §2: global options, one snippet, mostly
+# one-line reverse proxies to 10.0.0.x, and a few blocks using handle, route, matchers and
+# transport options. Host names are placeholders under .localhost, so Caddy issues local
+# certificates in tests instead of asking an ACME CA.
+{
+	email admin@example.com
+	admin 0.0.0.0:2019
+	servers {
+		trusted_proxies static 10.0.0.0/24
+	}
+}
+
+(tinyauth_forwarder) {
+	forward_auth 10.0.0.101:8888 {
+		uri /api/auth/caddy
+		copy_headers Remote-User Remote-Email Remote-Name Remote-Groups
+	}
+}
+
+# Media
+media.home.localhost {
+	reverse_proxy 10.0.0.20:8096
+}
+
+grafana.home.localhost {
+	import tinyauth_forwarder
+	reverse_proxy 10.0.0.21:3000
+}
+
+docs.home.localhost {
+	root * /srv/docs
+	try_files {path} /index.html
+	file_server
+}
+
+nas.home.localhost {
+	reverse_proxy https://10.0.0.30:5001 {
+		transport http {
+			tls_insecure_skip_verify
+			tls_server_name nas.home.localhost
+		}
+		header_up Host {http.request.header.Host}
+	}
+}
+
+apps.home.localhost {
+	@api path /api/*
+	handle @api {
+		uri strip_prefix /api
+		reverse_proxy 10.0.0.40:8080
+	}
+
+	@legacy path_regexp legacy ^/old/(.*)$
+	redir @legacy /new/{re.legacy.1} 301
+
+	handle {
+		reverse_proxy {
+			to 10.0.0.41:80 10.0.0.42:80
+			lb_policy round_robin
+			health_uri /healthz
+			health_interval 30s
+		}
+	}
+
+	handle_errors {
+		respond "{err.status_code} {err.status_text}"
+	}
+}
+
+auth.home.localhost {
+	reverse_proxy 10.0.0.101:8888
+}
+
+wiki.home.localhost {
+	route {
+		rewrite /wiki /wiki/
+		reverse_proxy 10.0.0.50:3000
+	}
+	# reverse_proxy 10.0.0.51:3000
+}
+
+ssh.home.localhost {
+	forward_auth 10.0.0.103:8888 {
+		uri /api/auth/caddy
+	}
+	reverse_proxy 10.0.0.60:2222
+}

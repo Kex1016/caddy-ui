@@ -1,0 +1,4 @@
+path_regexp [<name>] <regexp>
+
+expression path_regexp('<name>', '<regexp>')
+expression path_regexp('<regexp>')

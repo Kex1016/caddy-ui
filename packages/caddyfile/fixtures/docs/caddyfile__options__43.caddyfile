@@ -1,0 +1,8 @@
+{
+	servers {
+		listener_wrappers {
+			http_redirect
+			tls
+		}
+	}
+}

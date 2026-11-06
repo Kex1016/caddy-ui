@@ -1,0 +1,37 @@
+import js from '@eslint/js';
+import prettier from 'eslint-config-prettier';
+import svelte from 'eslint-plugin-svelte';
+import globals from 'globals';
+import ts from 'typescript-eslint';
+
+export default ts.config(
+	{
+		ignores: ['**/node_modules/', '**/build/', '**/dist/', '**/.svelte-kit/', '**/coverage/']
+	},
+	js.configs.recommended,
+	...ts.configs.recommended,
+	...svelte.configs.recommended,
+	prettier,
+	...svelte.configs.prettier,
+	{
+		languageOptions: {
+			globals: { ...globals.browser, ...globals.node }
+		},
+		rules: {
+			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+			// The UI is served at the root with no kit.paths.base, so resolve() would be the identity; components
+			// take plain href strings so pages can pass any route.
+			'svelte/no-navigation-without-resolve': 'off'
+		}
+	},
+	{
+		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
+		languageOptions: {
+			parserOptions: {
+				projectService: true,
+				extraFileExtensions: ['.svelte'],
+				parser: ts.parser
+			}
+		}
+	}
+);

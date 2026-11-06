@@ -1,0 +1,14 @@
+example.com {
+	root /srv
+	templates {
+		extensions {
+			# Requires the caddy-hitcounter plugin:
+			# https://github.com/mholt/caddy-hitcounter
+			hitCounter {
+				style bright_green
+				pad_digits 6
+			}
+		}
+	}
+	file_server
+}

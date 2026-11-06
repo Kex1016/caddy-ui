@@ -1,0 +1,9 @@
+	dynamic srv [<full_name>] {
+		service   <service>
+		proto     <proto>
+		name      <name>
+		refresh   <interval>
+		resolvers <ip...>
+		dial_timeout        <duration>
+		dial_fallback_delay <duration>
+	}

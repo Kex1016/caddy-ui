@@ -1,0 +1,1 @@
+@magic vars_regexp magic {magic_number} ^(4.*)

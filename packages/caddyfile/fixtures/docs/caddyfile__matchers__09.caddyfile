@@ -1,0 +1,9 @@
+example.com {
+	@websockets {
+		header Connection *Upgrade*
+		header Upgrade    websocket
+	}
+	reverse_proxy @websockets localhost:6001
+
+	reverse_proxy localhost:8080
+}

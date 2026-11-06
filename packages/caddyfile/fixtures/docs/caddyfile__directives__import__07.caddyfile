@@ -1,0 +1,15 @@
+(instrumented-route) {
+	header {
+		Alt-Svc `h3="0.0.0.0:443"; ma=2592000`
+	}
+	tracing {
+		span args[0]
+	}
+	{block}
+}
+
+example.com {
+	import instrumented-route example-com {
+		respond "OK"
+	}
+}

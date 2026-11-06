@@ -1,0 +1,5 @@
+@GET method GET
+header @GET Cache-Control "max-age=3600" {
+	match status 2xx
+}
+reverse_proxy upstream:443

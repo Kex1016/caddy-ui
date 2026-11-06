@@ -1,0 +1,6 @@
+{
+	metrics {
+		per_host
+		observe_catchall_hosts
+	}
+}

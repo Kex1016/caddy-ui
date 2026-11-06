@@ -1,0 +1,11 @@
+(snippet) {
+	respond "Yahaha! You found {args[0]}!"
+}
+
+a.example.com {
+	import snippet "Example A"
+}
+
+b.example.com {
+	import snippet "Example B"
+}

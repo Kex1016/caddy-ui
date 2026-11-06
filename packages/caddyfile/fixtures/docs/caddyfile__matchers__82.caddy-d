@@ -1,0 +1,4 @@
+vars <variable> <values...>
+
+expression vars({'<variable>': '<value>'})
+expression vars({'<variable>': ['<values...>']})

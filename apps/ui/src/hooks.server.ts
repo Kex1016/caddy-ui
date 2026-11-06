@@ -1,0 +1,72 @@
+import { json, type Handle, type HandleServerError, type ServerInit } from '@sveltejs/kit';
+import { building } from '$app/environment';
+import { identify } from '$lib/server/auth';
+import { startConfigService } from '$lib/server/config';
+import { installCaddyfileParser } from '$lib/server/config/caddyfile-parser';
+import { startCollector } from '$lib/server/collector';
+import { ConfigError } from '$lib/server/env';
+import { isApiPath, isPublicPath, sameOrigin } from '$lib/server/guard';
+import { getRuntime } from '$lib/server/runtime';
+import { SESSION_COOKIE } from '$lib/server/session';
+import { THEME_COOKIE, parseTheme, themeAttribute } from '$lib/theme';
+
+function seeOther(location: string): Response {
+	return new Response(null, { status: 303, headers: { location } });
+}
+
+/** Read and validate the environment once at boot, so a bad variable stops the container with its name. */
+export const init: ServerInit = async () => {
+	try {
+		const { auth } = getRuntime();
+		if (auth.mode === 'local-disabled') {
+			console.warn('caddy-ui: CADDY_UI_USER and CADDY_UI_PASSWORD are unset, so local sign-in is off.');
+		} else if (auth.mode === 'local-misconfigured') {
+			console.error(`caddy-ui: ${auth.missing} is unset; every request is refused until both are set.`);
+		}
+		if (!building && process.env.VITEST === undefined) startCollector();
+	} catch (err) {
+		if (err instanceof ConfigError) {
+			console.error(`caddy-ui: invalid configuration: ${err.message}`);
+			process.exit(1);
+		}
+		throw err;
+	}
+	installCaddyfileParser();
+	await startConfigService();
+};
+
+export const handle: Handle = async ({ event, resolve }) => {
+	const { url, request, cookies } = event;
+	const api = isApiPath(url.pathname);
+
+	if (!sameOrigin(request.method, request.headers)) {
+		const message = 'Cross-site request refused';
+		return api ? json({ message }, { status: 403 }) : new Response(message, { status: 403 });
+	}
+
+	const { auth, secret } = getRuntime();
+	event.locals.identity = identify(auth, secret, cookies.get(SESSION_COOKIE), request.headers);
+	event.locals.theme = parseTheme(cookies.get(THEME_COOKIE));
+
+	if (!event.locals.identity && !isPublicPath(url.pathname)) {
+		if (api) return json({ message: 'Sign in required' }, { status: 401 });
+		const next = url.pathname + url.search;
+		// In forward mode or with a broken local config the login page explains what is wrong instead.
+		return seeOther(
+			auth.mode === 'local' && next !== '/' ? `/login?next=${encodeURIComponent(next)}` : '/login'
+		);
+	}
+
+	const response = await resolve(event, {
+		transformPageChunk: ({ html }) => html.replace('%caddy-ui.theme%', themeAttribute(event.locals.theme))
+	});
+	response.headers.set('x-content-type-options', 'nosniff');
+	response.headers.set('referrer-policy', 'same-origin');
+	response.headers.set('x-frame-options', 'DENY');
+	return response;
+};
+
+export const handleError: HandleServerError = ({ error, status }) => {
+	if (status !== 404) console.error(error);
+	return { message: status === 404 ? 'Not found' : 'Something went wrong on the server' };
+};

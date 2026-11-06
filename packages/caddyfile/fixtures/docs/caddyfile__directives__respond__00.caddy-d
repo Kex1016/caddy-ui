@@ -1,0 +1,4 @@
+respond [<matcher>] <status>|<body> [<status>] {
+	body <text>
+	close
+}

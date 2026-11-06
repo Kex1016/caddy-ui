@@ -1,0 +1,8 @@
+handle_errors {
+	@custom_err file /err-{err.status_code}.html /err.html
+	handle @custom_err {
+		rewrite {file_match.relative}
+		file_server
+	}
+	respond "{err.status_code} {err.status_text}"
+}

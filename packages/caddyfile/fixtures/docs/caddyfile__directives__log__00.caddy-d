@@ -1,0 +1,12 @@
+log [<logger_name>] {
+	hostnames <hostnames...>
+	no_hostname
+	output <writer_module> ...
+	format <encoder_module> ...
+	level  <level>
+	sampling {
+		interval   <duration>
+		first      <number>
+		thereafter <number>
+	}
+}

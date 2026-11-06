@@ -1,0 +1,3 @@
+example.com {
+	reverse_proxy node1:80 node2:80 node3:80
+}

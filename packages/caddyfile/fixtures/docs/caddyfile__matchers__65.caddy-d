@@ -1,0 +1,5 @@
+query <key>=<val>...
+query ""
+
+expression query({'<key>': '<val>'})
+expression query({'<key>': ['<vals...>']})

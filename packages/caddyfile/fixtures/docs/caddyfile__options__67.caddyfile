@@ -1,0 +1,5 @@
+{
+	servers {
+		strict_sni_host on
+	}
+}

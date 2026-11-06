@@ -1,0 +1,5 @@
+example.com {
+	respond /secret/* "Access denied" 403 {
+		close
+	}
+}

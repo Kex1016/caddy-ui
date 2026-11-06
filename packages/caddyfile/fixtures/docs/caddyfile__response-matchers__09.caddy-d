@@ -1,0 +1,4 @@
+@foo {
+	header Foo bar
+	header Foo baz
+}

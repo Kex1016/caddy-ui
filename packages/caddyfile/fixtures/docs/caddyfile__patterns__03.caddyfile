@@ -1,0 +1,11 @@
+example.com {
+	handle_path /app1/* {
+		reverse_proxy localhost:5001
+	}
+	handle_path /app2/* {
+		reverse_proxy localhost:5002
+	}
+	handle {
+		respond "Not found" 404
+	}
+}

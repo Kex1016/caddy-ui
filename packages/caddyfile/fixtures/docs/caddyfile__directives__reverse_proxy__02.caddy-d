@@ -1,0 +1,9 @@
+	dynamic a [<name> <port>] {
+		name      <name>
+		port      <port>
+		refresh   <interval>
+		resolvers <ip...>
+		dial_timeout        <duration>
+		dial_fallback_delay <duration>
+		versions ipv4|ipv6
+	}

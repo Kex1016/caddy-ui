@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Unit tests
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+
+  image:
+    name: Docker image builds and answers /api/health
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: docker build --build-arg CADDY_UI_VERSION=ci-${{ github.sha }} -t caddy-ui:ci .
+      - name: Smoke test
+        run: |
+          docker run -d --name caddy-ui -p 3001:3001 -e CADDY_UI_AUTH_MODE=none caddy-ui:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3001/api/health; then exit 0; fi
+            sleep 1
+          done
+          docker logs caddy-ui
+          exit 1
+
+  caddy:
+    name: Config service against a real Caddy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start Caddy with its admin API on the runner
+        run: |
+          echo '{"admin":{"listen":"0.0.0.0:2019"}}' > "$RUNNER_TEMP/caddy.json"
+          docker run -d --name caddy -p 2019:2019 -v "$RUNNER_TEMP/caddy.json:/etc/caddy/caddy.json:ro" \
+            caddy:2.10 caddy run --config /etc/caddy/caddy.json
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:2019/config/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          docker logs caddy
+          exit 1
+      - name: W3 definition of done
+        env:
+          CADDY_TEST_ADMIN_URL: http://127.0.0.1:2019
+        run: pnpm --filter @caddy-ui/ui test:caddy
+      - name: Caddy logs
+        if: failure()
+        run: docker logs caddy
+
+  collector:
+    name: Collector against a real Caddy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: docker build --build-arg CADDY_UI_VERSION=ci-${{ github.sha }} -t caddy-ui:ci .
+      - name: Start Caddy and the UI
+        run: |
+          docker network create caddy-ui
+          mkdir -p logs && chmod 777 logs
+          docker run -d --name caddy --network caddy-ui -p 8080:80 \
+            -v "$PWD/deploy/ci/Caddyfile.collector:/etc/caddy/Caddyfile:ro" -v "$PWD/logs:/var/log/caddy" caddy:2
+          docker run -d --name caddy-ui --network caddy-ui -p 3001:3001 \
+            -e CADDY_UI_AUTH_MODE=none -e CADDY_UI_PROBE_INTERVAL=5s -e CADDY_UI_SCRAPE_INTERVAL=5s \
+            -v "$PWD/deploy/ci/Caddyfile.collector:/etc/caddy/Caddyfile:ro" -v "$PWD/logs:/var/log/caddy:ro" \
+            caddy-ui:ci
+          for i in $(seq 1 30); do curl -fsS http://localhost:3001/api/health && break; sleep 1; done
+      - name: Check stats
+        run: deploy/ci/collector-check.sh
+      - name: Logs
+        if: failure()
+        run: |
+          docker logs caddy
+          docker logs caddy-ui

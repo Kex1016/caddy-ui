@@ -1,0 +1,32 @@
+name: Caddy docs drift
+
+# Fails when the Caddy docs (caddyserver/website, master) list a directive, matcher or
+# global option that packages/caddy-schema lacks. Pull requests test against the pinned
+# docs commit in packages/caddy-schema/docs-source.json instead, so they stay reproducible.
+
+on:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: Schema covers the latest Caddy docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Coverage against caddyserver/website master
+        working-directory: packages/caddy-schema
+        env:
+          CADDY_DOCS_REF: master
+        run: pnpm exec vitest run test/docs.test.ts -t "coverage of the docs"

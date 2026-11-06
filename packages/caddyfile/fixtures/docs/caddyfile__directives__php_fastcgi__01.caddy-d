@@ -1,0 +1,26 @@
+route {
+	# Add trailing slash for directory requests
+	# This redirection is automatically disabled if "{http.request.uri.path}/index.php"
+	# doesn't appear in the try_files list
+	@canonicalPath {
+		file {path}/index.php
+		not path */
+	}
+	redir @canonicalPath ./{http.request.orig_uri.path.file_escaped}/{orig_?query} 308
+
+	# If the requested file does not exist, try index files and assume index.php always exists
+	@indexFiles file {
+		try_files {path} {path}/index.php index.php
+		try_policy first_exist_fallback
+		split_path .php
+	}
+	rewrite @indexFiles {file_match.relative}
+
+	# Proxy PHP files to the FastCGI responder
+	@phpFiles path *.php
+	reverse_proxy @phpFiles <php-fpm_gateway> {
+		transport fastcgi {
+			split .php
+		}
+	}
+}

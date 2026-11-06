@@ -1,0 +1,5 @@
+example.com {
+	root /srv
+	templates
+	file_server
+}

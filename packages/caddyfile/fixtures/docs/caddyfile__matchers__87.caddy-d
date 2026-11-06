@@ -1,0 +1,4 @@
+vars_regexp [<name>] <variable> <regexp>
+
+expression vars_regexp('<name>', '<variable>', '<regexp>')
+expression vars_regexp('<variable>', '<regexp>')

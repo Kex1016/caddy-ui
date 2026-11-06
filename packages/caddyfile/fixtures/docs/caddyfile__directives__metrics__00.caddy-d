@@ -1,0 +1,3 @@
+metrics [<matcher>] {
+	disable_openmetrics
+}

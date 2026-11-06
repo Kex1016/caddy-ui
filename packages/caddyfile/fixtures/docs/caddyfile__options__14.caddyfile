@@ -1,0 +1,14 @@
+{
+	shutdown_delay 30s
+}
+
+example.com {
+	handle /health-check {
+		@goingDown vars {http.shutting_down} true
+		respond @goingDown "Bye-bye in {http.time_until_shutdown}" 503
+		respond 200
+	}
+	handle {
+		respond "Hello, world!"
+	}
+}

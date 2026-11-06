@@ -1,0 +1,4 @@
+... http [<endpoints...>] {
+	endpoints   <endpoints...>
+	tls         <tls_config>
+}

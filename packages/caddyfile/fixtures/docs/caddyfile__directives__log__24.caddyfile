@@ -1,0 +1,10 @@
+example.com {
+	log {
+		format filter {
+			request>headers>Cookie cookie {
+				replace session REDACTED
+				delete secret
+			}
+		}
+	}
+}

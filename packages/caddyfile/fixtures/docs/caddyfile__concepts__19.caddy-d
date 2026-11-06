@@ -1,0 +1,3 @@
+root *           /var/www  # matcher token: *
+root /index.html /var/www  # matcher token: /index.html
+root @post       /var/www  # matcher token: @post
