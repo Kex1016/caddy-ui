@@ -97,7 +97,17 @@ B + E, with D as an optional toggle:
 7. Round trip preserves David's formatting and comments exactly; a "Format" action
    applies `caddy fmt` style when he wants it.
 
-## Open questions for David
+## David's answers (6 Nov 2026)
+
+1. Editor shape: **B, tree + inspector**, with recipes.
+2. Text mode: **Visual | Text switch**, with an optional side-by-side split toggle.
+3. Round trip: **normalise to `caddy fmt` style on every save**; comments are kept.
+   The byte-exact printer stays for in-editor diffs and history.
+4. First release scope: **bespoke forms for all 41 directives** (and all 19 matchers).
+   PLAN.md splits this into W5a (core and the directives in use) and W5b (the rest).
+5. Disable a site: **comment the block out**.
+
+## Open questions for David (answered above, kept for the record)
 
 1. Editor shape: B (tree + inspector) as recommended, A (cards), or C (flow diagram)?
 2. Text mode: a Visual | Text switch (recommended), always side by side, or both?

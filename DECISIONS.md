@@ -371,3 +371,19 @@ Format: date · workstream · decision · why · how to reverse.
   (the sites list's link, which also sends `site=<id>`) scrolls to that line, and a "Jump to block"
   list covers sites, global options, snippets and named routes. Whole-file editing only; per-block text
   editing is left to W5's inspector · W8 can link a site to its text with `?at=` · none.
+- 2026-11-06 · Plan · Text editing is a Visual | Text mode switch, with an optional
+  side-by-side split toggle · David chose it on the decision card in the planning
+  thread · a layout change in W5.
+- 2026-11-06 · Plan · Saving normalises the Caddyfile to `caddy fmt` style on every save;
+  comments are kept, indentation and spacing are rewritten · David chose it on the
+  decision card, over the byte-exact recommendation · W1 keeps the byte-exact printer
+  for in-editor round trips and diffs; W3 runs `format()` before writing. Reversible by
+  a setting if David changes his mind.
+- 2026-11-06 · Plan · The first release ships bespoke forms for all 41 directives, not
+  only the ones David uses · David chose it on the decision card · W5 is split: W5a
+  (Fable) builds the editor core, the matcher builder and the 12 directives in David's
+  Caddyfile; W5b (Opus, parallel, starts when W5a's form API lands) builds the other
+  29 bespoke forms in batches by category. Generic schema forms remain as the fallback
+  for plugin directives.
+- 2026-11-06 · Plan · "Disable a site" comments the block out · David confirmed the
+  recommendation on the decision card · none needed.

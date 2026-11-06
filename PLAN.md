@@ -123,7 +123,10 @@ type Trivia = { kind: 'comment'|'blank'; text: string; span: Span }
 The printer must reproduce the input byte-for-byte when the tree is unchanged
 (`print(parse(x)) === x`). Edits to a node re-print only that node, keeping the file's
 indentation style (tabs vs spaces, detected per block). A separate `format()` produces
-`caddy fmt` style output on demand.
+`caddy fmt` style output. David's choice (DECISIONS.md, 6 Nov): every save through the
+UI runs `format()` before writing, so the file on disk is always in `caddy fmt` style;
+comments are kept. The byte-exact printer is still required for in-editor diffs, the
+revision history and the "unapplied changes" comparison.
 
 **Schema shape (`packages/caddy-schema`)**
 
@@ -229,16 +232,18 @@ coordinator launches a thread the moment its start condition holds.
 | W2 | Caddy schema | Opus | high | plan approved | `packages/caddy-schema`: generator script reading `caddyserver/website` markdown, schema JSON for 41 directives, 19 matchers, global options, placeholders; coverage test that fails if the docs add a directive the schema lacks |
 | W3 | Config service and Caddy client | Opus | high | W0 merged | Admin client, read/validate/apply/backup/rollback, drift detection, revisions table, `/api/caddyfile*`, `/api/caddy/*`, file watcher for external edits |
 | W4 | Collector | Opus | high | W0 merged | Probes, metrics scraper, log tailer with minute rollups, cert reader, state-change tracking, retention, SQLite schema and migrations, `/api/sites`, `/api/sites/:id/stats`, `/api/overview` |
-| W5 | Visual editor | Fable | xhigh | W1, W2, W3 merged and David's editor answers | The editor chosen in docs/visual-editor-options.md: tree + inspector, schema-driven forms for every directive and matcher, bespoke forms for the directives David uses, recipes for new blocks, raw fallback, matcher builder, placeholder picker, effective-order view, diagnostics panel |
+| W5a | Visual editor core | Fable | xhigh | W1, W2, W3 merged | Tree + inspector editor (David's choice), Visual \| Text mode switch with an optional split, the inspector form API that W5b builds on, bespoke forms for the 12 directives and 5 matcher forms in David's Caddyfile, matcher builder, placeholder picker, recipes for new blocks, raw fallback, effective-order view, diagnostics panel, generic schema form as the fallback for plugin directives |
+| W5b | Bespoke forms for the remaining 29 directives | Opus | high | W5a's form API merged (W5a may merge it as its first PR) | Hand-designed inspector forms for every standard directive W5a does not cover, in batches by category (logging, headers and request shaping, TLS and ACME, static and templates, routing extras), plus the 14 generic matchers, each with examples from the docs and a round-trip test |
 | W6 | Text editor | Opus | high | W1, W2 merged | CodeMirror 6 Caddyfile language (Lezer grammar or stream parser backed by W1 tokens), highlighting, folding, bracket matching, lint from W1 + `/adapt`, autocomplete and hover docs from W2, format on demand, diff before apply |
 | W7 | Dashboard and stats pages | Opus | high | W4 merged | Overview page, per-site page, charts per Fishnet chart rules, time-range switch, table twins, uptime strips, cert list, upstream list |
 | W8 | Sites list and lifecycle | Sonnet | medium | W3, W4 merged | Sites index with status badges and "up for" times, search/filter, add (opens recipe picker from W5 or a blank block), duplicate, delete with confirm, enable/disable (comment out a block), reorder, global options and snippets entry points |
 | W9 | Deploy, image and updater | Sonnet | medium | W0 merged (script part can start at plan approval) | Multi-stage Dockerfile, GitHub Actions building `ghcr.io/kex1016/caddy-ui` on push to main and tags, `deploy/compose.example.yml`, `deploy/updater/` (poll GHCR digest or git HEAD every `CADDY_UI_UPDATE_INTERVAL`, `docker compose pull && up -d caddy-ui`, optional webhook on `CADDY_UI_UPDATE_WEBHOOK_PORT`), migration notes from zackwag images |
-| W10 | Documentation | Sonnet | medium | drafts at plan approval; final after W5–W9 | `README.md`, `docs/install.md`, `docs/configuration.md`, `docs/architecture.md`, `docs/editor.md`, `docs/stats.md`, `docs/migration-from-caddy-ui.md`, `docs/faq.md`, screenshots |
-| W11 | Integration and QA | Opus | medium | W5, W6, W7, W8 merged | Playwright e2e against a real `caddy` container in CI (compose in GitHub Actions), round-trip test of David's Caddyfile through the visual editor, accessibility pass, performance budget |
+| W10 | Documentation | Sonnet | medium | drafts at plan approval; final after W5b–W9 | `README.md`, `docs/install.md`, `docs/configuration.md`, `docs/architecture.md`, `docs/editor.md`, `docs/stats.md`, `docs/migration-from-caddy-ui.md`, `docs/faq.md`, screenshots |
+| W11 | Integration and QA | Opus | medium | W5a, W5b, W6, W7, W8 merged | Playwright e2e against a real `caddy` container in CI (compose in GitHub Actions), round-trip test of David's Caddyfile through the visual editor, accessibility pass, performance budget |
 
 Parallelism: W0, W1, W2, W9 (script), W10 (drafts) start together. W3, W4, W6 start
-when W0 (and for W6, W1 + W2) merge. W5, W7, W8 follow. W11 and the final W10 close.
+when W0 (and for W6, W1 + W2) merge. W5a, W7, W8 follow, then W5b beside W5a. W11 and
+the final W10 close.
 Peak is five threads at once, which matches "as many as reasonable".
 
 Suggested branch names: `ws/w1-caddyfile-parser`, `ws/w5-visual-editor`, and so on.
@@ -258,9 +263,12 @@ about 2,000 changed lines.
   the previous revision and reloads Caddy.
 - W4: after 10 minutes against a running Caddy the overview shows non-zero requests,
   every site has a probe state, a down upstream shows as down within two intervals.
-- W5: David's Caddyfile opened in the visual editor, every block expanded and saved with
-  no changes, writes an identical file; each directive and matcher in the schema has a
-  form (generic or bespoke); unknown directives show as raw rows and still round-trip.
+- W5a: David's Caddyfile opened in the visual editor, every block expanded and saved
+  with no changes, writes the `caddy fmt` form of the same file with every comment kept,
+  and saving that again changes nothing; the 12 directives and 5 matcher forms David
+  uses have bespoke forms; unknown directives show as raw rows and still round-trip.
+- W5b: every one of the 41 standard directives and 19 matchers has a bespoke form; each
+  form has a test that builds the docs' example and prints it back.
 - W6: highlighting covers comments, addresses, directives, matchers, placeholders, env
   vars, quoted and heredoc strings; a syntax error is underlined within 300 ms.
 - W7: every chart has a table twin and a source note; empty and stale states follow
@@ -310,5 +318,5 @@ log and metrics setup helpers), About (Caddy version, UI version, update status)
 
 1. Foundations merged: W0, W1, W2 (parallel).
 2. Working core: W3, W4, W6, W9 image.
-3. The product: W5, W7, W8.
+3. The product: W5a, W7, W8, then W5b.
 4. Release 1.0: W11 green, W10 final, W9 updater, compose swap in TODO-USER.
