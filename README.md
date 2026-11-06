@@ -90,10 +90,11 @@ the Caddyfile parser and the directive schema. See [docs/architecture.md](docs/a
 | [docs/migration-from-caddy-ui.md](docs/migration-from-caddy-ui.md) | Swapping the zackwag images for this one |
 | [docs/faq.md](docs/faq.md) | Common questions and fixes |
 | [docs/caddy-coverage.md](docs/caddy-coverage.md) | Every directive and matcher the editor supports |
+| [docs/testing.md](docs/testing.md) | How it is tested: e2e, accessibility, performance budget, Caddy versions |
 
 Project process documents: [PLAN.md](PLAN.md), [AUTOPILOT.md](AUTOPILOT.md),
 [DECISIONS.md](DECISIONS.md), [TODO-USER.md](TODO-USER.md).
 
 ## License
 
-No license file has been added yet; see [TODO-USER.md](TODO-USER.md).
+MIT. See [LICENSE](LICENSE).

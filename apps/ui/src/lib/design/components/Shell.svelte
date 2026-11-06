@@ -85,6 +85,8 @@
 			{@render top()}
 			{#if topEnd}<div class="fp-top__end">{@render topEnd()}</div>{/if}
 		</header>
-		<main class="fp-shell__scroll" id="main">{@render children()}</main>
+		<!-- The page scrolls inside main, so it must take focus for keyboard scrolling when a page has no links. -->
+		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+		<main class="fp-shell__scroll" id="main" tabindex="0">{@render children()}</main>
 	</div>
 </div>

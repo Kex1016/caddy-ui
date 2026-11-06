@@ -76,8 +76,10 @@ shows the version and which settings are in effect; secrets show only as set or 
 ## 4. First look
 
 1. **Overview** and **Sites** show status after one probe interval (30 s by default).
-2. Open **Editor**, expand a few blocks, and press **Review and apply** without changing
-   anything. The diff only re-indents the file into `caddy fmt` style; comments are kept.
+2. Open **Editor**, expand a few blocks, and press **Format**, then **Review and apply**,
+   without changing anything else. (**Review and apply** stays disabled while the text
+   matches the file.) The diff only re-indents the file into `caddy fmt` style; comments are
+   kept. If the file is already in that style, **Format** finds nothing to do.
 3. Sites that sit behind another container's network may show as down; see
    [faq.md](faq.md).
 

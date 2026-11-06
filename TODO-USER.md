@@ -42,8 +42,8 @@ Newest at the bottom. Format: date · workstream · what · why.
 - [ ] 2026-11-05 · W10 · Decide whether history and settings from the old zackwag backend
   should be imported into the new UI; the drafts say they are not · an importer is extra
   work and only worth it if you have history you want to keep.
-- [ ] 2026-11-05 · W10 · Pick the license for the first release (the README says MIT, to
-  be added) · the repo has no LICENSE file yet.
+- [x] 2026-11-05 · W10 · Pick the license for the first release (the README says MIT, to
+  be added) · the repo has no LICENSE file yet. Done 6 Nov: MIT, LICENSE added by W11.
 - [ ] 2026-11-05 · W0 · If you pick `CADDY_UI_AUTH_MODE=forward`, do not publish the UI's port on the host
   (drop the `ports:` mapping and reach it only through Caddy with `forward_auth`) · in forward mode the UI
   trusts the `Remote-User` header, and anyone who can reach the port directly could send it.
@@ -64,12 +64,16 @@ Newest at the bottom. Format: date · workstream · what · why.
       re-enable and delete a throwaway site (for example `test.example.com`). Each change is validated by Caddy and
       kept in History, so a mistake is one click to undo · the unit tests cover the file edits, but only your
       Caddyfile proves they sit well with its comments and layout.
-- [ ] 2026-11-06 · W5a · Open your real Caddyfile in the visual editor, expand every block, change nothing and
-      "Review and apply": the diff should only re-indent (every save is written in `caddy fmt` style, as you chose)
-      and keep every comment; applying again should say nothing changed. Then edit one site through its form and
+- [ ] 2026-11-06 · W5a · Open your real Caddyfile in the visual editor, expand every block, change nothing, press
+      "Format" and then "Review and apply" (the button stays disabled until the text differs from the file): the diff should only re-indent (every save is written in `caddy fmt` style, as you chose)
+      and keep every comment; afterwards "Format" should find nothing to change. Then edit one site through its form and
       check the text mode shows exactly the change you expect · the sample copy of your Caddyfile round-trips in
       the tests, but only the real file proves it, and anything the forms do not model shows under "Other lines".
 
+- [ ] 2026-11-06 · W11 · Glance at the theme once more: to pass the accessibility check, faint text (section
+      labels in the sidebar, captions, line numbers) is a little darker in light mode and lighter in dark mode, and
+      the light accent text is a shade darker (DECISIONS.md, W11). Nothing else changed · if you would rather keep
+      Fishnet's lighter grey, say so and pick a colour that still has 4.5:1 contrast.
 - [ ] 2026-11-06 · W10 · **Swap `caddy-ui-backend` and `caddy-ui-frontend` for `caddy-ui` in
   your compose file** (do this last; it is the end of the project). Do it once `v1.0.0` is
   tagged and its image is on GHCR.

@@ -53,9 +53,14 @@ jobs:
           exit 1
 
   caddy:
-    name: Config service against a real Caddy
+    name: Config service against Caddy ${{ matrix.caddy }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest Caddy the UI supports and whatever caddy:latest is today (David runs latest).
+        caddy: ['2.10', '2']
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -68,7 +73,7 @@ jobs:
         run: |
           echo '{"admin":{"listen":"0.0.0.0:2019"}}' > "$RUNNER_TEMP/caddy.json"
           docker run -d --name caddy -p 2019:2019 -v "$RUNNER_TEMP/caddy.json:/etc/caddy/caddy.json:ro" \
-            caddy:2.10 caddy run --config /etc/caddy/caddy.json
+            caddy:${{ matrix.caddy }} caddy run --config /etc/caddy/caddy.json
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:2019/config/ >/dev/null; then exit 0; fi
             sleep 1
@@ -109,3 +114,86 @@ jobs:
         run: |
           docker logs caddy
           docker logs caddy-ui
+
+  e2e:
+    name: E2E in Chromium against Caddy ${{ matrix.caddy }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        caddy: ['2.10', '2']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build the UI
+        run: pnpm --filter @caddy-ui/ui build
+      - name: Install Chromium
+        run: pnpm --filter @caddy-ui/e2e exec playwright install --with-deps chromium
+      - name: Start Caddy ${{ matrix.caddy }} with its admin API on the runner
+        run: |
+          echo '{"admin":{"listen":"0.0.0.0:2019"}}' > "$RUNNER_TEMP/caddy.json"
+          docker run -d --name caddy -p 2019:2019 -v "$RUNNER_TEMP/caddy.json:/etc/caddy/caddy.json:ro" \
+            caddy:${{ matrix.caddy }} caddy run --config /etc/caddy/caddy.json
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:2019/config/ >/dev/null && exit 0; sleep 1; done
+          docker logs caddy
+          exit 1
+      - name: Playwright
+        env:
+          CADDY_ADMIN_URL: http://127.0.0.1:2019
+        run: pnpm --filter @caddy-ui/e2e e2e
+      - name: Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-caddy-${{ matrix.caddy }}
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7
+      - name: Caddy logs
+        if: failure()
+        run: docker logs caddy
+
+  differential:
+    name: Formatter against caddy fmt and caddy adapt ${{ matrix.caddy }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        caddy: ['2.10', '2']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Take the caddy binary out of the official image
+        run: |
+          docker create --name src caddy:${{ matrix.caddy }}
+          docker cp src:/usr/bin/caddy "$RUNNER_TEMP/caddy"
+          "$RUNNER_TEMP/caddy" version
+      - name: Differential tests
+        run: CADDY_BIN="$RUNNER_TEMP/caddy" pnpm --filter @caddy-ui/caddyfile exec vitest run test/caddy-differential.test.ts
+
+  install:
+    name: Install docs and compose swap against the built image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Build
+        run: docker build --build-arg CADDY_UI_VERSION=ci-${{ github.sha }} -t caddy-ui:ci .
+      - name: Follow docs/install.md and the swap steps in TODO-USER.md
+        run: deploy/ci/install-smoke.sh caddy-ui:ci

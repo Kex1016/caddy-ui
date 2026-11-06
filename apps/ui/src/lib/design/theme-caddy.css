@@ -3,6 +3,9 @@
      #1f8a70 to #1a7560 so links and the focus ring keep 4.5:1 on bg; #1f8a70 is used for chart marks.
    - Success: shifted from Fishnet's teal (which now sits next to the accent) to a leaf green, so "up" never
      reads as "selected". Status colours still travel with a word or an icon.
+   - Faint text (kickers, captions, line numbers) and light acc-ink are darkened (lightened in dark) from
+     Fishnet's values so 11-12 px text keeps 4.5:1 on every ground it sits on (sidebar, chips, tags, panels);
+     W11's axe pass found Fishnet's #78716a / #867d71 at 3.7-4.5:1 there (light faint #78716a → #5f5850, dark #867d71 → #a0978a). Light acc-ink: #1a7560 → #166a57.
    - Fonts: unchanged (Zen Maru Gothic, Zen Kaku Gothic New, JetBrains Mono).
    After editing the light block, run `pnpm --filter @caddy-ui/ui gen:theme` to refresh theme-system.css. */
 :root,
@@ -20,10 +23,11 @@
 	--success-ink: #acd99a;
 	--success-soft: rgba(156, 207, 134, 0.14);
 	--focus-ring: 0 0 0 2px #171613, 0 0 0 4px #7fdfc4;
+	--faint: #a0978a;
 }
 [data-theme='light'] {
 	--acc: #5fd3b4;
-	--acc-ink: #1a7560;
+	--acc-ink: #166a57;
 	--acc-soft: rgba(26, 117, 96, 0.12);
 	--acc-viz: #1f8a70;
 	--acc-heat-1: #d2efe6;
@@ -34,5 +38,6 @@
 	--success: #9ccf86;
 	--success-ink: #3f6f22;
 	--success-soft: rgba(63, 111, 34, 0.12);
-	--focus-ring: 0 0 0 2px #f5f2ec, 0 0 0 4px #1a7560;
+	--focus-ring: 0 0 0 2px #f5f2ec, 0 0 0 4px #166a57;
+	--faint: #5f5850;
 }

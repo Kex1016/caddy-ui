@@ -16,7 +16,9 @@
 		Compared with {beforeLabel}: <span class="add-ink">+{stats.added}</span>
 		<span class="del-ink">−{stats.removed}</span> lines.
 	</p>
-	<div class="diff" role="table" aria-label={label}>
+	<!-- tabindex: the diff scrolls, so keyboard users must be able to focus it to scroll (WCAG 2.1.1). -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<div class="diff" role="table" aria-label={label} tabindex="0">
 		{#each shown as hunk, h (h)}
 			{#if hunk.skippedBefore}
 				<div class="diff__skip" role="row">

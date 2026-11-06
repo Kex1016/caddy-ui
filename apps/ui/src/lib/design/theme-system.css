@@ -10,9 +10,9 @@
 		--line-soft: #e5e0d6;
 		--text: #231f1a;
 		--muted: #5d574e;
-		--faint: #78716a;
+		--faint: #5f5850;
 		--acc: #5fd3b4;
-		--acc-ink: #1a7560;
+		--acc-ink: #166a57;
 		--acc-soft: rgba(26, 117, 96, 0.12);
 		--acc-viz: #1f8a70;
 		--acc-heat-1: #d2efe6;
@@ -54,7 +54,7 @@
 		--shadow-pill: 0 1px 2px rgba(40, 30, 20, 0.12);
 		--shadow-float: 0 6px 24px rgba(40, 30, 20, 0.16);
 		--shadow-modal: 0 16px 48px rgba(40, 30, 20, 0.22);
-		--focus-ring: 0 0 0 2px #f5f2ec, 0 0 0 4px #1a7560;
+		--focus-ring: 0 0 0 2px #f5f2ec, 0 0 0 4px #166a57;
 		--on-art-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 	}
 }
