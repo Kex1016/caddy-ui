@@ -44,6 +44,41 @@ The example compose file also reads `CADDY_UI_TAG`, `CADDY_UI_HOST_PORT` and
   the port on the host; reach the UI only through Caddy with `forward_auth`.
 - **`none`**: no login. Only for a network you trust.
 
+### Forward auth on the Caddy side
+
+For `forward` mode, put the UI behind Caddy with `forward_auth`, the same way as your other
+protected sites:
+
+1. In compose, set `CADDY_UI_AUTH_MODE: forward` and delete the `ports:` mapping of
+   `caddy-ui` so the UI is reachable only from the Docker network. Caddy must be on the same
+   network (`caddy-ui` in the example). `CADDY_UI_USER` and `CADDY_UI_PASSWORD` are not used
+   in this mode; remove them, along with the `:?` guards in the example.
+2. Add a site block that authenticates, then proxies to the service name and its container
+   port:
+
+   ```caddyfile
+   (tinyauth_forwarder) {
+   	forward_auth tinyauth:3000 {
+   		uri /api/auth/caddy
+   		copy_headers Remote-User Remote-Name Remote-Email Remote-Groups
+   	}
+   }
+
+   caddy.example.com {
+   	import tinyauth_forwarder
+   	reverse_proxy caddy-ui:3001
+   }
+   ```
+
+   If you already have a snippet like this, import it instead of adding a new one. Use your
+   auth provider's own address and verify path.
+3. Reload Caddy and open the site. tinyauth must accept the new hostname (it has to sit under
+   the cookie domain tinyauth serves).
+
+The UI shows the name from `Remote-User` as the signed-in user. Caddy drops a client-sent
+`Remote-User` when the auth response does not set it, so the header cannot be spoofed
+through Caddy. That is why the port must stay unpublished: a direct connection skips Caddy.
+
 `GET /api/health` is always unauthenticated so health checks work.
 
 ## Volumes
