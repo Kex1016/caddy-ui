@@ -3,8 +3,9 @@
 Things only David can do. Threads append here; David strikes items through when done.
 Newest at the bottom. Format: date · workstream · what · why.
 
-- [ ] 2026-11-05 · Plan · Approve [PLAN.md](PLAN.md) (merge the planning PR or say so in
-  the project chat) · the coordinator launches workstreams only after approval.
+- [x] 2026-11-05 · Plan · Approve [PLAN.md](PLAN.md) (merge the planning PR or say so in
+  the project chat) · the coordinator launches workstreams only after approval. Done 6 Nov:
+  PR #1 merged.
 - [x] 2026-11-05 · Plan · Answer the five visual editor questions · done 6 Nov: tree +
   inspector, Visual | Text switch, normalise on save, bespoke forms for all 41, comment
   out to disable (docs/visual-editor-options.md).
@@ -75,8 +76,9 @@ Newest at the bottom. Format: date · workstream · what · why.
       the light accent text is a shade darker (DECISIONS.md, W11). Nothing else changed · if you would rather keep
       Fishnet's lighter grey, say so and pick a colour that still has 4.5:1 contrast.
 - [ ] 2026-11-06 · W10 · **Swap `caddy-ui-backend` and `caddy-ui-frontend` for `caddy-ui` in
-  your compose file** (do this last; it is the end of the project). Do it once `v1.0.0` is
-  tagged and its image is on GHCR.
+  your compose file** (do this last; it is the end of the project). `v1.0.0` was tagged on
+  12 Nov and its images are on GHCR, so you can do it now. Both
+  packages were still private on 12 Nov (anonymous pulls are refused), so step 1 is needed.
   1. Check that `ghcr.io/kex1016/caddy-ui` and `ghcr.io/kex1016/caddy-ui-updater` are public
      (GitHub profile → Packages → the package → Package settings → Change visibility), or run
      `docker login ghcr.io` on the server. A private package cannot be pulled.
