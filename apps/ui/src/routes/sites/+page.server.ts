@@ -4,7 +4,10 @@ import { getConfigService } from '$lib/server/config';
 import { authorOf } from '$lib/server/config/http';
 import { ApplyError } from '$lib/server/config/service';
 import { AdminError, AdminUnreachableError } from '$lib/server/caddy/admin';
+import { siteHost } from '$lib/server/caddy/porkbun/caddyfile';
+import { SiteEditError, addPorkbunToSite } from '$lib/server/caddy/porkbun/site-edit';
 import { getDb } from '$lib/server/db';
+import { isConfigured } from '$lib/server/porkbun';
 import { config } from '$lib/server/env';
 import {
 	BlockError,
@@ -76,7 +79,9 @@ export const load: PageServerLoad = async () => {
 			fields
 		})),
 		caddyfileError: payload.sources.caddyfile.error,
-		probing: payload.sources.probes.ok
+		probing: payload.sources.probes.ok,
+		// With Porkbun keys the page asks `/api/porkbun/caddy` for its DNS column, after it has rendered.
+		porkbunOn: isConfigured()
 	};
 };
 
@@ -89,20 +94,29 @@ const str = (form: FormData, key: string) => {
 async function edit(
 	request: Request,
 	locals: App.Locals,
-	build: (text: string, form: FormData) => { text: string; note: string; done: string }
+	build: (
+		text: string,
+		form: FormData
+	) => { text: string; note: string; done: string; added?: string[]; dns01?: string }
 ) {
 	const form = await request.formData();
 	const svc = getConfigService();
 	try {
 		const file = await svc.readFile();
-		const { text, note, done } = build(file.text, form);
+		const { text, note, done, added, dns01 } = build(file.text, form);
 		const baseHash = str(form, 'baseHash') || undefined;
 		const res = await svc.apply(text, { author: authorOf(locals), note, baseHash });
 		return {
 			ok: true as const,
-			message: res.loaded ? `${done} Caddy reloaded.` : res.changed ? `${done}` : 'Nothing to change.'
+			message: res.loaded ? `${done} Caddy reloaded.` : res.changed ? `${done}` : 'Nothing to change.',
+			// The host names of a site that was just added: the page offers their DNS records next.
+			...(added ? { added } : {}),
+			...(dns01 ? { dns01 } : {})
 		};
 	} catch (err) {
+		if (err instanceof SiteEditError) {
+			return fail(err.code === 'not_found' ? 404 : 409, { message: err.message });
+		}
 		if (err instanceof BlockError) {
 			const status =
 				err.code === 'not_found' ? 404 : err.code === 'duplicate' ? 409 : err.code === 'bug' ? 500 : 400;
@@ -137,7 +151,20 @@ export const actions: Actions = {
 			return {
 				text: addSite(text, block, addresses),
 				note: `Added site ${label(addresses)}`,
-				done: `Added ${label(addresses)}.`
+				done: `Added ${label(addresses)}.`,
+				added: addresses.flatMap((a) => siteHost(a)?.host ?? [])
+			};
+		}),
+	/** Give a site the Porkbun DNS challenge (the wildcard hint). The keys are written as placeholders. */
+	dns01: ({ request, locals }) =>
+		edit(request, locals, (text, form) => {
+			const id = str(form, 'id');
+			const next = addPorkbunToSite(text, id);
+			return {
+				text: next.text,
+				note: `Added the Porkbun DNS challenge to ${label(next.addresses)}`,
+				done: `${label(next.addresses)} now gets its certificate through the Porkbun DNS challenge.`,
+				dns01: id
 			};
 		}),
 	duplicate: ({ request, locals }) =>

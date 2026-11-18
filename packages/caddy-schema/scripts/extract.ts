@@ -26,6 +26,7 @@ import {
 } from './md.ts';
 import { parseSyntaxBlock, parseArgs, tokenize, normaliseArgName, type SyntaxNode } from './syntax.ts';
 import { applyOverrides, CATEGORIES, EXTRA_PLACEHOLDERS, MATCHER_TOKEN_FORMS } from './overrides.ts';
+import { applyPlugins } from './plugins.ts';
 
 export const SCHEMA_VERSION = 1;
 const SITE = 'https://caddyserver.com';
@@ -788,6 +789,7 @@ export function extract(docs: Docs, source: SchemaSource): ExtractResult {
 		placeholders
 	};
 	applyOverrides(bundle);
+	applyPlugins(bundle);
 	return {
 		bundle,
 		docsIndex: {
