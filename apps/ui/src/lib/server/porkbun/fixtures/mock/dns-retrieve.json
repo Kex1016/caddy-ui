@@ -1,0 +1,15 @@
+{
+  "status": "SUCCESS",
+  "cloudflare": "enabled",
+  "records": [
+    {
+      "id": "string",
+      "name": "www.example.com",
+      "type": "A",
+      "content": "1.2.3.4",
+      "ttl": "600",
+      "prio": "10",
+      "notes": "string"
+    }
+  ]
+}

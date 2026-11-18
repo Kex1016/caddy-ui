@@ -1,0 +1,26 @@
+{
+  "status": "SUCCESS",
+  "count": 1,
+  "domains": [
+    {
+      "domain": "example.com",
+      "status": "ACTIVE",
+      "tld": "com",
+      "createDate": "2021-01-15 10:00:00",
+      "addedDate": "2026-10-16 07:06:17",
+      "expireDate": "2027-01-15 10:00:00",
+      "securityLock": 1,
+      "whoisPrivacy": 1,
+      "autoRenew": 1,
+      "apiAccess": 1,
+      "notLocal": 0,
+      "labels": [
+        {
+          "id": "string",
+          "title": "string",
+          "color": "string"
+        }
+      ]
+    }
+  ]
+}

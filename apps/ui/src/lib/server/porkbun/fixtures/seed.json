@@ -1,0 +1,108 @@
+{
+  "account": "example-account",
+  "apiKey": "pk1_fake_key_for_tests",
+  "apiSecret": "sk1_fake_secret_for_tests",
+  "scopes": ["full"],
+  "ip": "203.0.113.10",
+  "balanceCents": 2500,
+  "pricing": {
+    "com": { "registration": "11.08", "renewal": "11.08", "transfer": "11.08" },
+    "net": { "registration": "12.52", "renewal": "12.52", "transfer": "12.52" },
+    "org": { "registration": "7.48", "renewal": "10.74", "transfer": "10.74" }
+  },
+  "domains": [
+    {
+      "domain": "example.com",
+      "status": "ACTIVE",
+      "createDate": "2021-01-15 10:00:00",
+      "addedDate": "2021-01-15 10:00:00",
+      "expireDate": "2027-01-15 10:00:00",
+      "securityLock": 1,
+      "whoisPrivacy": 1,
+      "autoRenew": 1,
+      "apiAccess": 1,
+      "notLocal": 0,
+      "labels": [{ "id": "1", "title": "homelab", "color": "#f59e0b" }],
+      "ns": [
+        "maceio.ns.porkbun.com",
+        "curitiba.ns.porkbun.com",
+        "salvador.ns.porkbun.com",
+        "fortaleza.ns.porkbun.com"
+      ],
+      "ssl": true,
+      "records": [
+        { "name": "", "type": "A", "content": "203.0.113.10", "ttl": 600 },
+        { "name": "", "type": "AAAA", "content": "2001:db8::10", "ttl": 600 },
+        { "name": "www", "type": "A", "content": "203.0.113.10", "ttl": 600, "notes": "served by Caddy" },
+        { "name": "*", "type": "A", "content": "203.0.113.10", "ttl": 600 },
+        { "name": "blog", "type": "CNAME", "content": "example.org", "ttl": 3600 },
+        { "name": "mail", "type": "A", "content": "203.0.113.25", "ttl": 600 },
+        { "name": "", "type": "MX", "content": "mail.example.com", "ttl": 600, "prio": 10 },
+        { "name": "", "type": "TXT", "content": "v=spf1 mx -all", "ttl": 600 },
+        { "name": "", "type": "CAA", "content": "0 issue \"letsencrypt.org\"", "ttl": 3600 },
+        { "name": "_acme-challenge", "type": "TXT", "content": "fake-acme-challenge-token", "ttl": 600 },
+        { "name": "_sip._tcp", "type": "SRV", "content": "5 5060 sip.example.com", "ttl": 600, "prio": 0 }
+      ],
+      "glue": [{ "host": "ns1.example.com", "v4": ["192.0.2.1"], "v6": ["2001:db8::1"] }],
+      "forwards": [
+        {
+          "subdomain": "old",
+          "location": "https://www.example.com",
+          "redirectType": "301",
+          "includePath": "yes",
+          "wildcard": "no"
+        }
+      ]
+    },
+    {
+      "domain": "example.net",
+      "status": "ACTIVE",
+      "createDate": "2019-06-01 08:30:00",
+      "addedDate": "2024-03-10 12:00:00",
+      "expireDate": "2026-12-01 08:30:00",
+      "securityLock": 0,
+      "whoisPrivacy": 1,
+      "autoRenew": 0,
+      "apiAccess": 1,
+      "notLocal": 0,
+      "ns": ["ns1.example-dns.net", "ns2.example-dns.net"],
+      "records": [
+        { "name": "", "type": "A", "content": "198.51.100.7", "ttl": 600 },
+        { "name": "www", "type": "CNAME", "content": "example.net", "ttl": 600 }
+      ],
+      "dnssec": [
+        {
+          "keyTag": "2371",
+          "alg": "13",
+          "digestType": "2",
+          "digest": "49FD46E6C4B45C55D4AC49FD46E6C4B45C55D4AC49FD46E6C4B45C55D4AC49FD"
+        }
+      ],
+      "scan": [
+        { "name": "", "type": "A", "content": "198.51.100.7", "ttl": 300 },
+        { "name": "www", "type": "CNAME", "content": "example.net", "ttl": 300 },
+        { "name": "", "type": "MX", "content": "mx.example-dns.net", "ttl": 3600, "prio": 10 },
+        { "name": "", "type": "NS", "content": "ns1.example-dns.net", "ttl": 86400 }
+      ]
+    },
+    {
+      "domain": "example.org",
+      "status": "ACTIVE",
+      "createDate": "2023-09-20 16:45:00",
+      "addedDate": "2023-09-20 16:45:00",
+      "expireDate": "2027-09-20 16:45:00",
+      "securityLock": 1,
+      "whoisPrivacy": 0,
+      "autoRenew": 1,
+      "apiAccess": 0,
+      "notLocal": 0,
+      "ns": [
+        "maceio.ns.porkbun.com",
+        "curitiba.ns.porkbun.com",
+        "salvador.ns.porkbun.com",
+        "fortaleza.ns.porkbun.com"
+      ],
+      "records": [{ "name": "", "type": "A", "content": "203.0.113.10", "ttl": 600 }]
+    }
+  ]
+}

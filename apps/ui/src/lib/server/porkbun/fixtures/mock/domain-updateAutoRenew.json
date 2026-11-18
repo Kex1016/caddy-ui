@@ -1,0 +1,9 @@
+{
+  "status": "SUCCESS",
+  "results": {
+    "example": {
+      "status": "string",
+      "message": "string"
+    }
+  }
+}

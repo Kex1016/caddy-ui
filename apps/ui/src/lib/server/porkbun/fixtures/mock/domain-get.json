@@ -1,0 +1,15 @@
+{
+  "status": "SUCCESS",
+  "domain": {
+    "domain": "example.com",
+    "status": "ACTIVE",
+    "tld": "com",
+    "createDate": "string",
+    "expireDate": "string",
+    "securityLock": 0,
+    "whoisPrivacy": 0,
+    "autoRenew": 0,
+    "apiAccess": 0,
+    "notLocal": 0
+  }
+}

@@ -3,7 +3,9 @@ import type { Database } from 'better-sqlite3';
 /**
  * Ordered schema migrations. Entry N (1-based) moves the database to `PRAGMA user_version = N`.
  * Append only: never edit or reorder an entry that has shipped. Each runs inside a transaction.
- * W3 owns migration 1 (revisions, settings); W4 appends the collector tables as migration 2.
+ * W3 owns migration 1 (revisions, settings); W4 appends the collector tables as migration 2; P0 appends the
+ * Porkbun tables as migration 3. Later Porkbun tables are appended by the workstream that needs them, one
+ * migration each (docs/porkbun-plan.md §3.2).
  */
 export type Migration = string | ((db: Database) => void);
 
@@ -92,5 +94,30 @@ export const migrations: Migration[] = [
 		issuer TEXT,
 		seen_at INTEGER NOT NULL
 	);
+	`,
+	// 3 · P0 · Porkbun read cache and write log (docs/porkbun-plan.md §3.2). Neither ever holds an API key.
+	`
+	-- Cached reads. key is '<domain>:<area>' or '_account:<area>'; fetched_at in ms since the epoch.
+	CREATE TABLE porkbun_cache (
+		key TEXT PRIMARY KEY,
+		fetched_at INTEGER NOT NULL,
+		json TEXT NOT NULL
+	);
+
+	-- One row per write sent to Porkbun, successful or not. before_json is the state the write replaced,
+	-- which is what makes a manual undo possible where Porkbun has none.
+	CREATE TABLE porkbun_audit (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		ts INTEGER NOT NULL,
+		author TEXT NOT NULL,
+		domain TEXT NOT NULL,
+		action TEXT NOT NULL,
+		request_json TEXT NOT NULL,
+		before_json TEXT,
+		ok INTEGER NOT NULL,
+		result_json TEXT NOT NULL,
+		request_id TEXT
+	);
+	CREATE INDEX porkbun_audit_domain ON porkbun_audit (domain, id);
 	`
 ];

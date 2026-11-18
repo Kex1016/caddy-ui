@@ -1,0 +1,6 @@
+{
+  "status": "SUCCESS",
+  "certificatechain": "string",
+  "privatekey": "string",
+  "publickey": "string"
+}

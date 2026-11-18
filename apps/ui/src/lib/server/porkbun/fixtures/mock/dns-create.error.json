@@ -1,0 +1,11 @@
+{
+  "status": "ERROR",
+  "message": "Invalid domain.",
+  "code": "INVALID_DOMAIN",
+  "account": "string",
+  "next_action": {
+    "type": "fix_request",
+    "hint": "Re-fetch the price via /domain/checkDomain and resend the matching cost.",
+    "url": "https://porkbun.com/account/api"
+  }
+}

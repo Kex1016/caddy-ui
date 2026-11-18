@@ -1,0 +1,8 @@
+{
+  "status": "SUCCESS",
+  "yourIp": "1.2.3.4",
+  "xForwardedFor": "1.2.3.4",
+  "credentialsValid": true,
+  "account": "string",
+  "scopes": ["read", "dns"]
+}

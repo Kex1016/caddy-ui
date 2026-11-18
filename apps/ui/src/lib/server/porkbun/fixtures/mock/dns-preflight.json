@@ -1,0 +1,18 @@
+{
+  "status": "SUCCESS",
+  "domain": "example.com",
+  "intent": "move-nameservers",
+  "safe": false,
+  "blockers": ["string"],
+  "warnings": ["string"],
+  "checks": [
+    {
+      "id": "dnssec-active",
+      "severity": "blocker",
+      "ok": true,
+      "title": "string",
+      "detail": "string",
+      "next_action": "string"
+    }
+  ]
+}

@@ -163,3 +163,9 @@ Newest at the bottom. Format: date · workstream · what · why.
   one job is skipped.
 - [ ] 2026-11-18 · Porkbun plan · Replace the coordinator goal in the project's instructions
   with the block in [COORDINATOR.md](COORDINATOR.md) · the current goal ends at v1.0.0.
+- [ ] 2026-11-18 · P0 · Nothing to do unless you run the UI without its own sign-in
+  (`CADDY_UI_AUTH_MODE=none`, or `local` with no user and password, for example because
+  tinyauth in front does the sign-in): the Domains area is then read-only by default. Add
+  `CADDY_UI_PORKBUN_READONLY: "false"` to the `caddy-ui` service to allow changes. With
+  `CADDY_UI_AUTH_MODE=forward` or a local user, changes are allowed without it · an open UI
+  should not be able to change DNS by accident. The About page shows the value in use.
