@@ -678,3 +678,37 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-18 · P1 · The list's filter and search are kept in the address (`?filter=soon`, `?q=`) by a shallow
   history replace, so a reload or a link shows the same list; the sort is not · links such as "expiring soon"
   can point straight at the filtered list · confidence 78.
+- 2026-11-18 · P3 · P3 also owns two new folders the ownership table does not list, `lib/porkbun/registry/**`
+  (input checks, browser calls, the safety check list, shared by the pages and the routes) and
+  `lib/server/porkbun-registry/**` (small route helpers) · the checks must be the same in the form and on the
+  server, and no other workstream claimed these names, so nothing collides · move them under a P3 route folder
+  if anyone objects · confidence 85.
+- 2026-11-18 · P3 · The server checks the typed confirmation as well as the page: restore with prune, a
+  nameserver change, deleting glue, and adding or deleting a DS record need `"confirm": "<domain>"` in the body,
+  or the route answers 400 `CONFIRMATION_REQUIRED` and sends nothing · §3.1 rule 3 then holds for every caller,
+  not only for this UI's pages · drop `requireConfirm` from a route to relax it · confidence 80.
+- 2026-11-18 · P3 · Adding a DS record needs the domain typed too, although §3.1 rule 3 names only deleting one
+  · a DS record that does not match the zone's key makes the whole domain fail for validating resolvers, which
+  is worse than most deletes · confidence 75.
+- 2026-11-18 · P3 · Nameserver and DNSSEC changes run Porkbun's preflight on the server, uncached, right before
+  the write, and answer 409 `PREFLIGHT_BLOCKED` (with the preflight) while it reports a blocker. The review
+  step gets the same check from the rehearsal (`PUT …/nameservers` with `dryRun`, `POST …/dnssec` with
+  `check`) · §3.1 rule 4 and the P3 definition of done; a cached "safe" answer must not let a move through ·
+  confidence 88.
+- 2026-11-18 · P3 · "Undo this restore" restores `previousStateSavedAs` with prune, always · a restore without
+  prune only adds records back, so it can not take away what the first restore added; with prune the zone is
+  exactly as before. The undo still needs the domain typed · confidence 85.
+- 2026-11-18 · P3 · Cache keys: `<domain>:history`, `<domain>:history:<id>` (diff), `<domain>:preflight:<intent>`,
+  `<domain>:ns` (the `string[]` of `porkbun().ns.get`, the shape P1's overview would read), `<domain>:glue`,
+  `<domain>:dnssec`. Compare and the review step always ask Porkbun for a fresh diff · one key per read, same
+  shape for anyone who reads the same key; a diff is a comparison with the live zone and goes stale with every
+  change made at porkbun.com · confidence 80. Told the coordinator about `<domain>:ns`.
+- 2026-11-18 · P3 · Input rules before any call: 2 to 13 distinct nameserver hostnames; a glue host is one label
+  (`ns1`) or a full name under the domain (`ns1.eu.example.com`), never another domain; 1 to 13 glue addresses;
+  DS key tag 0 to 65535, digest in hex with the length its digest type requires (40, 64 or 96); algorithms 1, 3,
+  5, 6, 7 and 12 refused as retired (the same list the fake refuses); key data all or nothing; a second DS
+  record with a key tag that exists is refused (Porkbun keys DS records by key tag) · catches typing mistakes
+  with a clear message instead of a registry error · `lib/porkbun/registry/validate.ts` · confidence 78.
+- 2026-11-18 · P3 · Glue and DNSSEC have no dry run at Porkbun, so their review step shows the change, the
+  safety check (DNSSEC) and advice, and says plainly that Porkbun does not rehearse it · §3.1 rule 2 asks for a
+  dry run only where Porkbun has one · confidence 85.
