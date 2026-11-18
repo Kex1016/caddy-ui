@@ -637,3 +637,26 @@ Format: date · workstream · decision · why · how to reverse.
   replace them when Porkbun documents real ones · confidence 78.
 - 2026-11-18 · P0 · A vitest setup file makes any request to a `porkbun.com` host fail in unit tests · "no test
   calls the real API" is then enforced, not just intended · `no-network.setup.ts` · confidence 92.
+- 2026-11-18 · P4 · The SSL switch is read with `config().porkbun.sslKeyDownload` in `lib/server/porkbun-ssl.ts`,
+  not from the Porkbun module's own settings · `index.ts` is P0's and exports no accessor, so a P4 helper reads
+  the same environment value; tests flip it by mocking `$lib/server/env`. A later cleanup can move it behind a
+  P0 accessor · `useFakePorkbun({ settings: { sslKeyDownload } })` does not reach it · confidence 75.
+- 2026-11-18 · P4 · `GET …/ssl` answers with certificate details (`SslInfo`) and never with the bundle; the chain
+  and the key are only served by `…/ssl/download?part=chain|key` · the browser never needs the key in a JSON
+  body, and the page's load data can not leak it · none · confidence 88.
+- 2026-11-18 · P4 · The key download is refused unless `CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD` is on, refused when
+  `Sec-Fetch-Site` is `cross-site`, and written to the activity log as `ssl.key-download` without the key · a
+  private key leaving the server should leave a trace · log row for the chain download too (judged noise) ·
+  confidence 80.
+- 2026-11-18 · P4 · Adding a forward is refused with 409 `DUPLICATE_FORWARD` when the subdomain already has one,
+  after a fresh read of the list · the API spec does not say what Porkbun does with two forwards for one name,
+  so a second one is not risked · let Porkbun decide · confidence 68. Low only because Porkbun may allow it;
+  the effect of being wrong is that a legitimate second forward needs the first deleted.
+- 2026-11-18 · P4 · A forward's subdomain takes letters, digits and hyphens in dot-separated labels; `*` is not
+  allowed, the "every subdomain" option is the wildcard · matches how Porkbun's form splits the two · accept
+  `*` · confidence 80. The destination must be http(s) without a user name or password.
+- 2026-11-18 · P4 · Deleting a forward uses the review dialog with a plain confirm, not a typed domain name ·
+  §3.1 rule 3 asks for typing only for DNS records by name and type, nameservers, DNSSEC, glue and prune
+  restores, and a forward is one row · typed confirm · confidence 82.
+- 2026-11-18 · P4 · The SSL page does not branch on Porkbun's invented `SSL_NOT_READY`; any error is shown by
+  `PorkbunNotice` as written · P0 asked for that · none · confidence 90.
