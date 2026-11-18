@@ -190,13 +190,18 @@ export type FormSpec = {
 	 * users or `header` operations), so none of them is an "other line". Only raw lines are left over.
 	 */
 	claimsAllLines?: boolean | ((node: Directive) => boolean);
+	/**
+	 * More claimed names that depend on the node: a custom field that edits a block whose lines are not known
+	 * up front (the options of a DNS provider) names them here.
+	 */
+	claimsFor?: (node: Directive) => readonly string[];
 	/** A short one-line description for the tree, when the default (arguments joined) is not helpful. */
 	describe?: (node: Directive) => string;
 };
 
 /** Which body lines of `node` no field of `spec` models. */
 export function unclaimedLines(spec: FormSpec, node: Directive): Node[] {
-	const claimed = new Set(spec.claims ?? []);
+	const claimed = new Set([...(spec.claims ?? []), ...(spec.claimsFor?.(node) ?? [])]);
 	const all =
 		typeof spec.claimsAllLines === 'function' ? spec.claimsAllLines(node) : spec.claimsAllLines === true;
 	return (node.body ?? []).filter((n) => !(n.kind === 'directive' && (all || claimed.has(n.name.text))));

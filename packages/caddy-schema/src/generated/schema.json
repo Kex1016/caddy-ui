@@ -10400,7 +10400,76 @@
 					"examples": [],
 					"syntax": [
 						"dns <provider_name> [<params...>]"
-					]
+					],
+					"block": true,
+					"freeformBody": true,
+					"variants": {
+						"porkbun": {
+							"name": "porkbun",
+							"summary": "Solves the ACME DNS challenge at Porkbun. Needs a Caddy built with the `caddy-dns/porkbun` plugin.",
+							"docsUrl": "https://github.com/caddy-dns/porkbun",
+							"category": "tls",
+							"order": -1,
+							"matcher": false,
+							"args": [],
+							"subdirectives": {
+								"api_key": {
+									"name": "api_key",
+									"summary": "The Porkbun API key. Use `{env.PORKBUN_API_KEY}` so the key stays out of the Caddyfile.",
+									"docsUrl": "https://github.com/caddy-dns/porkbun",
+									"category": "tls",
+									"order": -1,
+									"matcher": false,
+									"args": [
+										{
+											"name": "api_key",
+											"type": "string",
+											"doc": "The Porkbun API key. Use `{env.PORKBUN_API_KEY}` so the key stays out of the Caddyfile.",
+											"secret": "{env.PORKBUN_API_KEY}"
+										}
+									],
+									"examples": [],
+									"syntax": [
+										"api_key <api_key>"
+									],
+									"plugin": "dns.providers.porkbun"
+								},
+								"api_secret_key": {
+									"name": "api_secret_key",
+									"summary": "The Porkbun secret API key. Use `{env.PORKBUN_API_SECRET_KEY}` so the key stays out of the Caddyfile.",
+									"docsUrl": "https://github.com/caddy-dns/porkbun",
+									"category": "tls",
+									"order": -1,
+									"matcher": false,
+									"args": [
+										{
+											"name": "api_secret_key",
+											"type": "string",
+											"doc": "The Porkbun secret API key. Use `{env.PORKBUN_API_SECRET_KEY}` so the key stays out of the Caddyfile.",
+											"secret": "{env.PORKBUN_API_SECRET_KEY}"
+										}
+									],
+									"examples": [],
+									"syntax": [
+										"api_secret_key <api_secret_key>"
+									],
+									"plugin": "dns.providers.porkbun"
+								}
+							},
+							"examples": [
+								"dns porkbun {\n\tapi_key {env.PORKBUN_API_KEY}\n\tapi_secret_key {env.PORKBUN_API_SECRET_KEY}\n}"
+							],
+							"syntax": [
+								"dns porkbun {\n\tapi_key <api_key>\n\tapi_secret_key <api_secret_key>\n}"
+							],
+							"block": true,
+							"plugin": "dns.providers.porkbun",
+							"requires": [
+								"api_key",
+								"api_secret_key"
+							]
+						}
+					}
 				},
 				"dns_challenge_override_domain": {
 					"name": "dns_challenge_override_domain",
@@ -10719,7 +10788,76 @@
 									"examples": [],
 									"syntax": [
 										"dns [<provider_name> [<options>]]"
-									]
+									],
+									"block": true,
+									"freeformBody": true,
+									"variants": {
+										"porkbun": {
+											"name": "porkbun",
+											"summary": "Solves the ACME DNS challenge at Porkbun. Needs a Caddy built with the `caddy-dns/porkbun` plugin.",
+											"docsUrl": "https://github.com/caddy-dns/porkbun",
+											"category": "tls",
+											"order": -1,
+											"matcher": false,
+											"args": [],
+											"subdirectives": {
+												"api_key": {
+													"name": "api_key",
+													"summary": "The Porkbun API key. Use `{env.PORKBUN_API_KEY}` so the key stays out of the Caddyfile.",
+													"docsUrl": "https://github.com/caddy-dns/porkbun",
+													"category": "tls",
+													"order": -1,
+													"matcher": false,
+													"args": [
+														{
+															"name": "api_key",
+															"type": "string",
+															"doc": "The Porkbun API key. Use `{env.PORKBUN_API_KEY}` so the key stays out of the Caddyfile.",
+															"secret": "{env.PORKBUN_API_KEY}"
+														}
+													],
+													"examples": [],
+													"syntax": [
+														"api_key <api_key>"
+													],
+													"plugin": "dns.providers.porkbun"
+												},
+												"api_secret_key": {
+													"name": "api_secret_key",
+													"summary": "The Porkbun secret API key. Use `{env.PORKBUN_API_SECRET_KEY}` so the key stays out of the Caddyfile.",
+													"docsUrl": "https://github.com/caddy-dns/porkbun",
+													"category": "tls",
+													"order": -1,
+													"matcher": false,
+													"args": [
+														{
+															"name": "api_secret_key",
+															"type": "string",
+															"doc": "The Porkbun secret API key. Use `{env.PORKBUN_API_SECRET_KEY}` so the key stays out of the Caddyfile.",
+															"secret": "{env.PORKBUN_API_SECRET_KEY}"
+														}
+													],
+													"examples": [],
+													"syntax": [
+														"api_secret_key <api_secret_key>"
+													],
+													"plugin": "dns.providers.porkbun"
+												}
+											},
+											"examples": [
+												"dns porkbun {\n\tapi_key {env.PORKBUN_API_KEY}\n\tapi_secret_key {env.PORKBUN_API_SECRET_KEY}\n}"
+											],
+											"syntax": [
+												"dns porkbun {\n\tapi_key <api_key>\n\tapi_secret_key <api_secret_key>\n}"
+											],
+											"block": true,
+											"plugin": "dns.providers.porkbun",
+											"requires": [
+												"api_key",
+												"api_secret_key"
+											]
+										}
+									}
 								},
 								"dns_challenge_override_domain": {
 									"name": "dns_challenge_override_domain",
@@ -12666,7 +12804,74 @@
 			"freeformBody": true,
 			"syntax": [
 				"acme_dns <provider> ..."
-			]
+			],
+			"variants": {
+				"porkbun": {
+					"name": "porkbun",
+					"summary": "Solves the ACME DNS challenge at Porkbun. Needs a Caddy built with the `caddy-dns/porkbun` plugin.",
+					"docsUrl": "https://github.com/caddy-dns/porkbun",
+					"category": "global",
+					"order": -1,
+					"matcher": false,
+					"args": [],
+					"subdirectives": {
+						"api_key": {
+							"name": "api_key",
+							"summary": "The Porkbun API key. Use `{env.PORKBUN_API_KEY}` so the key stays out of the Caddyfile.",
+							"docsUrl": "https://github.com/caddy-dns/porkbun",
+							"category": "global",
+							"order": -1,
+							"matcher": false,
+							"args": [
+								{
+									"name": "api_key",
+									"type": "string",
+									"doc": "The Porkbun API key. Use `{env.PORKBUN_API_KEY}` so the key stays out of the Caddyfile.",
+									"secret": "{env.PORKBUN_API_KEY}"
+								}
+							],
+							"examples": [],
+							"syntax": [
+								"api_key <api_key>"
+							],
+							"plugin": "dns.providers.porkbun"
+						},
+						"api_secret_key": {
+							"name": "api_secret_key",
+							"summary": "The Porkbun secret API key. Use `{env.PORKBUN_API_SECRET_KEY}` so the key stays out of the Caddyfile.",
+							"docsUrl": "https://github.com/caddy-dns/porkbun",
+							"category": "global",
+							"order": -1,
+							"matcher": false,
+							"args": [
+								{
+									"name": "api_secret_key",
+									"type": "string",
+									"doc": "The Porkbun secret API key. Use `{env.PORKBUN_API_SECRET_KEY}` so the key stays out of the Caddyfile.",
+									"secret": "{env.PORKBUN_API_SECRET_KEY}"
+								}
+							],
+							"examples": [],
+							"syntax": [
+								"api_secret_key <api_secret_key>"
+							],
+							"plugin": "dns.providers.porkbun"
+						}
+					},
+					"examples": [
+						"acme_dns porkbun {\n\tapi_key {env.PORKBUN_API_KEY}\n\tapi_secret_key {env.PORKBUN_API_SECRET_KEY}\n}"
+					],
+					"syntax": [
+						"acme_dns porkbun {\n\tapi_key <api_key>\n\tapi_secret_key <api_secret_key>\n}"
+					],
+					"block": true,
+					"plugin": "dns.providers.porkbun",
+					"requires": [
+						"api_key",
+						"api_secret_key"
+					]
+				}
+			}
 		},
 		"acme_eab": {
 			"name": "acme_eab",
@@ -12939,7 +13144,74 @@
 			"freeformBody": true,
 			"syntax": [
 				"dns <provider> ..."
-			]
+			],
+			"variants": {
+				"porkbun": {
+					"name": "porkbun",
+					"summary": "Solves the ACME DNS challenge at Porkbun. Needs a Caddy built with the `caddy-dns/porkbun` plugin.",
+					"docsUrl": "https://github.com/caddy-dns/porkbun",
+					"category": "global",
+					"order": -1,
+					"matcher": false,
+					"args": [],
+					"subdirectives": {
+						"api_key": {
+							"name": "api_key",
+							"summary": "The Porkbun API key. Use `{env.PORKBUN_API_KEY}` so the key stays out of the Caddyfile.",
+							"docsUrl": "https://github.com/caddy-dns/porkbun",
+							"category": "global",
+							"order": -1,
+							"matcher": false,
+							"args": [
+								{
+									"name": "api_key",
+									"type": "string",
+									"doc": "The Porkbun API key. Use `{env.PORKBUN_API_KEY}` so the key stays out of the Caddyfile.",
+									"secret": "{env.PORKBUN_API_KEY}"
+								}
+							],
+							"examples": [],
+							"syntax": [
+								"api_key <api_key>"
+							],
+							"plugin": "dns.providers.porkbun"
+						},
+						"api_secret_key": {
+							"name": "api_secret_key",
+							"summary": "The Porkbun secret API key. Use `{env.PORKBUN_API_SECRET_KEY}` so the key stays out of the Caddyfile.",
+							"docsUrl": "https://github.com/caddy-dns/porkbun",
+							"category": "global",
+							"order": -1,
+							"matcher": false,
+							"args": [
+								{
+									"name": "api_secret_key",
+									"type": "string",
+									"doc": "The Porkbun secret API key. Use `{env.PORKBUN_API_SECRET_KEY}` so the key stays out of the Caddyfile.",
+									"secret": "{env.PORKBUN_API_SECRET_KEY}"
+								}
+							],
+							"examples": [],
+							"syntax": [
+								"api_secret_key <api_secret_key>"
+							],
+							"plugin": "dns.providers.porkbun"
+						}
+					},
+					"examples": [
+						"dns porkbun {\n\tapi_key {env.PORKBUN_API_KEY}\n\tapi_secret_key {env.PORKBUN_API_SECRET_KEY}\n}"
+					],
+					"syntax": [
+						"dns porkbun {\n\tapi_key <api_key>\n\tapi_secret_key <api_secret_key>\n}"
+					],
+					"block": true,
+					"plugin": "dns.providers.porkbun",
+					"requires": [
+						"api_key",
+						"api_secret_key"
+					]
+				}
+			}
 		},
 		"ech": {
 			"name": "ech",

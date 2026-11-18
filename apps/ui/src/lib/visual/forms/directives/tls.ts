@@ -7,8 +7,9 @@ import { claimsOf, flag, group, section, subList, subSelect, subText, variant } 
 import { argFields, bodyFields } from '../generic';
 import { getArg, replaceArgs, subs } from '../node';
 import { registerForm } from '../registry';
-import type { FieldSpec, FormSpec, SelectField, TextField } from '../types';
-import { subArg, subArgList, subArgSelect } from './helpers';
+import type { CustomField, FieldSpec, FormSpec, SelectField, TextField } from '../types';
+import DnsProviderField from '../DnsProviderField.svelte';
+import { subArg, subArgSelect } from './helpers';
 import { docsUrlOf, resolveSchema, schemaFields } from './schema-fields';
 
 type Mode = 'auto' | 'email' | 'internal' | 'files' | 'force_automate';
@@ -102,6 +103,14 @@ export function tlsForm(schema: SchemaBundle | null): FormSpec {
 		set: (n, v) => replaceArgs(n, v ? [getArg(n, 0) ?? '', v] : n.args.slice(0, 1).map((a) => a.text))
 	};
 
+	// Porkbun is guided, any other provider is free text (docs/porkbun-plan.md §4). Edits the `dns` line.
+	const dnsProvider: CustomField = {
+		kind: 'custom',
+		id: 'dns',
+		label: 'DNS provider',
+		component: DnsProviderField
+	};
+
 	const issuerSchema = resolveSchema(schema, [...TLS, 'issuer']);
 	const issuer = variant('issuer', {
 		label: 'Issuer',
@@ -174,17 +183,7 @@ export function tlsForm(schema: SchemaBundle | null): FormSpec {
 		section(
 			'DNS challenge',
 			[
-				subArg('dns', 0, {
-					label: 'DNS provider',
-					placeholder: 'cloudflare',
-					placeholders: false,
-					help: 'Needed for wildcard certificates. The provider is a Caddy plugin built into the image.'
-				}),
-				subArgList('dns', 1, {
-					label: 'Provider credentials',
-					placeholder: '{env.CF_API_TOKEN}',
-					help: 'Use {env.NAME} so the token stays out of the Caddyfile.'
-				}),
+				dnsProvider,
 				...schemaFields(schema, TLS, [
 					['resolvers', { label: 'DNS resolvers', help: 'Used to check that the record propagated.' }],
 					['propagation_delay', { label: 'Wait before checking' }],

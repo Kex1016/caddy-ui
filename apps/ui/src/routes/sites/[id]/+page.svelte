@@ -33,8 +33,9 @@
 		statusLine,
 		stepLabel
 	} from '$lib/stats/view';
+	import SiteDns from './SiteDns.svelte';
 
-	let { data } = $props();
+	let { data, form } = $props();
 	onMount(() => autoRefresh());
 
 	const st = $derived(data.stats);
@@ -130,6 +131,9 @@
 			</dl>
 		</div>
 	</section>
+	{#if data.porkbunOn}
+		<SiteDns siteId={site.id} addresses={st.site.addresses} timeZone={tz} {form} />
+	{/if}
 {/if}
 
 <section class="fp-section">

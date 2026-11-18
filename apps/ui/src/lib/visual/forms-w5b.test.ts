@@ -14,6 +14,7 @@ import {
 } from '@caddy-ui/caddyfile';
 import { schema } from '@caddy-ui/caddy-schema';
 import { formForDirective, formForMatcher, unclaimedLines, type FieldSpec, type FormSpec } from './forms';
+import { chooseOther, otherProviderFields } from './forms/directives/dns-provider';
 import { findField, roundTrip } from './testing';
 
 const W5A = [
@@ -461,8 +462,10 @@ describe('W5b directive edits', () => {
 		expect(t.out()).toBe('a.com {\n\ttls /certs/a.pem key.pem\n}\n');
 
 		const d = one('\ttls');
-		f(s, 'dns', 'text').set(d.node, 'cloudflare');
-		f(s, 'dns#1+', 'list').set(d.node, ['{env.CF_API_TOKEN}']);
+		// The provider is a guided field of its own (dns-provider.test.ts); this is what it does for "other".
+		expect(f(s, 'dns', 'custom').label).toBe('DNS provider');
+		const line = chooseOther(d.node, 'cloudflare');
+		findField(otherProviderFields, 'credentials', 'list').set(line, ['{env.CF_API_TOKEN}']);
 		f(s, 'protocols', 'select').set(d.node, 'tls1.3');
 		f(s, 'key_type', 'select').set(d.node, 'p384');
 		f(s, 'on_demand', 'toggle').set(d.node, true);

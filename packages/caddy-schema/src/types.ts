@@ -55,6 +55,12 @@ export type ArgSchema = {
 	literals?: string[];
 	/** extension: single-character operators that may prefix the value, e.g. `+`, `-`, `?`, `>` on header fields. */
 	prefixes?: string[];
+	/**
+	 * extension: the value is a credential. Written out in the file it would also end up in every saved
+	 * revision, so a literal value gets a warning that suggests this placeholder instead, e.g.
+	 * `{env.PORKBUN_API_KEY}`.
+	 */
+	secret?: string;
 };
 
 /** contract (category gains 'global' for global options, which the contract implies) */
@@ -99,6 +105,13 @@ export type DirectiveSchema = {
 	experimental?: boolean;
 	/** extension: a block may follow (`{ … }`). */
 	block?: boolean;
+	/**
+	 * extension: the node is not part of standard Caddy. It is the Caddy module ID of the plugin that must be
+	 * compiled in for it to work, e.g. `dns.providers.porkbun`. `docsUrl` then points at the plugin.
+	 */
+	plugin?: string;
+	/** extension: subdirectives that must be present in the block, e.g. both keys of `dns porkbun { … }`. */
+	requires?: string[];
 };
 
 /** contract */
