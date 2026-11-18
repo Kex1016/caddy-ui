@@ -712,3 +712,79 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-18 · P3 · Glue and DNSSEC have no dry run at Porkbun, so their review step shows the change, the
   safety check (DNSSEC) and advice, and says plainly that Porkbun does not rehearse it · §3.1 rule 2 asks for a
   dry run only where Porkbun has one · confidence 85.
+- 2026-11-18 · P5 · The plugin's Caddyfile syntax was read from the source of github.com/caddy-dns/porkbun
+  v0.3.1 and checked by adapting against Caddy 2.11.2 built with and without it: nothing on the `porkbun` line,
+  `api_key` and `api_secret_key` in its block, both required, no other option. Stock Caddy answers the probe
+  with HTTP 400 "module not registered: dns.providers.porkbun" · the plan's syntax was written from memory and
+  flagged; it was right · `packages/caddy-schema/scripts/plugins.ts` and `PROBE_CADDYFILE` · confidence 95.
+- 2026-11-18 · P5 · Contract addition (schema): `DirectiveSchema.plugin` (Caddy module ID),
+  `DirectiveSchema.requires` (subdirectives that must be present) and `ArgSchema.secret` (the placeholder to
+  suggest); the four lines that name a DNS provider (`tls`'s `dns`, the acme issuer's `dns`, global `acme_dns`
+  and `dns`) now take a block, free-form for providers the schema does not know, with a `porkbun` variant from
+  `scripts/plugins.ts` · the schema said "dns does not take a block" for the valid `dns porkbun { … }`, and a
+  validator rule reaches both editors and the server at once · all three fields are optional, so nothing that
+  reads the schema changes; remove the `applyPlugins` call to undo · confidence 85.
+- 2026-11-18 · P5 · The literal-key warning is a validator rule (`literal-secret`, a warning, never an error):
+  a value for `api_key` / `api_secret_key` without a placeholder says "this puts the key in the Caddyfile and
+  in History; use {env.…} instead" and never repeats the value; `{env.X}` and `{$X}` both pass. The form shows
+  the same as a notice · one rule for the text editor, the visual editor and the server's check · `validate.ts`
+  `checkArg` · confidence 88.
+- 2026-11-18 · P5 · Contract addition (forms): `FormSpec.claimsFor(node)` lets a form claim body lines per node;
+  the provider picker is a `custom` field, so `forms-w5b.test.ts` (W5b's file) sets the provider through the
+  picker's functions instead of the old text field · a global `acme_dns` line is the provider line itself, so
+  which of its lines the form owns depends on the node · optional, nothing else uses it · confidence 85.
+- 2026-11-18 · P5 · Porkbun is first in the provider picker unless the plugin is known to be missing, where it
+  is still offered, marked "plugin not in this Caddy", with a warning; a provider other than Porkbun keeps the
+  free text it had (credentials on the line, options in a block) · "not checked" must not hide the guided path,
+  and controls are disabled or explained, not hidden · `DnsProviderField.svelte` · confidence 80.
+- 2026-11-18 · P5 · Detection is cached until Caddy's process start time changes (from the metrics the UI
+  already reads), looks at that at most every 30 s, asks again after an answer that was neither yes nor no, and
+  never throws for an unreachable Caddy (state `unknown` with the reason) · "cached until Caddy restarts"
+  needs something that changes on a restart, and a page must still render when Caddy is down · `plugin.ts` ·
+  confidence 85.
+- 2026-11-18 · P5 · Contract additions (API): `GET /api/porkbun/caddy` takes `?only=plugin` (asks Caddy only,
+  works with the keys unset), `?domain=` and `?force`, and its `sites[]` rows carry `siteId`, `status`, `detail`,
+  `fix`, `hints` beside the `host`, `records[].id` and `dns01` the DNS tab reads; `POST
+  /api/porkbun/caddy/records` takes `dryRun` and `expect`; new route `POST /api/porkbun/caddy/challenges` for
+  the cleanup. Shapes are in `lib/api/porkbun-caddy.ts` · the review step needs a rehearsal and a way to notice
+  that the records changed since, and the cleanup is a write of its own · additive; P2 reads only the three
+  fields it named · confidence 82.
+- 2026-11-18 · P5 · The server decides the record fix: an A (or AAAA) record with this server's public IP as
+  Porkbun's `/ping` saw it, or that content on the one record that is wrong. The browser sends only the site
+  address and the fix it reviewed; a fix that no longer matches is a 409 with the new one. No fix is offered
+  behind a CNAME, for several records of one name, or when only some of them are wrong; behind a wildcard the
+  name gets a record of its own and the wildcard is left alone · a request can then never write an address the
+  person did not review, and the cases without one obvious change go to the DNS tab · `actions.ts`, `judge()` in
+  `check.ts`; the dialog says where the IP comes from, for servers that are reached through another address ·
+  confidence 80.
+- 2026-11-18 · P5 · Cross-check statuses beyond the plan's wording: `private` (the name points at 10.x,
+  192.168.x and the like; shown neutral, no fix, since internal-only sites are normal in a homelab),
+  `external` (a CNAME leaves the account), `unverified` (public IP unknown, or only the other address family
+  has a record), `elsewhere` (nameservers are not Porkbun's) and `unreadable`. Wildcard records answer by the
+  closest-encloser rule, and CNAME/ALIAS are followed across the account's zones · a private address is not a
+  mistake to fix, and "wrong" should only be said when it is certain · `DnsCheckStatus` · confidence 78.
+- 2026-11-18 · P5 · "Left behind" for a challenge record means this UI first saw it more than 24 hours ago;
+  first-seen times are kept by record id in the `settings` table (key `porkbun.caddy.challenges`), no migration.
+  The cleanup deletes only such records, checks each id against the zone again, rehearses with Porkbun's dry
+  run, and logs each delete with what the record held · Porkbun does not say when a record was made, and a
+  record of an order in progress must never be deleted · `STALE_AFTER_MS` in `challenges.ts` · confidence 75.
+- 2026-11-18 · P5 · With the Porkbun keys unset the Sites pages look as before: no DNS column, no panel, no
+  hints; `GET /api/porkbun/caddy` still answers the plugin check. With keys, the pages ask for the tie-in after
+  they have rendered, so the list never waits for Porkbun · the cross-check is about records at Porkbun, and
+  David's first deploy has no keys on the UI yet · `porkbunOn` in the two `+page.server.ts` · confidence 80.
+- 2026-11-18 · P5 · The wildcard hint's "Use the Porkbun DNS challenge" is a form action (`dns01`) on the
+  Sites list and the site page that edits the site through the config service, after a dialog that shows the
+  block; "also create the DNS record" opens by itself after "Add site" as a second review step, once per new
+  address that has no record, and not at all in read-only mode · the Caddyfile edit gets Caddy's validation,
+  the hash check and History like every other edit, and the record write gets the same review as every other
+  record write · `site-edit.ts`, `RecordFixDialog.svelte` · confidence 82.
+- 2026-11-18 · P5 · Files outside the folders the plan lists for P5: `lib/api/porkbun-caddy.ts` (the API's
+  shapes, beside `lib/api/porkbun.ts`), `lib/porkbun/caddy/**` (the dialogs and the checks list that the Sites
+  pages and the Caddy tab share), `lib/visual/forms-w5b.test.ts` (see above) and one job in
+  `.github/workflows/ci.yml` (P6's file): `caddy-porkbun-tie-in` loads the `caddy-porkbun-image` artifact and
+  runs `test:caddy` with `CADDY_TEST_PORKBUN_PLUGIN=present`; the existing `caddy` job runs the same file
+  against stock Caddy and expects "missing" · shared code needs a home no other workstream owns, and the
+  definition of done asks for both Caddy builds; P6's entry says the artifact is for P5 · confidence 80.
+- 2026-11-18 · P5 · "Every Caddy call goes through `adminFetch`" is a test (`caddy.test.ts`) that reads the
+  tie-in's server files and fails on a bare `fetch(`; the detector takes a `CaddyAdmin` · the plan allows a lint
+  rule or a test, and a test needs no change to the shared ESLint config · confidence 85.

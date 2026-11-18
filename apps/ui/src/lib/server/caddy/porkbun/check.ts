@@ -31,8 +31,8 @@ import {
  * which record answers for it and whether that points at this server's public IP; which sites use the DNS
  * challenge and whether that can work; and the challenge records Caddy left at Porkbun.
  *
- * Reads only. Zones are read through the shared cache under the same key the DNS tab uses
- * (`<domain>:dns`), so opening both costs one request, and a write anywhere drops it.
+ * Reads only. Zones and nameservers are read through the shared cache under the keys the other tabs use
+ * (`<domain>:dns`, `<domain>:ns`), so opening several costs one request, and a write anywhere drops them.
  */
 export type TieInOptions = {
 	/** Only this domain (already through `requireDomain`). Its zone is read even when no site uses it. */
@@ -244,15 +244,15 @@ async function readZone(d: DomainSummary, force: boolean): Promise<ZoneRead> {
 	};
 	const [zone, ns] = await Promise.all([
 		cached<DnsZone>(`${d.domain}:dns`, () => pb.dns.list(d.domain), { force }).catch(fail),
-		// Below `<domain>:ns`, so a nameserver change drops it, whatever the Registry tab keeps at that key.
-		cached<string[]>(`${d.domain}:ns:caddy`, () => pb.ns.get(d.domain), { force }).catch(fail)
+		// The key the Overview and Registry tabs read the nameservers under, so they share one request.
+		cached<string[]>(`${d.domain}:ns`, () => pb.ns.get(d.domain), { force }).catch(fail)
 	]);
 	const reads = [zone, ns].filter((c): c is Cached<DnsZone> | Cached<string[]> => c !== null);
 	if (reads.length > 0) {
 		info.fetchedAt = Math.min(...reads.map((c) => c.fetchedAt));
 		info.stale = reads.some((c) => c.stale);
 	}
-	if (ns) {
+	if (ns && Array.isArray(ns.data)) {
 		info.nameservers = ns.data;
 		info.servedByPorkbun = servedByPorkbun(ns.data);
 	}
