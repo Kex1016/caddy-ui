@@ -712,3 +712,8 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-18 · P3 · Glue and DNSSEC have no dry run at Porkbun, so their review step shows the change, the
   safety check (DNSSEC) and advice, and says plainly that Porkbun does not rehearse it · §3.1 rule 2 asks for a
   dry run only where Porkbun has one · confidence 85.
+- 2026-11-18 · P3 follow-up · `ReviewDialog` (P0-owned) no longer shows "Porkbun checked this change and would
+  accept it" while `blocked` is set; the red "This can not be applied" stands alone. A failed dry run is still
+  shown beside a blocker · the two lines contradicted each other in the nameserver dialog with active DNSSEC and
+  in the restore dialog with nothing to add back. A one-condition change, no prop or contract changes, so P2, P4
+  and P5 need nothing · confidence 92.
