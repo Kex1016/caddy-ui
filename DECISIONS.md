@@ -637,3 +637,78 @@ Format: date · workstream · decision · why · how to reverse.
   replace them when Porkbun documents real ones · confidence 78.
 - 2026-11-18 · P0 · A vitest setup file makes any request to a `porkbun.com` host fail in unit tests · "no test
   calls the real API" is then enforced, not just intended · `no-network.setup.ts` · confidence 92.
+- 2026-11-18 · P1 · P1's shared code lives in a new folder, `apps/ui/src/lib/porkbun/domains/`: client-safe
+  types and helpers in `index.ts`, the reads and the auto-renew write in `data.server.ts`, used by both the
+  `/api/porkbun/*` routes and the two page loads · the ownership table names no home for a workstream's
+  helpers outside its route folders, and no other workstream owns this one · move it if P0 wants it elsewhere ·
+  confidence 80.
+- 2026-11-18 · P1 · The domain list sends every row to the page and sorts, filters and searches in the browser,
+  drawing 100 rows per page; the page data leaves out `createDate` and `tld`. Measured with 1,000 fake domains
+  against the built app: 423 KB in all, TTFB 136 ms, load 248 ms, 60 KB of JS (the W11 budget is 600 KB,
+  500 ms, 1,500 ms, 120 KB) · instant filtering without a server round trip, inside the budget · server-side
+  paging if accounts grow past a few thousand domains · confidence 78.
+- 2026-11-18 · P1 · "Expiring soon" means within 30 days or already expired. The countdown is a warning tag only
+  when auto-renew is off (an expired domain is always an error tag) · a domain that renews by itself needs no
+  attention · `EXPIRING_SOON_DAYS` in `lib/porkbun/domains` · confidence 75.
+- 2026-11-18 · P1 · The renewal price is Porkbun's public list price for the TLD (`/pricing/get`, every TLD in one
+  call, cached as `_account:pricing`); a price list that fails leaves the column empty with a notice and does not
+  fail the page · the API has no per-domain renewal quote outside the out-of-scope renew call; premium domains
+  can cost more than this · confidence 72.
+- 2026-11-18 · P1 · The Overview tab's flags come from `/domain/get` (cached as `<d>:domain`), not from the list,
+  and fall back to the list's copy with a notice when that read fails · the definition of done asks that every
+  flag match `/domain/get` · confidence 85.
+- 2026-11-18 · P1 · The Overview counts (records, restore points, URL forwards, glue hosts, DS records) are
+  cached under their own keys, `<d>:<area>:overview`, holding counts only; the nameservers are read through
+  P3's key `<d>:ns` with P3's loader (`ns.get`, a sorted string[]) and summarised after reading, as P3 asked. With API access off
+  those reads are not made and the tiles say why · a write on another tab that drops `<d>:<area>` or `<d>` drops
+  the count too, and the overview can never store something under another tab's key in a shape that tab does
+  not expect; asking for what Porkbun is known to refuse only spends the rate limit · confidence 80.
+- 2026-11-18 · P1 · Bulk auto-renew sends 100 domains per `/domain/updateAutoRenew` request, in turn, and answers
+  with one result per domain in the order asked. A request for one domain is logged under that domain; a
+  request for several is logged once as an account-wide change with the names and the state before in the row.
+  One name not in the account refuses the whole request before anything is sent · Porkbun takes a list, so one
+  row per request matches what was sent; per-domain rows would mean one request per domain · confidence 75.
+- 2026-11-18 · P1 · Auto-renew changes skip domains already in the target state. In bulk, a domain with API access
+  off is still sent and Porkbun's refusal is reported for it (the review step says it will be refused); on the
+  Overview tab the button is disabled for such a domain · a bulk selection should report what happened to every
+  name in it, while a single button that can only fail should not be offered · confidence 72.
+- 2026-11-18 · P1 · Transfer lock, WHOIS privacy and API access are shown read-only with a link to porkbun.com, and
+  the account credit is a read-only tile on the list (no top-up) · the API in this build's scope has no call that
+  changes them, and top-ups are out of scope (plan §2) · confidence 85.
+- 2026-11-18 · P1 · The list's filter and search are kept in the address (`?filter=soon`, `?q=`) by a shallow
+  history replace, so a reload or a link shows the same list; the sort is not · links such as "expiring soon"
+  can point straight at the filtered list · confidence 78.
+- 2026-11-18 · P3 · P3 also owns two new folders the ownership table does not list, `lib/porkbun/registry/**`
+  (input checks, browser calls, the safety check list, shared by the pages and the routes) and
+  `lib/server/porkbun-registry/**` (small route helpers) · the checks must be the same in the form and on the
+  server, and no other workstream claimed these names, so nothing collides · move them under a P3 route folder
+  if anyone objects · confidence 85.
+- 2026-11-18 · P3 · The server checks the typed confirmation as well as the page: restore with prune, a
+  nameserver change, deleting glue, and adding or deleting a DS record need `"confirm": "<domain>"` in the body,
+  or the route answers 400 `CONFIRMATION_REQUIRED` and sends nothing · §3.1 rule 3 then holds for every caller,
+  not only for this UI's pages · drop `requireConfirm` from a route to relax it · confidence 80.
+- 2026-11-18 · P3 · Adding a DS record needs the domain typed too, although §3.1 rule 3 names only deleting one
+  · a DS record that does not match the zone's key makes the whole domain fail for validating resolvers, which
+  is worse than most deletes · confidence 75.
+- 2026-11-18 · P3 · Nameserver and DNSSEC changes run Porkbun's preflight on the server, uncached, right before
+  the write, and answer 409 `PREFLIGHT_BLOCKED` (with the preflight) while it reports a blocker. The review
+  step gets the same check from the rehearsal (`PUT …/nameservers` with `dryRun`, `POST …/dnssec` with
+  `check`) · §3.1 rule 4 and the P3 definition of done; a cached "safe" answer must not let a move through ·
+  confidence 88.
+- 2026-11-18 · P3 · "Undo this restore" restores `previousStateSavedAs` with prune, always · a restore without
+  prune only adds records back, so it can not take away what the first restore added; with prune the zone is
+  exactly as before. The undo still needs the domain typed · confidence 85.
+- 2026-11-18 · P3 · Cache keys: `<domain>:history`, `<domain>:history:<id>` (diff), `<domain>:preflight:<intent>`,
+  `<domain>:ns` (the `string[]` of `porkbun().ns.get`, the shape P1's overview would read), `<domain>:glue`,
+  `<domain>:dnssec`. Compare and the review step always ask Porkbun for a fresh diff · one key per read, same
+  shape for anyone who reads the same key; a diff is a comparison with the live zone and goes stale with every
+  change made at porkbun.com · confidence 80. Told the coordinator about `<domain>:ns`.
+- 2026-11-18 · P3 · Input rules before any call: 2 to 13 distinct nameserver hostnames; a glue host is one label
+  (`ns1`) or a full name under the domain (`ns1.eu.example.com`), never another domain; 1 to 13 glue addresses;
+  DS key tag 0 to 65535, digest in hex with the length its digest type requires (40, 64 or 96); algorithms 1, 3,
+  5, 6, 7 and 12 refused as retired (the same list the fake refuses); key data all or nothing; a second DS
+  record with a key tag that exists is refused (Porkbun keys DS records by key tag) · catches typing mistakes
+  with a clear message instead of a registry error · `lib/porkbun/registry/validate.ts` · confidence 78.
+- 2026-11-18 · P3 · Glue and DNSSEC have no dry run at Porkbun, so their review step shows the change, the
+  safety check (DNSSEC) and advice, and says plainly that Porkbun does not rehearse it · §3.1 rule 2 asks for a
+  dry run only where Porkbun has one · confidence 85.
