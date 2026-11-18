@@ -14,6 +14,11 @@ every thread. They stay in force until David edits this file.
    in the same PR, and moves on. It asks David only when the choice cannot be undone or
    changes the goal (for example dropping a feature from PLAN.md). Even then it keeps
    working on its recommended option while waiting.
+   Every DECISIONS.md entry made from 18 Nov 2026 on carries a confidence score from 1
+   to 100 (`confidence 85`): how sure the thread is that David would make the same call.
+   Below 70, the thread also asks David, once, with its recommended option, and keeps
+   working on that option while it waits unless the step cannot be undone. At 70 or above
+   it does not ask. David asked for this on 18 Nov 2026.
 4. Anything David must do himself goes in [TODO-USER.md](TODO-USER.md) with the date,
    the workstream, what to do, and why. Threads never block on those items.
 5. No real secrets, hostnames of private services, or credentials are ever committed.
@@ -44,6 +49,7 @@ same problem; it logs that in DECISIONS.md.
 
 ## Communication
 
+- David is not involved unless an important design or code decision needs him (rule 3).
 - One reply to David when a PR is up, one when it is merged, one when the thread needs
   him. Everything else goes on the thread checklist.
 - When a thread finishes, it tells the coordinator which start conditions in PLAN.md are

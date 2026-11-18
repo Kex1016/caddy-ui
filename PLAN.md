@@ -17,6 +17,8 @@ Companion documents:
 - [docs/caddy-coverage.md](docs/caddy-coverage.md) — every Caddyfile directive, matcher
   and global option, with what the visual editor must support for each, and which ones
   David's Caddyfile uses today.
+- [docs/porkbun-plan.md](docs/porkbun-plan.md) — the Porkbun integration (workstreams
+  P0–P7), planned after v1.0.0. See §9.
 - [docs/visual-editor-options.md](docs/visual-editor-options.md) — the visual editor
   approaches that were brainstormed, with the recommendation and the open questions.
 
@@ -320,3 +322,15 @@ log and metrics setup helpers), About (Caddy version, UI version, update status)
 2. Working core: W3, W4, W6, W9 image.
 3. The product: W5a, W7, W8, then W5b.
 4. Release 1.0: W11 green, W10 final, W9 updater, compose swap in TODO-USER.
+
+## 9. After 1.0: Porkbun integration
+
+Managing David's Porkbun domains from the UI (DNS records, restore points, DNSSEC,
+nameservers, glue, URL forwarding, auto-renew, the SSL bundle) and tying that to the
+`caddy-dns/porkbun` plugin his Caddy is built with is planned in
+[docs/porkbun-plan.md](docs/porkbun-plan.md). It adds workstreams P0–P7, its own
+contracts (env variables, `/api/porkbun/*` routes, two SQLite tables, a file ownership
+table) and a new coordinator goal in [COORDINATOR.md](COORDINATOR.md). Everything in
+this file still applies to those workstreams, including the `adminFetch` rule for Caddy's
+admin API. "Certificate issuance outside what Caddy already does" stays a non-goal: the
+integration only reads the certificate Porkbun issues.

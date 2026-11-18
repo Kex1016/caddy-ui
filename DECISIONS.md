@@ -503,3 +503,49 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-06 · README screenshots · The Sites table showed "expired" for a certificate with less than a day left
   (`certDays <= 0`), while Overview already used `< 0`. Sites now uses `< 0` too, so a certificate expiring later
   today reads "0 d" with the warning tag · found while taking the screenshots · none.
+- 2026-11-18 · Porkbun plan · From this entry on, each decision ends with `confidence N` (1–100: how sure the
+  thread is that David would make the same call). Below 70 the thread also asks David, with its recommendation,
+  and keeps building on it (AUTOPILOT.md rule 3) · David asked for it on 18 Nov · none · confidence 95.
+- 2026-11-18 · Porkbun plan · The UI server calls Porkbun's API v3 directly with header auth, using the same
+  `PORKBUN_API_KEY` / `PORKBUN_API_SECRET_KEY` names the `caddy` service already has; keys come from env only and
+  are never stored · one `.env` entry serves both containers, and header auth keeps keys out of request bodies
+  so those can be audited · to use a separate key for the UI, set different values on the `caddy-ui` service ·
+  confidence 90.
+- 2026-11-18 · Porkbun plan · Not built on Porkbun's MCP server or webhooks; a small typed client instead · the
+  UI needs a server-side API, not agent tools, and webhooks need a public HTTPS endpoint · none · confidence 88.
+- 2026-11-18 · Porkbun plan · Scope is everything changeable on an existing domain that does not spend money:
+  DNS records, restore points, preflight, import, DNSSEC, nameservers, glue, URL forwarding, auto-renew, SSL
+  bundle, read-only pricing and balance. Registration, transfers, hosting, mailboxes, Link in Bio, the Cloudflare
+  move, agent naming, top-ups and API key management are out · "manage my existing domains" · add a workstream
+  to docs/porkbun-plan.md §5 · confidence 80.
+- 2026-11-18 · Porkbun plan · Renewals (spend credit), WHOIS contacts (personal data) and email forwarding are
+  left out by default and put to David as one question · they are arguably part of "fully manage", but each has
+  a cost or privacy edge · a yes adds P8a/P8b/P8c (docs/porkbun-plan.md §8) · confidence 60, asked.
+- 2026-11-18 · Porkbun plan · No dynamic DNS (keeping A/AAAA on the server's public IP) by default; asked ·
+  not requested, and it writes DNS without a person reviewing it · a yes adds P9 · confidence 62, asked.
+- 2026-11-18 · Porkbun plan · Every write goes through a review step with Porkbun's dry run where it exists;
+  typed confirmation for nameserver changes, DNSSEC deletes, bulk deletes, restore with prune and glue deletes;
+  nameserver changes are refused while preflight reports blockers · a wrong DNS write takes sites and mail down,
+  and the editor already taught "Review and apply" · relax per action in docs/porkbun-plan.md §3.1 · confidence 85.
+- 2026-11-18 · Porkbun plan · Reads are cached in SQLite for 60 s (`CADDY_UI_PORKBUN_CACHE_TTL`) and every write
+  is recorded in `porkbun_audit` with the state before · fast pages, survives rate limits, and gives an undo
+  trail where Porkbun has none · change the TTL by env · confidence 82.
+- 2026-11-18 · Porkbun plan · Read-only is the default when `CADDY_UI_AUTH_MODE=none`; otherwise writes are on ·
+  an unauthenticated UI should not be able to change DNS by accident · set `CADDY_UI_PORKBUN_READONLY=false` ·
+  confidence 75.
+- 2026-11-18 · Porkbun plan · The SSL tab shows the Porkbun-issued certificate and lets the chain be downloaded;
+  the private key download needs `CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD=true` · Caddy issues its own certificates,
+  so the key is rarely needed and is the most sensitive thing the API returns · set the env switch · confidence 75.
+- 2026-11-18 · Porkbun plan · The plugin Caddy image is shipped as `deploy/caddy/Dockerfile` for David to build
+  (as he does today), not published to GHCR · he already builds it, and publishing a Caddy image means tracking
+  Caddy releases · P6 can add a publish job later · confidence 72.
+- 2026-11-18 · Porkbun plan · Tests never call the real API: unit and e2e tests use an in-repo fake seeded from
+  Porkbun's `/mock` responses; a job against Porkbun's sandbox runs only if sandbox keys are added as secrets ·
+  CI must not depend on an account or touch real DNS · none · confidence 85.
+- 2026-11-18 · Porkbun plan · P0 alone edits shared files (env, migrations, nav, hooks, the route layout) and
+  creates placeholders, so P1–P5 run in parallel in folders of their own; models are Fable for P0, P2, P5, Opus
+  for P1, P3, P7, Sonnet for P4, P6 · David asked for as many parallel agents as do not collide, and Fable where
+  needed · change the table in docs/porkbun-plan.md §5 · confidence 80.
+- 2026-11-18 · Porkbun plan · The `caddy-dns/porkbun` Caddyfile syntax in docs/porkbun-plan.md §4 was written
+  from memory because this session could not open that repository; P5 verifies it first · flagged rather than
+  assumed · none · confidence 85 that the syntax is right.
