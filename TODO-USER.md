@@ -135,3 +135,24 @@ Newest at the bottom. Format: date · workstream · what · why.
   9. Rollback if needed: put the two old services back, remove `caddy-ui`, run
      `docker compose up -d --remove-orphans`. Your Caddyfile is the same file; the UI keeps
      its backups in `./caddy-ui/backups/`.
+- [ ] 2026-11-18 · Porkbun plan · Answer the two open questions in
+  [docs/porkbun-plan.md](docs/porkbun-plan.md) §8: whether renewals, WHOIS contacts or email
+  forwarding belong in this build, and whether you want dynamic DNS · both were decided with
+  confidence under 70 (default: leave them out); the build does not wait for you.
+- [ ] 2026-11-18 · Porkbun plan · At https://porkbun.com/account/api, check the key the server
+  uses: permissions should cover DNS and domain settings but not purchases (the "Manage, but
+  no purchases" preset), and if the key has an IP allowlist it must include the server's
+  public IP. Each domain you want to manage needs "API access" switched on · the UI can only
+  do what the key may do, and it shows which of these is missing.
+- [ ] 2026-11-18 · Porkbun plan · When P0 is in the image you run, add `PORKBUN_API_KEY:
+  ${PORKBUN_API_KEY}` and `PORKBUN_API_SECRET_KEY: ${PORKBUN_API_SECRET_KEY}` to the
+  `environment:` of the `caddy-ui` service (the same two lines the `caddy` service has) ·
+  the UI is a separate container and does not see Caddy's environment. P6 writes the exact
+  steps into this file when the build is done.
+- [ ] 2026-11-18 · Porkbun plan · Optional: create a sandbox key pair at Porkbun (public key
+  starts with `pk1_sb_`) and add both halves as GitHub Actions secrets
+  `PORKBUN_SANDBOX_API_KEY` and `PORKBUN_SANDBOX_API_SECRET_KEY` · lets CI run the
+  integration against Porkbun's sandbox, where nothing real is changed; without them that
+  one job is skipped.
+- [ ] 2026-11-18 · Porkbun plan · Replace the coordinator goal in the project's instructions
+  with the block in [COORDINATOR.md](COORDINATOR.md) · the current goal ends at v1.0.0.
