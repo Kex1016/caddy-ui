@@ -7,9 +7,12 @@ import type { DomainSummary, PorkbunStatus } from '$lib/api/porkbun';
 import { setConfigServiceForTests } from '$lib/server/config';
 import { FakeAdmin } from '$lib/server/config/fake-admin';
 import { ConfigService } from '$lib/server/config/service';
+import { PluginDetector, setPluginDetectorForTests } from '$lib/server/caddy/porkbun/plugin';
+import { PluginAdmin } from '$lib/server/caddy/porkbun/testing';
 import { openDb } from '$lib/server/db';
 import { porkbunStatus, requireDomain } from '$lib/server/porkbun';
 import { resetPorkbunForTests, useFakePorkbun } from '$lib/server/porkbun/testing';
+import { GET as tieInRoute } from '../../../api/porkbun/caddy/+server';
 import { load, type DnsPageData } from './+page.server';
 import Page from './+page.svelte';
 
@@ -47,6 +50,7 @@ beforeEach(async () => {
 afterEach(async () => {
 	vi.useRealTimers();
 	resetPorkbunForTests();
+	setPluginDetectorForTests(undefined);
 	svc.unwatch();
 	setConfigServiceForTests(undefined);
 	await rm(dir, { recursive: true, force: true });
@@ -120,12 +124,36 @@ describe('the DNS tab load', () => {
 				sites: [{ host: 'blog.example.com', records: [{ id: apex?.id }] }]
 			});
 		});
-		expect(asked).toEqual(['/api/porkbun/caddy']);
+		expect(asked).toEqual(['/api/porkbun/caddy?domain=example.com']);
 		expect(hostsOf(data, '', 'A')).toEqual(['blog.example.com']);
 		expect(hostsOf(data, 'www', 'A')).toEqual([]);
 		// The link to the site still comes from the Caddyfile.
 		const record = data.zone?.data.records.find((r) => r.host === '' && r.type === 'A');
 		expect(data.marks[record?.id ?? '']?.sites[0]?.href).toMatch(/^\/sites\//);
+	});
+
+	it('reads the answer the tie-in gives today', async () => {
+		useFakePorkbun();
+		setPluginDetectorForTests(new PluginDetector(new PluginAdmin()));
+		const answers: { status: number; sites: string[] }[] = [];
+		const viaRoute = async (path: string) => {
+			const res = await tieInRoute({ url: new URL(path, 'http://ui.test') } as never);
+			const body = (await res.clone().json()) as { sites?: { host: string }[] };
+			answers.push({ status: res.status, sites: (body.sites ?? []).map((s) => s.host) });
+			return res;
+		};
+		const [own, data] = [await page('example.com'), await page('example.com', viaRoute)];
+		// The tie-in did answer, with the three sites of this domain and not the one elsewhere.
+		expect(answers).toEqual([
+			{ status: 200, sites: ['www.example.com', 'blog.example.com', 'shop.example.com'] }
+		]);
+		// Both ways of working it out agree on this zone, record by record.
+		const hosts = (d: DnsPageData) =>
+			Object.fromEntries(Object.entries(d.marks).map(([id, m]) => [id, m.sites.map((s) => s.host).sort()]));
+		expect(hosts(data)).toEqual(hosts(own));
+		expect(hostsOf(data, 'www', 'A')).toEqual(['www.example.com']);
+		expect(hostsOf(data, '*', 'A')).toEqual(['shop.example.com']);
+		expect(data.marks).toEqual(own.marks);
 	});
 
 	it.each([

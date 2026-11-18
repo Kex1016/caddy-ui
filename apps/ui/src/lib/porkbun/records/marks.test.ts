@@ -156,8 +156,8 @@ describe('marksFromCaddy', () => {
 				plugin: true,
 				sites: [
 					{ host: 'www.example.com', dns01: true, records: [{ id: '3' }, { id: 1 }, { id: '999' }] },
-					{ host: 'api.example.com', records: [{ id: '4' }] },
-					{ host: 'elsewhere.test', records: [{ id: '4' }] }
+					{ host: 'api.example.com', siteId: 'api.example.com', records: [{ id: '4', domain: D }] },
+					{ host: 'no-link.example.com', siteId: '', records: [{ id: '9' }] }
 				]
 			},
 			zone(),
@@ -166,9 +166,50 @@ describe('marksFromCaddy', () => {
 		);
 		expect(marks?.['3']?.sites).toEqual(known);
 		expect(marks?.['1']?.sites).toEqual(known);
-		expect(marks?.['4']?.sites).toEqual([{ host: 'api.example.com', href: null, disabled: false }]);
+		// A site the Caddyfile scan did not list gets its link from the tie-in.
+		expect(marks?.['4']?.sites).toEqual([
+			{ host: 'api.example.com', href: '/sites/api.example.com', disabled: false }
+		]);
+		expect(marks?.['9']?.sites).toEqual([{ host: 'no-link.example.com', href: null, disabled: false }]);
 		expect(marks?.['7']?.managedByCaddy).toBe(true);
 		expect(marks?.['999']).toBeUndefined();
+	});
+
+	it('marks a site of another domain that resolves through this zone, and no record of another zone', () => {
+		const marks = marksFromCaddy(
+			{
+				sites: [
+					{
+						host: 'shop.example.net',
+						siteId: 'shop.example.net',
+						// A CNAME in the other zone, then the record it points at here.
+						records: [
+							{ id: '4', domain: 'example.net' },
+							{ id: '1', domain: D }
+						]
+					}
+				]
+			},
+			zone(),
+			known,
+			D
+		);
+		expect(marks?.['1']?.sites.map((s) => s.host)).toEqual(['shop.example.net']);
+		// Record 4 of this zone only shares its id with the one in example.net.
+		expect(marks?.['4']).toBeUndefined();
+	});
+
+	it('is null when the tie-in could not read the zone, so the marks are worked out here', () => {
+		const unreadable = { host: 'www.example.com', status: 'unreadable', records: [] };
+		expect(marksFromCaddy({ sites: [unreadable] }, zone(), known, D)).toBeNull();
+		// A zone further along a CNAME that can not be read leaves the pairs found in this one.
+		const further = { host: 'blog.example.com', status: 'unreadable', records: [{ id: '5', domain: D }] };
+		expect(marksFromCaddy({ sites: [further] }, zone(), known, D)?.['5']?.sites.map((s) => s.host)).toEqual([
+			'blog.example.com'
+		]);
+		// Another domain's trouble is not this page's.
+		const other = { host: 'www.example.net', status: 'unreadable', records: [] };
+		expect(marksFromCaddy({ sites: [other] }, zone(), known, D)).not.toBeNull();
 	});
 
 	it.each([

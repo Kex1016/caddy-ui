@@ -9,8 +9,9 @@ import { fqdn, isIPv4 } from './names';
  *   deleting one says which sites it takes with it.
  *
  * Worked out from the Caddyfile's site addresses and the zone alone, so the DNS tab does not need the Caddy
- * tie-in (workstream P5) to be there. When `GET /api/porkbun/caddy` answers with a cross-check this page can
- * read, `marksFromCaddy` takes the site-to-record pairs from it instead.
+ * tie-in (workstream P5) to answer. When `GET /api/porkbun/caddy` does, `marksFromCaddy` takes the
+ * site-to-record pairs from its cross-check instead: it follows a CNAME into another zone of the account,
+ * which the zone of one domain alone can not show.
  */
 
 /** A site of the Caddyfile whose address is a name in this domain. */
@@ -146,9 +147,12 @@ const isObj = (v: unknown): v is Record<string, unknown> =>
 	typeof v === 'object' && v !== null && !Array.isArray(v);
 
 /**
- * The same marks from the Caddy tie-in's cross-check, when it is there and has the shape this page reads:
- * `{ sites: [{ host, records: [{ id }] }] }`. Anything else is null, and the marks worked out here are used.
- * Sites the tie-in does not list keep what `known` says about them (their link, whether they are off).
+ * The same marks from the Caddy tie-in's cross-check (`CaddyTieIn` in `$lib/api/porkbun-caddy`), read as
+ * loosely as it can be: `{ sites: [{ host, records: [{ id, domain? }], siteId?, status? }] }`. null when the
+ * answer has another shape or could not read the zone itself, and the marks worked out here are used.
+ *
+ * A site under another domain counts too when its name resolves through a record of this zone. Sites the
+ * Caddyfile scan knows keep what `known` says about them (their link, whether they are switched off).
  */
 export function marksFromCaddy(
 	payload: unknown,
@@ -164,11 +168,23 @@ export function marksFromCaddy(
 	for (const entry of payload.sites) {
 		if (!isObj(entry) || typeof entry.host !== 'string' || !Array.isArray(entry.records)) return null;
 		const host = siteHostOf(entry.host);
-		if (!host || !inDomain(host, domain)) continue;
-		const site = known.find((s) => s.host === host) ?? { host, href: null, disabled: false };
+		if (!host) continue;
+		// The tie-in found no records because it could not read this zone, not because there are none. (With
+		// records, it is a zone further along a CNAME that could not be read, and the pairs here stand.)
+		if (entry.status === 'unreadable' && entry.records.length === 0 && inDomain(host, domain)) return null;
+		const site: SiteUse = known.find((s) => s.host === host) ?? {
+			host,
+			href:
+				typeof entry.siteId === 'string' && entry.siteId !== ''
+					? `/sites/${encodeURIComponent(entry.siteId)}`
+					: null,
+			disabled: false
+		};
 		for (const ref of entry.records) {
-			const id =
-				isObj(ref) && (typeof ref.id === 'string' || typeof ref.id === 'number') ? String(ref.id) : '';
+			if (!isObj(ref)) continue;
+			// A record of another zone of the account: not one of this page's.
+			if (typeof ref.domain === 'string' && ref.domain !== domain) continue;
+			const id = typeof ref.id === 'string' || typeof ref.id === 'number' ? String(ref.id) : '';
 			if (ids.has(id) && !of(id).sites.some((s) => s.host === host)) of(id).sites.push(site);
 		}
 	}

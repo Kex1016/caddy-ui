@@ -862,10 +862,14 @@ Format: date · workstream · decision · why · how to reverse.
   `GET …/dns/export?format=json` · confidence 80.
 - 2026-11-18 · P2 · "Managed by Caddy" and "used by site" are worked out by the DNS tab itself from the
   Caddyfile's site addresses and the zone (exact name, else the covering wildcard, following CNAME and ALIAS
-  inside the zone). When `GET /api/porkbun/caddy` (P5) answers within 1.5 s with
-  `{ sites: [{ host, records: [{ id }] }] }`, its pairs are used instead; any other answer is ignored · the
-  tab then works before P5 lands and never waits on it. Told the P5 thread the shape ·
-  `lib/porkbun/records/marks.ts` · confidence 75.
+  inside the zone). When `GET /api/porkbun/caddy?domain=<domain>` (P5) answers within 1.5 s, the pairs of
+  its cross-check (`sites[].host`, `sites[].records[].id`) are used instead, and `siteId` gives the link for a
+  site the scan here did not list; an answer of another shape, or one that could not read the zone, is
+  ignored · the tab works when Caddy or the tie-in is slow or down and never waits on it; a test runs P5's
+  real route against the same zone and both ways give the same marks. The tie-in is asked for this domain
+  only, so a site under another domain whose CNAME leads into this zone is not marked; asking for every
+  domain would read every zone of the account each time a DNS tab opens (the reader already handles that
+  answer) · `lib/porkbun/records/marks.ts` · confidence 75.
 - 2026-11-18 · P2 · The DNS tab reads the nameservers under P3's cache key `<domain>:ns` to say up front when a
   domain is answered from somewhere else, and uses P3's browser helper (`lib/porkbun/registry/api.ts`) and
   `isAtPorkbun` · one read and one way to call the API routes; no P3 file is changed · confidence 85.

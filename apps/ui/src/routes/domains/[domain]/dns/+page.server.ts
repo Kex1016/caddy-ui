@@ -40,14 +40,19 @@ async function sitesOf(domain: string): Promise<SiteUse[]> {
 	}
 }
 
-/** The Caddy tie-in's cross-check (workstream P5), when that route exists and answers in time. */
-async function tieIn(fetcher: typeof fetch): Promise<unknown> {
+/**
+ * The Caddy tie-in's cross-check of this domain's sites (workstream P5), when it answers in time. Asked
+ * through its route, so this page reads the same answer every other page gets and nothing of its insides.
+ */
+async function tieIn(fetcher: typeof fetch, domain: string): Promise<unknown> {
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	try {
 		const late = new Promise<null>((resolve) => {
 			timer = setTimeout(() => resolve(null), TIE_IN_WAIT_MS);
 		});
-		const answer = fetcher('/api/porkbun/caddy').then(async (res) => (res.ok ? await res.json() : null));
+		const answer = fetcher(`/api/porkbun/caddy?domain=${encodeURIComponent(domain)}`).then(async (res) =>
+			res.ok ? await res.json() : null
+		);
 		return await Promise.race([answer, late]);
 	} catch {
 		return null;
@@ -84,7 +89,7 @@ export const load: PageServerLoad = async ({ params, fetch }): Promise<DnsPageDa
 			() => null
 		),
 		sitesOf(domain),
-		tieIn(fetch)
+		tieIn(fetch, domain)
 	]);
 
 	const records = zoneRead.zone?.data.records ?? [];
