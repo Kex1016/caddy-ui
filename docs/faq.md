@@ -53,5 +53,17 @@ Set `CADDY_UI_SESSION_SECRET`. Without it a new secret is generated at every sta
 No. It never uses the Docker socket. Only the optional updater sidecar does, to redeploy
 `caddy-ui`.
 
+## Domains says Porkbun is not set up.
+The `caddy-ui` container needs `PORKBUN_API_KEY` and `PORKBUN_API_SECRET_KEY` in its own
+`environment:`; Caddy's copy is not visible to it. See [porkbun.md](porkbun.md).
+
+## Does the Porkbun plugin for Caddy do what the Domains pages do?
+No. The plugin only lets Caddy answer ACME DNS-01 challenges (wildcard certificates). The
+Domains pages manage DNS records, nameservers and the rest through the Porkbun API. They
+share the same two environment variables.
+
+## Can the UI register or renew domains?
+No. It manages domains you already own and never spends money.
+
 ## Where do I report problems?
 Open an issue on the GitHub repository.
