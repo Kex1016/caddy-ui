@@ -570,3 +570,6 @@ Format: date · workstream · decision · why · how to reverse.
   are final; the tab descriptions and safety rules are marked *(to verify)* and are checked in the final docs pass
   after P1-P5 · the UI does not exist yet, and claiming behaviour that may change would mislead · final pass
   rewrites the marked sections · confidence 85.
+- 2026-11-18 · Porkbun plan · David answered both questions asked below 70: renewals, WHOIS contacts and email
+  forwarding stay out, and there is no dynamic DNS. The P8a/P8b/P8c and P9 workstreams are dropped
+  (docs/porkbun-plan.md §8) · his choice on the decision cards · he can ask for any of them later · confidence 100.
