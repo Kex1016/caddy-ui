@@ -5,15 +5,24 @@
 # Required in .env or the shell:
 #   CADDY_UI_COMPOSE_DIR   absolute path of the directory holding this file
 #   CADDY_UI_SESSION_SECRET  long random string (cookie signing)
+# Optional, for Porkbun (docs/porkbun.md):
+#   PORKBUN_API_KEY, PORKBUN_API_SECRET_KEY   one key pair serves Caddy and Caddy UI
 name: caddy
 
 services:
   caddy:
-    image: caddy:latest
+    # Caddy built with the Porkbun DNS plugin (deploy/caddy/Dockerfile). If you do not use
+    # Porkbun, replace `build` and `image` with `image: caddy:latest` and drop the two keys.
+    build:
+      context: ./caddy
+    image: caddy-porkbun:local
     restart: unless-stopped
     ports: ['80:80', '443:443', '443:443/udp']
     environment:
       TZ: ${TZ:-UTC}
+      # Used by `dns porkbun` / `acme_dns porkbun` in the Caddyfile as {env.PORKBUN_API_KEY}.
+      PORKBUN_API_KEY: ${PORKBUN_API_KEY:-}
+      PORKBUN_API_SECRET_KEY: ${PORKBUN_API_SECRET_KEY:-}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./data:/data
@@ -40,6 +49,11 @@ services:
       CADDY_UI_USER: ${CADDY_UI_USER:-admin}
       CADDY_UI_PASSWORD: ${CADDY_UI_PASSWORD:?set CADDY_UI_PASSWORD}
       CADDY_UI_SESSION_SECRET: ${CADDY_UI_SESSION_SECRET:?set CADDY_UI_SESSION_SECRET}
+      # Domains area (Porkbun). Leave both empty to switch it off. Same names as on `caddy`.
+      PORKBUN_API_KEY: ${PORKBUN_API_KEY:-}
+      PORKBUN_API_SECRET_KEY: ${PORKBUN_API_SECRET_KEY:-}
+      # Writes to Porkbun can be disabled outright; see docs/porkbun.md.
+      # CADDY_UI_PORKBUN_READONLY: 'true'
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./data:/data:ro

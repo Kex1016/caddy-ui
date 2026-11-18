@@ -1,0 +1,39 @@
+name: Porkbun spec drift
+
+# Compares the Porkbun API spec version this repo was built against
+# (apps/ui/src/lib/server/porkbun/SPEC_VERSION) with the live spec. It only fails visibly so
+# someone looks; it never opens issues or changes files. v3 is additive by contract.
+
+on:
+  schedule:
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: Porkbun spec matches the version we built against
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare versions
+        run: |
+          file=apps/ui/src/lib/server/porkbun/SPEC_VERSION
+          if [ ! -f "$file" ]; then
+            echo "::notice::$file does not exist yet; nothing to compare."
+            exit 0
+          fi
+          known=$(tr -d '[:space:]' < "$file")
+          live=$(curl -fsS --max-time 30 https://porkbun.com/api/json/v3/spec | jq -r '.info.version')
+          echo "built against $known, live $live"
+          if [ -z "$live" ] || [ "$live" = null ]; then
+            echo "::error::could not read info.version from the live spec"
+            exit 1
+          fi
+          if [ "$known" != "$live" ]; then
+            echo "::error::Porkbun spec is now $live; this repo was built against $known. Check the changelog, update SPEC_VERSION."
+            exit 1
+          fi

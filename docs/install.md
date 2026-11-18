@@ -58,6 +58,10 @@ is right. If your host folder holds `certificates/` directly (the old backend mo
 `/data/caddy`), mount it at `/data/caddy`, or set `CADDY_DATA_PATH` to wherever
 `certificates/` sits.
 
+To manage Porkbun domains from the UI, also pass `PORKBUN_API_KEY` and
+`PORKBUN_API_SECRET_KEY` (the same variables Caddy's Porkbun plugin uses) to the `caddy-ui`
+service; see [porkbun.md](porkbun.md). Leave them unset and the Domains area stays off.
+
 The service needs `CADDY_UI_PASSWORD` and `CADDY_UI_SESSION_SECRET` (a long random string).
 The compose example refuses to start without them.
 

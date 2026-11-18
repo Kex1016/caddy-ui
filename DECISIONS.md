@@ -549,3 +549,24 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-18 · Porkbun plan · The `caddy-dns/porkbun` Caddyfile syntax in docs/porkbun-plan.md §4 was written
   from memory because this session could not open that repository; P5 verifies it first · flagged rather than
   assumed · none · confidence 85 that the syntax is right.
+- 2026-11-18 · P6 drafts · `deploy/compose.example.yml` passes `PORKBUN_API_KEY` and `PORKBUN_API_SECRET_KEY`
+  to both `caddy` and `caddy-ui` as `${VAR:-}` (empty when unset), not `:?` as in David's own file · the example is
+  also used by the updater CI job and by people without Porkbun; the Domains area must then be off · switch to
+  `:?` in your own compose · confidence 78. Needs P0 to treat an empty value like an unset one; told the
+  coordinator.
+- 2026-11-18 · P6 drafts · The example `caddy` service builds from `deploy/caddy/Dockerfile` (tag
+  `caddy-porkbun:local`) instead of `caddy:latest`; the Dockerfile pins the Caddy minor version (`ARG
+  CADDY_VERSION=2.11`) but not the plugin, which xcaddy resolves to its latest · David already builds the plugin
+  Caddy himself, and pinning the minor keeps rebuilds predictable while the plugin has no tags worth pinning ·
+  edit the ARG, or pass `--build-arg` · confidence 70.
+- 2026-11-18 · P6 drafts · A new CI job `caddy-porkbun` builds the plugin image, checks that `dns.providers.porkbun`
+  is listed, adapts the documented Caddyfile syntax, and uploads the image as artifact `caddy-porkbun-image` for
+  later jobs (P5, P7) · gives P5 a real way to verify the plugin syntax that the plan flagged as unverified ·
+  none · confidence 80.
+- 2026-11-18 · P6 drafts · `.github/workflows/porkbun-spec-drift.yml` runs weekly, compares `SPEC_VERSION` with the
+  live spec's `info.version`, fails visibly and does nothing else; it exits with a notice while `SPEC_VERSION`
+  does not exist yet (P0 creates it) · plan §7 · none · confidence 85.
+- 2026-11-18 · P6 drafts · `docs/porkbun.md` is committed as a draft: set-up, settings, sandbox and troubleshooting
+  are final; the tab descriptions and safety rules are marked *(to verify)* and are checked in the final docs pass
+  after P1-P5 · the UI does not exist yet, and claiming behaviour that may change would mislead · final pass
+  rewrites the marked sections · confidence 85.

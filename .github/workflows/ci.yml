@@ -197,3 +197,38 @@ jobs:
         run: docker build --build-arg CADDY_UI_VERSION=ci-${{ github.sha }} -t caddy-ui:ci .
       - name: Follow docs/install.md and the swap steps in TODO-USER.md
         run: deploy/ci/install-smoke.sh caddy-ui:ci
+
+  caddy-porkbun:
+    name: Caddy built with the Porkbun DNS plugin
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build deploy/caddy/Dockerfile
+        run: docker build -t caddy-porkbun:ci deploy/caddy
+      - name: The plugin is compiled in
+        run: docker run --rm caddy-porkbun:ci caddy list-modules | grep -x 'dns.providers.porkbun'
+      - name: The documented Caddyfile syntax adapts
+        run: |
+          cat > "$RUNNER_TEMP/Caddyfile" <<'EOF'
+          *.example.com {
+          	tls {
+          		dns porkbun {
+          			api_key {env.PORKBUN_API_KEY}
+          			api_secret_key {env.PORKBUN_API_SECRET_KEY}
+          		}
+          	}
+          	respond "ok"
+          }
+          EOF
+          docker run --rm -v "$RUNNER_TEMP/Caddyfile:/etc/caddy/Caddyfile:ro" caddy-porkbun:ci \
+            caddy adapt --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
+      - name: Offer the image to other jobs
+        run: docker save caddy-porkbun:ci | gzip > "$RUNNER_TEMP/caddy-porkbun.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          # Other jobs: actions/download-artifact, then `gunzip -c caddy-porkbun.tar.gz | docker load`
+          # and use the tag caddy-porkbun:ci.
+          name: caddy-porkbun-image
+          path: ${{ runner.temp }}/caddy-porkbun.tar.gz
+          retention-days: 1
