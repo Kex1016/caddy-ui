@@ -6,6 +6,8 @@ export default defineConfig({
 	server: { port: 5173 },
 	test: {
 		include: ['src/**/*.test.ts'],
+		// No unit test may reach the real Porkbun API (docs/porkbun-plan.md §5.1).
+		setupFiles: ['src/lib/server/porkbun/no-network.setup.ts'],
 		environment: 'node'
 	}
 });

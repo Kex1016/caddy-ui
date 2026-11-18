@@ -22,6 +22,9 @@ export const load: PageServerLoad = () => {
 			{ name: 'CADDY_DATA_PATH', value: cfg.dataPath },
 			{ name: 'CADDY_UI_DATA', value: cfg.uiData },
 			{ name: 'CADDY_UI_PUBLIC_URL', value: cfg.publicUrl ?? 'unset' },
+			{ name: 'PORKBUN_API_KEY', value: set(cfg.porkbun.apiKey) },
+			{ name: 'PORKBUN_API_SECRET_KEY', value: set(cfg.porkbun.apiSecret) },
+			{ name: 'CADDY_UI_PORKBUN_READONLY', value: String(cfg.porkbun.readonly) },
 			{ name: 'TZ', value: cfg.timeZone }
 		]
 	};

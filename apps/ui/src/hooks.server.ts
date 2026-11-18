@@ -4,7 +4,7 @@ import { identify } from '$lib/server/auth';
 import { startConfigService } from '$lib/server/config';
 import { installCaddyfileParser } from '$lib/server/config/caddyfile-parser';
 import { startCollector } from '$lib/server/collector';
-import { ConfigError } from '$lib/server/env';
+import { ConfigError, config } from '$lib/server/env';
 import { isApiPath, isPublicPath, sameOrigin } from '$lib/server/guard';
 import { getRuntime } from '$lib/server/runtime';
 import { SESSION_COOKIE } from '$lib/server/session';
@@ -22,6 +22,13 @@ export const init: ServerInit = async () => {
 			console.warn('caddy-ui: CADDY_UI_USER and CADDY_UI_PASSWORD are unset, so local sign-in is off.');
 		} else if (auth.mode === 'local-misconfigured') {
 			console.error(`caddy-ui: ${auth.missing} is unset; every request is refused until both are set.`);
+		}
+		const { porkbun } = config();
+		if (Boolean(porkbun.apiKey) !== Boolean(porkbun.apiSecret)) {
+			const missing = porkbun.apiKey ? 'PORKBUN_API_SECRET_KEY' : 'PORKBUN_API_KEY';
+			console.warn(
+				`caddy-ui: ${missing} is unset, so the Domains area is off until both Porkbun keys are set.`
+			);
 		}
 		if (!building && process.env.VITEST === undefined) startCollector();
 	} catch (err) {

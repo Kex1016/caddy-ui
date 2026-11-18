@@ -1,0 +1,21 @@
+{
+  "status": "SUCCESS",
+  "unsupported": ["nope"],
+  "pricing": {
+    "example": {
+      "registration": "9.73",
+      "renewal": "9.73",
+      "transfer": "9.73",
+      "specialType": "string",
+      "coupons": {
+        "example": {
+          "code": "string",
+          "max_per_user": 0,
+          "first_year_only": "yes",
+          "type": "string",
+          "amount": 0
+        }
+      }
+    }
+  }
+}

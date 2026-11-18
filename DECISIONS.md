@@ -573,3 +573,67 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-18 · Porkbun plan · David answered both questions asked below 70: renewals, WHOIS contacts and email
   forwarding stay out, and there is no dynamic DNS. The P8a/P8b/P8c and P9 workstreams are dropped
   (docs/porkbun-plan.md §8) · his choice on the decision cards · he can ask for any of them later · confidence 100.
+- 2026-11-18 · P0 · `CADDY_UI_PORKBUN_READONLY` also defaults to `true` when auth mode is `local` with neither
+  `CADDY_UI_USER` nor `CADDY_UI_PASSWORD` set, not only with mode `none` · that case runs without sign-in too, and
+  the reason for the default (an open UI should not change DNS by accident) is the same · set
+  `CADDY_UI_PORKBUN_READONLY=false` · confidence 78.
+- 2026-11-18 · P0 · An empty or blank `PORKBUN_API_KEY` / `PORKBUN_API_SECRET_KEY` counts as unset, and the values
+  are trimmed · P6's compose example passes `${VAR:-}`, and a stray newline from an env file would otherwise make
+  every call fail · none · confidence 90.
+- 2026-11-18 · P0 · Contract (§3.2), additions only: `audit()` returns the row id; `PorkbunStatus` gains `account`
+  and `checkedAt`; `ApiError` gains `retryAfter` and `details` (Porkbun's extra error fields such as `existingId`
+  and `conflictingRecords`); the failure branch of `WriteResult` gains an optional `auditId`; the server module
+  also exports `isConfigured()`, `listDomains()`, `auditLog()`, `toApiError()` and `write()`; migration 3 adds an
+  index on `porkbun_audit (domain, id)` · each was needed by a P0 page or saves P1–P5 from writing the same code
+  five times, and nothing that was promised changed shape · they are additions, so removing one only needs its
+  callers changed · confidence 88. Told the coordinator.
+- 2026-11-18 · P0 · Contract (§3.2), one change: `DnsRecord.type` is `AnyRecordType` (the 14 known types or any
+  other string), with `isKnownRecordType()` to narrow it; `DnsRecordInput.type` stays the 14 · §7 says a record
+  of a type this build does not know is shown read-only and never dropped, which the narrower type could not
+  express · narrow it back if Porkbun's list is ever closed · confidence 85. Told the coordinator.
+- 2026-11-18 · P0 · Dates in the shared types are ISO 8601 UTC strings (or '' when Porkbun sent none); the client
+  converts Porkbun's "YYYY-MM-DD HH:MM:SS" · one format for every page, and `Date` parses it the same in every
+  browser · change `isoDate` in client.ts · confidence 88.
+- 2026-11-18 · P0 · `write()` in the server module is the one way to send a change: it checks read-only mode and
+  the key's permission, runs the call, drops the domain's cached reads on success and on failure (after a lost
+  connection the write may have happened), and records both outcomes in `porkbun_audit` · the safety rules of
+  §3.1 then hold by construction instead of by five workstreams remembering them · routes can still call the
+  client directly, but should not · confidence 85.
+- 2026-11-18 · P0 · The read cache is emptied when the process starts, instead of being tied to a fingerprint of
+  the key · a restart is the only way the key can change, and no hash of a secret has to be stored · store a
+  fingerprint if cold starts ever hurt · confidence 80.
+- 2026-11-18 · P0 · A stale cached answer is served only when Porkbun can not be reached or says the failure is
+  temporary (rate limit, DNS read failed); a refusal such as a missing permission is shown as the error it is ·
+  old data should not hide that access was taken away · cache.ts · confidence 82.
+- 2026-11-18 · P0 · The client waits out a 429 on a read once, and only when `Retry-After` is 5 s or less; writes
+  are never retried by the client. At most 4 requests run at once, each with a 15 s timeout, and redirects are
+  refused · a page should answer or fail quickly, a write must not be sent twice without the person knowing
+  (every POST still carries an `Idempotency-Key`), and a redirect would carry the key headers to another host ·
+  the limits are options of the `Porkbun` class · confidence 80.
+- 2026-11-18 · P0 · The key's scopes come from the last `/ping`, remembered in memory (as long as the cache TTL,
+  at least 10 s; a failed ping for 10 s); `requireWritable()` uses that and lets the request through when no ping
+  has succeeded yet, so Porkbun itself is the judge · one extra call per write would double the request count
+  against the rate limit · `porkbunStatus({ force: true })` re-checks · confidence 80.
+- 2026-11-18 · P0 · Key values are blanked in everything that leaves the client (error messages and details,
+  results) and in every audit row, and fields named like a key or a private key are dropped from audit rows; the
+  cache refuses to store the SSL bundle · the keys and the certificate key are the only secrets here, and
+  `secrets.test.ts` holds the line with marker keys · none · confidence 90.
+- 2026-11-18 · P0 · `toResponse()` maps errors to HTTP like this: keys unset or Porkbun unreachable 503, rate limit
+  429 with `Retry-After`, Porkbun's 403/404/409 as they are, its other 4xx as 422, anything else 502 · the browser
+  needs to tell "try again" from "change the request" without parsing text; the body always carries the code ·
+  errors.ts · confidence 80.
+- 2026-11-18 · P0 · With the keys unset, `/domains` shows the set-up steps and every page under it redirects
+  there; the nav entry is always shown · the plan asks for one nav entry and no calls, and a person who has not
+  set it up should find out that it exists · hide the entry in nav.ts · confidence 80.
+- 2026-11-18 · P0 · The About page lists `PORKBUN_API_KEY`, `PORKBUN_API_SECRET_KEY` (as set or unset) and
+  `CADDY_UI_PORKBUN_READONLY` · it already lists every other setting that way, and it is the quickest way to see
+  whether the container got the keys · remove the three rows · confidence 82.
+- 2026-11-18 · P0 · `routes/domains/[domain]/+layout.svelte` owns the page heading (the domain name), the status
+  tags and the tab bar; tab pages start at `<h2>`. The Activity page links each row to its domain and pages with
+  `?before=` · one heading per page, and tabs that do not jump · the layout file · confidence 85.
+- 2026-11-18 · P0 · The fake Porkbun (`fake.ts`) imports nothing at run time and has two error codes of its own
+  where the spec names none (`SSL_NOT_READY`, `INVALID_RECORD_ID` for an unknown URL forward) · P7 can load it
+  with plain Node and serve it over HTTP for the e2e suite; nothing may branch on the two invented codes ·
+  replace them when Porkbun documents real ones · confidence 78.
+- 2026-11-18 · P0 · A vitest setup file makes any request to a `porkbun.com` host fail in unit tests · "no test
+  calls the real API" is then enforced, not just intended · `no-network.setup.ts` · confidence 92.

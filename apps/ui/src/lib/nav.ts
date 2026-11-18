@@ -1,4 +1,13 @@
-import { FileCode, Globe, History, Info, LayoutDashboard, Settings, SlidersHorizontal } from '@lucide/svelte';
+import {
+	FileCode,
+	Globe,
+	History,
+	Info,
+	LayoutDashboard,
+	Network,
+	Settings,
+	SlidersHorizontal
+} from '@lucide/svelte';
 import type { Component } from 'svelte';
 
 /** Sidebar navigation (PLAN.md §6 pages). Workstreams fill the pages; the shell owns this list. */
@@ -9,7 +18,9 @@ export const NAV: NavGroupDef[] = [
 	{
 		items: [
 			{ href: '/', label: 'Overview', icon: LayoutDashboard },
-			{ href: '/sites', label: 'Sites', icon: Globe }
+			{ href: '/sites', label: 'Sites', icon: Globe },
+			// The Porkbun area (docs/porkbun-plan.md §6). Always listed; with the keys unset it explains the set-up.
+			{ href: '/domains', label: 'Domains', icon: Network }
 		]
 	},
 	{

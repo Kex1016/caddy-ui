@@ -1,0 +1,11 @@
+{
+  "status": "SUCCESS",
+  "domain": "string",
+  "created": 0,
+  "skipped": 0,
+  "failed": 0,
+  "failures": [{}],
+  "warnings": [
+    "example.com is delegated to nameservers we do not operate (ns1.example-dns.net), so this change was saved to your Porkbun DNS zone but does NOT affect what resolves. Make the same change wherever those nameservers are managed, or point the domain back at ours (maceio.ns.porkbun.com, curitiba.ns.porkbun.com, salvador.ns.porkbun.com, fortaleza.ns.porkbun.com) with POST /domain/updateNs/example.com -- the zone you just edited is what we would start serving."
+  ]
+}

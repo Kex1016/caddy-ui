@@ -21,7 +21,15 @@ describe('loadConfig', () => {
 			updateIntervalMs: 3_600_000,
 			updateWebhookPort: undefined,
 			updateSource: 'ghcr',
-			timeZone: 'UTC'
+			timeZone: 'UTC',
+			porkbun: {
+				apiKey: undefined,
+				apiSecret: undefined,
+				apiUrl: 'https://api.porkbun.com/api/json/v3',
+				readonly: true,
+				cacheTtlMs: 60_000,
+				sslKeyDownload: false
+			}
 		});
 	});
 
@@ -72,9 +80,53 @@ describe('loadConfig', () => {
 		['CADDY_UI_UPDATE_INTERVAL', '10s'],
 		['CADDY_ADMIN_URL', 'caddy:2019'],
 		['CADDY_UI_UPDATE_SOURCE', 'dockerhub'],
+		['PORKBUN_API_URL', 'api.porkbun.com'],
+		['CADDY_UI_PORKBUN_READONLY', 'maybe'],
+		['CADDY_UI_PORKBUN_CACHE_TTL', 'a while'],
+		['CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD', '2'],
 		['TZ', 'Mars/Olympus']
 	])('rejects %s=%s naming the variable', (name, value) => {
 		expect(() => loadConfig({ [name]: value })).toThrowError(ConfigError);
 		expect(() => loadConfig({ [name]: value })).toThrowError(name);
+	});
+
+	describe('Porkbun', () => {
+		it('reads the keys, trimmed, and treats empty or blank ones as unset', () => {
+			const cfg = loadConfig({ PORKBUN_API_KEY: ' pk1_abc\n', PORKBUN_API_SECRET_KEY: 'sk1_def' });
+			expect(cfg.porkbun.apiKey).toBe('pk1_abc');
+			expect(cfg.porkbun.apiSecret).toBe('sk1_def');
+			const empty = loadConfig({ PORKBUN_API_KEY: '', PORKBUN_API_SECRET_KEY: '   ' });
+			expect(empty.porkbun.apiKey).toBeUndefined();
+			expect(empty.porkbun.apiSecret).toBeUndefined();
+		});
+
+		it('reads the other settings', () => {
+			const cfg = loadConfig({
+				PORKBUN_API_URL: 'https://api-ipv4.porkbun.com/api/json/v3/',
+				CADDY_UI_PORKBUN_CACHE_TTL: '5m',
+				CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD: 'TRUE',
+				CADDY_UI_PORKBUN_READONLY: 'yes',
+				CADDY_UI_AUTH_MODE: 'forward'
+			});
+			expect(cfg.porkbun).toMatchObject({
+				apiUrl: 'https://api-ipv4.porkbun.com/api/json/v3',
+				cacheTtlMs: 300_000,
+				sslKeyDownload: true,
+				readonly: true
+			});
+			expect(loadConfig({ CADDY_UI_PORKBUN_CACHE_TTL: '0s' }).porkbun.cacheTtlMs).toBe(0);
+		});
+
+		it.each([
+			[{ CADDY_UI_AUTH_MODE: 'none' }, true],
+			[{}, true],
+			[{ CADDY_UI_USER: 'admin', CADDY_UI_PASSWORD: 'pw' }, false],
+			[{ CADDY_UI_USER: 'admin' }, false],
+			[{ CADDY_UI_AUTH_MODE: 'forward' }, false],
+			[{ CADDY_UI_AUTH_MODE: 'none', CADDY_UI_PORKBUN_READONLY: 'false' }, false],
+			[{ CADDY_UI_AUTH_MODE: 'forward', CADDY_UI_PORKBUN_READONLY: 'true' }, true]
+		])('is read-only by default only when nobody has to sign in: %o', (env, readonly) => {
+			expect(loadConfig(env).porkbun.readonly).toBe(readonly);
+		});
 	});
 });

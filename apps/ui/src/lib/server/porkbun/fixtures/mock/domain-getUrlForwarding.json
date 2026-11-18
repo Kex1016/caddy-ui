@@ -1,0 +1,14 @@
+{
+  "status": "SUCCESS",
+  "forwards": [
+    {
+      "id": "string",
+      "subdomain": "string",
+      "location": "string",
+      "type": "permanent",
+      "redirectType": "301",
+      "includePath": "yes",
+      "wildcard": "yes"
+    }
+  ]
+}

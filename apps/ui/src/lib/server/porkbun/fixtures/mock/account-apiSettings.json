@@ -1,0 +1,22 @@
+{
+  "status": "SUCCESS",
+  "settings": {
+    "monthlySpendLimit": 0,
+    "lowBalanceAlert": 0,
+    "autoTopup": true,
+    "topupThreshold": 0,
+    "topupAmount": 0
+  },
+  "monthlySpend": 0,
+  "spendLimit": {
+    "limit": 0,
+    "source": "account",
+    "spent": 0,
+    "remaining": 0
+  },
+  "topupLimit": {
+    "limit": 0,
+    "source": "account",
+    "added": 0
+  }
+}

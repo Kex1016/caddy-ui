@@ -1,0 +1,28 @@
+{
+  "status": "SUCCESS",
+  "domain": "example.com",
+  "snapshot": {
+    "id": 1234,
+    "takenAt": "2026-09-16 22:14:19",
+    "reason": "before-edit"
+  },
+  "missing": [
+    {
+      "name": "www.example.com",
+      "type": "A",
+      "content": "203.0.113.10",
+      "ttl": 600,
+      "prio": null
+    }
+  ],
+  "extra": [
+    {
+      "name": "www.example.com",
+      "type": "A",
+      "content": "203.0.113.10",
+      "ttl": 600,
+      "prio": null
+    }
+  ],
+  "inSync": false
+}

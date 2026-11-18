@@ -1,0 +1,12 @@
+{
+  "status": "SUCCESS",
+  "records": {
+    "example": {
+      "keyTag": "string",
+      "alg": "string",
+      "digestType": "string",
+      "digest": "string",
+      "pubKey": "string"
+    }
+  }
+}
