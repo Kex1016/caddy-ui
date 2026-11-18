@@ -32,7 +32,9 @@ export type Diagnostic = {
 		| 'bad-regexp'
 		| 'not-allowed-here'
 		| 'unknown-global-option'
-		| 'undefined-matcher';
+		| 'undefined-matcher'
+		| 'missing-subdirective'
+		| 'literal-secret';
 };
 
 /** A directive line: name, argument texts (unquoted), optional block. */
@@ -117,6 +119,17 @@ export function matchArgs(args: ArgSchema[], tokens: string[]): ArgIssue[] {
 }
 
 function checkArg(a: ArgSchema, value: string, argIndex: number): ArgIssue[] {
+	// A credential written out in the file. The value itself is never repeated in the message.
+	if (a.secret && value !== '' && !hasPlaceholder(value)) {
+		return [
+			{
+				code: 'literal-secret',
+				message: `this puts the key in the Caddyfile and in History; use ${a.secret} instead`,
+				argIndex,
+				severity: 'warning'
+			}
+		];
+	}
 	if (a.type === 'regexp' && !hasPlaceholder(value)) {
 		const err = checkRegexp(value);
 		return err ? [{ code: 'bad-regexp', message: `${a.name}: ${err}`, argIndex, severity: 'warning' }] : [];
@@ -180,6 +193,16 @@ function validateNode(ctx: Ctx, schema: DirectiveSchema, node: DirectiveLike, pa
 			argIndex: i.argIndex === undefined ? undefined : i.argIndex + offset
 		});
 	if (node.body) validateBody(ctx, schema, variant, node.body, path);
+	const owner = variant ?? schema;
+	for (const name of owner.requires ?? []) {
+		if (node.body?.some((c) => c.name === name)) continue;
+		diag(ctx, {
+			code: 'missing-subdirective',
+			message: `${variant ? `${schema.name} ${owner.name}` : owner.name} needs ${name}`,
+			path,
+			line: node.line
+		});
+	}
 }
 
 function shift(i: ArgIssue, by: number): ArgIssue {

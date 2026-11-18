@@ -1,8 +1,11 @@
 /**
- * Bespoke forms for the three global options David's Caddyfile uses (`email`, `admin`, `servers`); the
- * rest of the global options use the schema's generic forms.
+ * Bespoke forms for the three global options David's Caddyfile uses (`email`, `admin`, `servers`) and the
+ * two that name a DNS provider (`acme_dns`, `dns`); the rest of the global options use the schema's generic
+ * forms.
  */
 import type { SchemaBundle } from '@caddy-ui/caddy-schema/types';
+import DnsProviderField from './DnsProviderField.svelte';
+import { dnsClaims } from './directives/dns-provider';
 import { arg, argList, claimsOf, note, rows, section } from './fields';
 import { registerGlobalForm } from './registry';
 import type { FieldSpec, FormSpec } from './types';
@@ -119,6 +122,37 @@ export function serversForm(schema: SchemaBundle | null): FormSpec {
 	};
 }
 
+/**
+ * `acme_dns` and the global `dns` option: the same provider picker as the `tls` form (Porkbun guided, any
+ * other provider as free text). The option is the provider line itself.
+ */
+function dnsProviderForm(name: 'acme_dns' | 'dns', title: string, summary: string) {
+	return (schema: SchemaBundle | null): FormSpec => ({
+		name,
+		title,
+		summary,
+		docsUrl: docs(schema, name),
+		fields: [{ kind: 'custom', id: 'provider', label: 'DNS provider', component: DnsProviderField }],
+		claims: [],
+		claimsFor: dnsClaims,
+		describe: (n) => n.args[0]?.text ?? 'default provider'
+	});
+}
+
+export const acmeDnsForm = dnsProviderForm(
+	'acme_dns',
+	'ACME DNS challenge',
+	'Every site gets its certificate through the DNS challenge with this provider. Needed for wildcard certificates.'
+);
+
+export const globalDnsForm = dnsProviderForm(
+	'dns',
+	'Default DNS provider',
+	'The DNS provider used wherever a site or option asks for one without naming it (Caddy 2.10 and later).'
+);
+
 registerGlobalForm('email', emailForm);
 registerGlobalForm('admin', adminForm);
 registerGlobalForm('servers', serversForm);
+registerGlobalForm('acme_dns', acmeDnsForm);
+registerGlobalForm('dns', globalDnsForm);

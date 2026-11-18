@@ -32,7 +32,10 @@ describe('schema shape', () => {
 			const where = path.join('/');
 			expect(typeof n.name, where).toBe('string');
 			expect(typeof n.summary, where).toBe('string');
-			expect(n.docsUrl, where).toMatch(/^https:\/\/caddyserver\.com\/docs\//);
+			// A plugin's node documents itself at the plugin's repository, not in the Caddy docs.
+			expect(n.docsUrl, where).toMatch(
+				n.plugin ? /^https:\/\/github\.com\/caddy-dns\// : /^https:\/\/caddyserver\.com\/docs\//
+			);
 			expect(typeof n.order, where).toBe('number');
 			expect(typeof n.matcher, where).toBe('boolean');
 			expect(Array.isArray(n.examples), where).toBe(true);

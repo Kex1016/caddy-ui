@@ -232,3 +232,42 @@ jobs:
           name: caddy-porkbun-image
           path: ${{ runner.temp }}/caddy-porkbun.tar.gz
           retention-days: 1
+
+  caddy-porkbun-tie-in:
+    name: Porkbun tie-in against the plugin Caddy
+    needs: caddy-porkbun
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: caddy-porkbun-image
+          path: ${{ runner.temp }}
+      - name: Start the plugin Caddy with its admin API on the runner
+        run: |
+          gunzip -c "$RUNNER_TEMP/caddy-porkbun.tar.gz" | docker load
+          echo '{"admin":{"listen":"0.0.0.0:2019"}}' > "$RUNNER_TEMP/caddy.json"
+          docker run -d --name caddy -p 2019:2019 -v "$RUNNER_TEMP/caddy.json:/etc/caddy/caddy.json:ro" \
+            caddy-porkbun:ci caddy run --config /etc/caddy/caddy.json
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:2019/config/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          docker logs caddy
+          exit 1
+      # The "caddy" job runs the same tests against stock Caddy, where they expect the plugin to be missing.
+      - name: P5 definition of done, and the config service on this build
+        env:
+          CADDY_TEST_ADMIN_URL: http://127.0.0.1:2019
+          CADDY_TEST_PORKBUN_PLUGIN: present
+        run: pnpm --filter @caddy-ui/ui test:caddy
+      - name: Caddy logs
+        if: failure()
+        run: docker logs caddy

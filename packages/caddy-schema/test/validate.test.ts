@@ -186,3 +186,86 @@ describe('diagnostics', () => {
 		});
 	});
 });
+
+describe('the Porkbun DNS plugin (github.com/caddy-dns/porkbun)', () => {
+	const site = (src: string) => validateSiteBody(schema, parseDirectives(src));
+	const globals = (src: string) => validateGlobalOptions(schema, parseDirectives(src));
+	const BLOCK = '{\n\tapi_key {env.PORKBUN_API_KEY}\n\tapi_secret_key {env.PORKBUN_API_SECRET_KEY}\n}';
+	const HOSTS: [string, (src: string) => Diagnostic[], (provider: string) => string][] = [
+		['tls { dns }', site, (p) => `tls {\n\tdns ${p}\n}`],
+		['tls { issuer acme { dns } }', site, (p) => `tls {\n\tissuer acme {\n\t\tdns ${p}\n\t}\n}`],
+		['acme_dns', globals, (p) => `acme_dns ${p}`],
+		['dns (global)', globals, (p) => `dns ${p}`]
+	];
+
+	it.each(HOSTS)('%s takes the documented block', (_, validate, wrap) => {
+		expect(fmt(validate(wrap(`porkbun ${BLOCK}`)))).toBe('');
+	});
+
+	it.each(HOSTS)('%s names the plugin module', (name) => {
+		const path = {
+			'tls { dns }': schema.directives.tls.subdirectives!.dns,
+			'tls { issuer acme { dns } }':
+				schema.directives.tls.subdirectives!.issuer.variants!.acme.subdirectives!.dns,
+			acme_dns: schema.globalOptions.acme_dns,
+			'dns (global)': schema.globalOptions.dns
+		}[name]!;
+		expect(path.variants!.porkbun).toMatchObject({
+			plugin: 'dns.providers.porkbun',
+			requires: ['api_key', 'api_secret_key'],
+			args: []
+		});
+	});
+
+	it.each(HOSTS)('%s warns about a key written out, without repeating it', (_, validate, wrap) => {
+		const diags = validate(
+			wrap('porkbun {\n\tapi_key pk1_0123456789abcdef\n\tapi_secret_key "sk1_fedcba9876543210"\n}')
+		);
+		expect(diags.map((d) => [d.code, d.severity, d.path.at(-1), d.argIndex])).toEqual([
+			['literal-secret', 'warning', 'api_key', 0],
+			['literal-secret', 'warning', 'api_secret_key', 0]
+		]);
+		expect(diags[0]!.message).toBe(
+			'api_key: this puts the key in the Caddyfile and in History; use {env.PORKBUN_API_KEY} instead'
+		);
+		expect(JSON.stringify(diags)).not.toMatch(/pk1_0123|sk1_fedc/);
+	});
+
+	it('accepts the Caddyfile env form {$NAME} as well as {env.NAME}', () => {
+		expect(
+			fmt(
+				site('tls {\n\tdns porkbun {\n\t\tapi_key {$PORKBUN_API_KEY}\n\t\tapi_secret_key {$SECRET}\n\t}\n}')
+			)
+		).toBe('');
+	});
+
+	it('refuses what the plugin refuses: a missing key, an unknown option, arguments on the line', () => {
+		const missing = site('tls {\n\tdns porkbun {\n\t\tapi_key {env.PORKBUN_API_KEY}\n\t}\n}');
+		expect(missing).toHaveLength(1);
+		expect(missing[0]).toMatchObject({
+			code: 'missing-subdirective',
+			severity: 'error',
+			message: 'dns porkbun needs api_secret_key'
+		});
+		expect(site('tls {\n\tdns porkbun\n}').map((d) => d.code)).toEqual([
+			'missing-subdirective',
+			'missing-subdirective'
+		]);
+		expect(
+			site(
+				`tls {\n\tdns porkbun {\n\t\tapi_key {env.A}\n\t\tapi_secret_key {env.B}\n\t\tapi_token x\n\t}\n}`
+			)[0]
+		).toMatchObject({ code: 'unknown-subdirective' });
+		expect(site(`tls {\n\tdns porkbun {env.A} ${BLOCK}\n}`)[0]).toMatchObject({ code: 'extra-arg' });
+		expect(
+			site('tls {\n\tdns porkbun {\n\t\tapi_key a b\n\t\tapi_secret_key {env.B}\n\t}\n}').map((d) => d.code)
+		).toContain('extra-arg');
+	});
+
+	it('leaves other providers alone, with arguments or with a block of their own', () => {
+		expect(fmt(site('tls {\n\tdns cloudflare {env.CF_API_TOKEN}\n}'))).toBe('');
+		expect(fmt(site('tls {\n\tdns route53 {\n\t\tregion eu-central-1\n\t\tprofile caddy\n\t}\n}'))).toBe('');
+		expect(fmt(globals('acme_dns cloudflare {env.CF_API_TOKEN}'))).toBe('');
+		expect(fmt(globals('acme_dns duckdns {\n\tapi_token {env.DUCKDNS_TOKEN}\n}'))).toBe('');
+	});
+});
