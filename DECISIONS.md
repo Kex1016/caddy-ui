@@ -637,6 +637,47 @@ Format: date · workstream · decision · why · how to reverse.
   replace them when Porkbun documents real ones · confidence 78.
 - 2026-11-18 · P0 · A vitest setup file makes any request to a `porkbun.com` host fail in unit tests · "no test
   calls the real API" is then enforced, not just intended · `no-network.setup.ts` · confidence 92.
+- 2026-11-18 · P1 · P1's shared code lives in a new folder, `apps/ui/src/lib/porkbun/domains/`: client-safe
+  types and helpers in `index.ts`, the reads and the auto-renew write in `data.server.ts`, used by both the
+  `/api/porkbun/*` routes and the two page loads · the ownership table names no home for a workstream's
+  helpers outside its route folders, and no other workstream owns this one · move it if P0 wants it elsewhere ·
+  confidence 80.
+- 2026-11-18 · P1 · The domain list sends every row to the page and sorts, filters and searches in the browser,
+  drawing 100 rows per page; the page data leaves out `createDate` and `tld`. Measured with 1,000 fake domains
+  against the built app: 423 KB in all, TTFB 136 ms, load 248 ms, 60 KB of JS (the W11 budget is 600 KB,
+  500 ms, 1,500 ms, 120 KB) · instant filtering without a server round trip, inside the budget · server-side
+  paging if accounts grow past a few thousand domains · confidence 78.
+- 2026-11-18 · P1 · "Expiring soon" means within 30 days or already expired. The countdown is a warning tag only
+  when auto-renew is off (an expired domain is always an error tag) · a domain that renews by itself needs no
+  attention · `EXPIRING_SOON_DAYS` in `lib/porkbun/domains` · confidence 75.
+- 2026-11-18 · P1 · The renewal price is Porkbun's public list price for the TLD (`/pricing/get`, every TLD in one
+  call, cached as `_account:pricing`); a price list that fails leaves the column empty with a notice and does not
+  fail the page · the API has no per-domain renewal quote outside the out-of-scope renew call; premium domains
+  can cost more than this · confidence 72.
+- 2026-11-18 · P1 · The Overview tab's flags come from `/domain/get` (cached as `<d>:domain`), not from the list,
+  and fall back to the list's copy with a notice when that read fails · the definition of done asks that every
+  flag match `/domain/get` · confidence 85.
+- 2026-11-18 · P1 · The Overview counts (records, restore points, URL forwards, glue hosts, DS records) are
+  cached under their own keys, `<d>:<area>:overview`, holding counts only; the nameservers are read through
+  P3's key `<d>:ns` with P3's loader (`ns.get`, a sorted string[]) and summarised after reading, as P3 asked. With API access off
+  those reads are not made and the tiles say why · a write on another tab that drops `<d>:<area>` or `<d>` drops
+  the count too, and the overview can never store something under another tab's key in a shape that tab does
+  not expect; asking for what Porkbun is known to refuse only spends the rate limit · confidence 80.
+- 2026-11-18 · P1 · Bulk auto-renew sends 100 domains per `/domain/updateAutoRenew` request, in turn, and answers
+  with one result per domain in the order asked. A request for one domain is logged under that domain; a
+  request for several is logged once as an account-wide change with the names and the state before in the row.
+  One name not in the account refuses the whole request before anything is sent · Porkbun takes a list, so one
+  row per request matches what was sent; per-domain rows would mean one request per domain · confidence 75.
+- 2026-11-18 · P1 · Auto-renew changes skip domains already in the target state. In bulk, a domain with API access
+  off is still sent and Porkbun's refusal is reported for it (the review step says it will be refused); on the
+  Overview tab the button is disabled for such a domain · a bulk selection should report what happened to every
+  name in it, while a single button that can only fail should not be offered · confidence 72.
+- 2026-11-18 · P1 · Transfer lock, WHOIS privacy and API access are shown read-only with a link to porkbun.com, and
+  the account credit is a read-only tile on the list (no top-up) · the API in this build's scope has no call that
+  changes them, and top-ups are out of scope (plan §2) · confidence 85.
+- 2026-11-18 · P1 · The list's filter and search are kept in the address (`?filter=soon`, `?q=`) by a shallow
+  history replace, so a reload or a link shows the same list; the sort is not · links such as "expiring soon"
+  can point straight at the filtered list · confidence 78.
 - 2026-11-18 · P3 · P3 also owns two new folders the ownership table does not list, `lib/porkbun/registry/**`
   (input checks, browser calls, the safety check list, shared by the pages and the routes) and
   `lib/server/porkbun-registry/**` (small route helpers) · the checks must be the same in the form and on the
