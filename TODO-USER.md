@@ -135,10 +135,9 @@ Newest at the bottom. Format: date · workstream · what · why.
   9. Rollback if needed: put the two old services back, remove `caddy-ui`, run
      `docker compose up -d --remove-orphans`. Your Caddyfile is the same file; the UI keeps
      its backups in `./caddy-ui/backups/`.
-- [ ] 2026-11-18 · Porkbun plan · Answer the two open questions in
-  [docs/porkbun-plan.md](docs/porkbun-plan.md) §8: whether renewals, WHOIS contacts or email
-  forwarding belong in this build, and whether you want dynamic DNS · both were decided with
-  confidence under 70 (default: leave them out); the build does not wait for you.
+- [x] 2026-11-18 · Porkbun plan · Answer the two open questions in
+  [docs/porkbun-plan.md](docs/porkbun-plan.md) §8 · done 18 Nov: renewals, WHOIS contacts and
+  email forwarding stay out, no dynamic DNS.
 - [ ] 2026-11-18 · Porkbun plan · At https://porkbun.com/account/api, check the key the server
   uses: permissions should cover DNS and domain settings but not purchases (the "Manage, but
   no purchases" preset), and if the key has an IP allowlist it must include the server's

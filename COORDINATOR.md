@@ -44,9 +44,8 @@ Porkbun, with tagging `v1.1.0` as the last open item.
    green. No test may call the real Porkbun API; tests use the fake, and the sandbox job
    runs only with sandbox keys. Every call to Caddy's admin API goes through `adminFetch`.
    Never merge a PR that changes a §3.2 contract without a `DECISIONS.md` entry.
-9. If I answer an open question in `docs/porkbun-plan.md` §8 with a yes, add the matching
-   workstream (P8a, P8b, P8c or P9) to the table in a small PR and launch it once P0 is
-   merged.
+9. Renewals, WHOIS contacts, email forwarding and dynamic DNS are out of this build
+   (`docs/porkbun-plan.md` §8). Do not launch work on them.
 10. Models: Fable for P0, P2 and P5, Opus for P1, P3 and P7, Sonnet for P4 and P6. Effort
     as in the table.
 

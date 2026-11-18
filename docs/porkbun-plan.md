@@ -48,10 +48,10 @@ different product.
 | Auto-renew | `/domain/updateAutoRenew` | Yes, per domain and in bulk |
 | SSL bundle | `/ssl/retrieve/{domain}` | Yes: certificate details and chain download; private key download is off unless enabled by env |
 | Pricing and balance | `/pricing/get`, `/account/balance`, `/account/apiSettings` | Read-only: renewal price next to expiry, account credit |
-| Renewals | `/domain/renew` | **Open question** (spends credit). Default: left out |
-| Contacts (WHOIS) | `/domain/getContacts`, `/domain/updateContacts` | **Open question** (personal data). Default: left out |
-| Email forwarding | `/email/getForwards`, `/email/addForward`, `/email/deleteForward` | **Open question**. Default: left out |
-| Dynamic DNS | `/ping` + `/dns/editByNameType` on a timer | **Open question**. Default: left out |
+| Renewals | `/domain/renew` | No (David, 18 Nov) |
+| Contacts (WHOIS) | `/domain/getContacts`, `/domain/updateContacts` | No (David, 18 Nov) |
+| Email forwarding | `/email/getForwards`, `/email/addForward`, `/email/deleteForward` | No (David, 18 Nov) |
+| Dynamic DNS | `/ping` + `/dns/editByNameType` on a timer | No (David, 18 Nov) |
 | Registration, transfers, closeouts, marketplace, aftermarket | `/domain/create`, `/domain/transfer*`, `/closeout/*`, … | No: not "existing domains", and they charge |
 | Hosting, WordPress, Link in Bio, mailboxes, Cloudflare move, agent naming, webhooks, API key management, top-ups | `/hosting/*`, `/linkinbio/*`, `/email/*Mailbox`, `/cloudflare/*`, `/ans/*`, `/webhook/*`, `/apikey/*`, `/account/topup*` | No: other products |
 
@@ -348,16 +348,14 @@ cached.
   `info.version` and opens nothing, only fails visibly, so someone looks.
 - **CI cannot call Porkbun.** Unit and e2e tests use the fake. The sandbox job is optional.
 
-## 8. Open questions for David
+## 8. Questions David answered
 
-Decisions below 70 confidence (see DECISIONS.md). Each has a default the build follows
-until he answers, and none blocks P0–P7.
+Both were decided below 70 confidence and put to him on 18 Nov 2026. He chose the defaults.
 
-1. Which of renewals, contacts and email forwarding belong in this build? Default: none.
-   Each would be one more small workstream (P8a renewals with dry-run cost and a typed
-   confirm; P8b contacts; P8c email forwards), startable any time after P0.
-2. Should the UI keep A/AAAA records pointed at the server's public IP (dynamic DNS)?
-   Default: no. If yes, it becomes P9 (collector job, per-record opt-in, off by default).
+1. Renewals, WHOIS contacts and email forwarding: **left out**. No P8 workstreams.
+2. Dynamic DNS (keeping A/AAAA records on the server's public IP): **left out**. No P9.
+
+Do not ask again and do not build these unless he brings them up.
 
 ## 9. Milestones
 
