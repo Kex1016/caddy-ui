@@ -267,8 +267,14 @@
 		});
 		if (mine !== seq) return;
 		previewing = false;
-		if (answer.ok) preview = answer.data;
-		else previewError = answer.error;
+		if (!answer.ok) {
+			previewError = answer.error;
+			return;
+		}
+		preview = answer.data;
+		// A problem often means the zone moved on (a record changed or deleted somewhere else). The server
+		// read it again to find out, so show that zone behind the dialog too.
+		if (answer.data.items.some((i) => i.problems.length > 0)) await invalidateAll();
 	}
 
 	const isRefusal = (body: unknown): body is PlanRefusal =>
@@ -692,9 +698,10 @@
 
 <style>
 	.head-end {
-		display: inline-flex;
+		display: flex;
+		flex-wrap: wrap;
 		align-items: baseline;
-		gap: var(--space-3);
+		gap: var(--space-1) var(--space-3);
 	}
 	.bar__end {
 		display: flex;

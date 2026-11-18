@@ -243,6 +243,41 @@ describe('planChanges', () => {
 		expect(clash?.problems[0]?.code).toBe('CNAME_CONFLICT');
 	});
 
+	it('lets an edit keep a stored value this page would not write, but not write a new one', () => {
+		const stored = 'a form this build does not read';
+		const z = [...zone(), rec('h3', 'HTTPS', stored), rec('old', 'MX', 'not a hostname', { prio: 5 })];
+		const [retimed, moved, rewritten, reprioritised] = planChanges(
+			z,
+			[
+				{
+					op: 'edit',
+					id: '7',
+					record: { host: 'h3', type: 'HTTPS', content: stored, ttl: 3600, notes: 'kept' }
+				},
+				{ op: 'edit', id: '8', record: { host: 'older', type: 'MX', content: 'not a hostname', prio: 5 } }
+			],
+			D
+		).concat(
+			planChanges(
+				z,
+				[{ op: 'edit', id: '7', record: { host: 'h3', type: 'HTTPS', content: 'still not one' } }],
+				D
+			),
+			planChanges(
+				z,
+				[{ op: 'edit', id: '8', record: { host: 'old', type: 'MX', content: 'not a hostname', prio: 6 } }],
+				D
+			)
+		);
+		expect(retimed).toMatchObject({ problems: [], changed: ['ttl', 'notes'] });
+		expect(patchOf(retimed as never)).toEqual({ ttl: 3600, notes: 'kept' });
+		expect(moved).toMatchObject({ problems: [], changed: ['host'], name: 'older.example.com' });
+		expect(moved?.after).toMatchObject({ content: 'not a hostname', prio: 5 });
+		expect(rewritten?.problems[0]).toMatchObject({ code: 'INVALID' });
+		expect(rewritten?.problems[0]?.message).toMatch(/not the form of an HTTPS value/);
+		expect(reprioritised?.problems[0]).toMatchObject({ code: 'INVALID' });
+	});
+
 	it('keeps the priority of an MX record through an edit', () => {
 		const [p] = planChanges(
 			zone(),

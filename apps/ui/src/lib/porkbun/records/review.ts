@@ -23,7 +23,8 @@ function noteOf(item: PlannedChange | PreviewItem, change: RecordChange | undefi
 		lines.push('Already as asked. Nothing is sent for this one.');
 	}
 	if (item.needsEarlier && item.problems.length === 0) lines.push(NEEDS_EARLIER);
-	if (change && change.op !== 'create') {
+	// What depends on a record matters when the change can go ahead; a change that can not is not sent.
+	if (change && change.op !== 'create' && item.problems.length === 0) {
 		const uses = dependents(marks[change.id], change.op);
 		if (uses) lines.push(uses);
 	}

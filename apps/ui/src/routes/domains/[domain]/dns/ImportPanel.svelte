@@ -206,8 +206,10 @@
 				<b>{imported} record{imported === 1 ? '' : 's'} imported.</b>
 				{#if done.porkbun && done.porkbun.skipped > 0}{done.porkbun.skipped} already there and left as they are.{/if}
 				{#if done.porkbun && done.porkbun.failed > 0}{done.porkbun.failed} could not be imported.{/if}
-				Porkbun took a restore point of the zone first; it is on the
-				<a href={domainHref(domain, 'history')}>History tab</a>.
+				{#if done.porkbun && done.porkbun.created > 0}
+					Porkbun took a restore point of the zone first; it is on the
+					<a href={domainHref(domain, 'history')}>History tab</a>.
+				{/if}
 			</p>
 			{#if done.porkbun && done.porkbun.failures.length > 0}
 				<ul class="fails">
