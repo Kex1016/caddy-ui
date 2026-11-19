@@ -289,7 +289,7 @@
 									: `${(r.uptime24h * 100).toFixed(r.uptime24h === 1 ? 0 : 1)}%`}</td
 							>
 							<td class="num">
-								{#if r.certDays === null}—{:else if r.certDays <= 14}
+								{#if r.certDays === null}—{:else if r.certDays < data.certWarnDays}
 									<Tag kind={r.certDays < 0 ? 'error' : 'warning'}
 										>{r.certDays < 0 ? 'expired' : `${r.certDays} d`}</Tag
 									>

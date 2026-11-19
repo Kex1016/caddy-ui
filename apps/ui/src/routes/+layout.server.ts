@@ -13,6 +13,8 @@ export const load: LayoutServerLoad = ({ locals, cookies }) => {
 		authOff: auth.mode === 'local-disabled',
 		version: UI_VERSION,
 		timeZone: config().timeZone,
+		/** Certificates with fewer days left are flagged (CADDY_UI_CERT_WARN_DAYS, Settings → Monitoring). */
+		certWarnDays: config().certWarnDays,
 		/** CADDY_UI_SETTINGS_IGNORE is on: saved settings are not in force (the Settings page says why). */
 		settingsIgnored: config().settingsIgnore
 	};

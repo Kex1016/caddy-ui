@@ -1117,3 +1117,45 @@ Format: date · workstream · decision · why · how to reverse.
   says the sidecar reads its own copy; S4 makes the interval and "check now" editable through its file channel
   (D13). Sections later workstreams add go into `SECTION_KEYS` (lib/settings/meta.ts) and the page's section list
   · confidence 80.
+- 2026-11-19 · S3 · New API route `GET /api/settings/backup` (a file download cannot be a form action). It answers a
+  `.tar.gz` with `caddy-ui.db` (a `VACUUM INTO` copy made in a worker thread on a read-only connection, which in WAL
+  mode is a read, so probes keep being written) and the `Caddyfile`; the copy is written next to the database and
+  deleted once streamed. 409 while compacting, 507 when the volume has no room for the copy. Signed-in only, like
+  every `/api` route. No §3.2 contract changes · confidence 80.
+- 2026-11-19 · S3 · Every other S3 action is a form action on the Settings page (`?/diagnose`, `?/helper`, `?/prune`,
+  `?/compact`, `?/probeOptions`), as S2 did with `?/measure`, so no further routes. The Caddy helpers apply through the
+  editor's existing `PUT /api/caddyfile` with the hash the proposal was worked out on, so a file changed meanwhile
+  is refused (409) and Caddy validates first · confidence 82.
+- 2026-11-19 · S3 · Four new editable variables through `EDITABLE`: `CADDY_UI_PROBE_TIMEOUT` (1s to 60s; unset or empty
+  is the old automatic rule, a third of the interval between 2s and 10s; capped at the probe interval),
+  `CADDY_UI_CERT_WARN_DAYS` (1 to 365, default 14), `CADDY_UI_REVISIONS_KEEP` (10 to 10000, default 200) and
+  `CADDY_UI_BACKUPS_KEEP` (1 to 10000, default 50). The plan named one "revisions and backups kept" number; they were
+  already two numbers (200 and 50), so they stay two settings. Lowering either trims at once · confidence 78.
+- 2026-11-19 · S3 · Per-site probe options live in a new table `probe_options` (migration 6, empty, `WITHOUT ROWID`,
+  instant on any database), keyed by the site id, which is the hash of the site's addresses: changing a site's
+  addresses starts it with default options again. Options: skip (no site or upstream probe; the site and its
+  upstreams are recorded as `unknown`, and `/api/sites` gains `probeSkipped`), a path (and query) probed instead of
+  the site block's own, and extra statuses that count as up on top of the 502/503/504 rule. Changes are logged in
+  `settings_log` under `probe:<first address>` so Recent changes lists them. S6's export should include this table
+  · confidence 76.
+- 2026-11-19 · S3 · The JSON access log helper does not use a global `log` option, which in Caddy configures runtime
+  logs and does not turn on access logs. It adds an `(access_log)` snippet (or reuses one that already writes
+  `CADDY_LOG_PATH` as JSON; `caddy_ui_access_log` when the name is taken) and `import`s it at the top of every site
+  that has no `log` of its own. Sites with their own `log` elsewhere are left alone and named in the review. It
+  writes the UI's `CADDY_LOG_PATH`, which in the example compose file is the same path in both containers; the
+  review says so · confidence 74.
+- 2026-11-19 · S3 · Compact is `VACUUM` in a worker thread on its own connection, with the collector's jobs held
+  (`Collector.hold()` waits for running jobs and pauses new ticks until released), so the main thread never waits on
+  the lock. It is refused unless the volume has twice the database's size free. Request-path writes during a
+  compact (a settings save, a Porkbun cache write) can wait up to the 5 s busy timeout; the page says probes pause
+  while it runs · confidence 72.
+- 2026-11-19 · S3 · Diagnostics is one report built from what the server already holds (collector job status, path
+  checks, storage facts, S0's slow-load log) plus two live calls: the config service's status (through `adminFetch`)
+  and Porkbun `/ping` with `force`. Metrics, the access log and Porkbun count as optional: missing ones are "Check"
+  or "Off", not "Problem". A job is late after three missed runs plus a minute · confidence 80.
+- 2026-11-19 · S3 · The certificate warning applies everywhere a threshold was hard-coded: Overview's tile and list,
+  the Sites column and the site page. The layout passes `certWarnDays`; Overview's cached part is rebuilt when it
+  changes · confidence 85.
+- 2026-11-19 · S3 · The database size view moved from Monitoring to the new "Data and storage" section with the
+  storage tools; the retention field and its "what will be deleted" notice stay in Monitoring. Section order:
+  Diagnostics, Monitoring, Data and storage, Caddy helpers, then S2's sections · confidence 78.

@@ -91,8 +91,8 @@ export class ConfigService {
 	private readonly backupDir: string;
 	private readonly parser: () => CaddyfileParser | null;
 	private readonly now: () => number;
-	private readonly keepRevisions: number;
-	private readonly keepBackups: number;
+	private keepRevisions: number;
+	private keepBackups: number;
 	private readonly formatOnSave: boolean;
 
 	/** Hash of the file as this service last wrote or accepted it; anything else on disk is an outside edit. */
@@ -475,10 +475,55 @@ export class ConfigService {
 		const existing = new Set(await readdir(this.backupDir));
 		for (let i = 1; existing.has(name); i++) name = `${BACKUP_PREFIX}${stamp}-${i}.bak`;
 		await writeFile(join(this.backupDir, name), text, { encoding: 'utf8', mode: 0o600 });
-		const backups = (await readdir(this.backupDir)).filter((f) => f.startsWith(BACKUP_PREFIX)).sort();
+		await this.trimBackups();
+	}
+
+	private async trimBackups(): Promise<void> {
+		let names: string[];
+		try {
+			names = await readdir(this.backupDir);
+		} catch {
+			return;
+		}
+		const backups = names.filter((f) => f.startsWith(BACKUP_PREFIX)).sort();
 		for (const old of backups.slice(0, Math.max(0, backups.length - this.keepBackups))) {
 			await unlink(join(this.backupDir, old)).catch(() => undefined);
 		}
+	}
+
+	/** How many revisions and backup files are kept. */
+	get keeping(): { revisions: number; backups: number } {
+		return { revisions: this.keepRevisions, backups: this.keepBackups };
+	}
+
+	/**
+	 * Change how many revisions and backups are kept (Settings → Data and storage, `CADDY_UI_REVISIONS_KEEP` and
+	 * `CADDY_UI_BACKUPS_KEEP`). A lower number trims the oldest at once; a higher one keeps more from now on.
+	 */
+	async setKeep(keep: { revisions: number; backups: number }): Promise<void> {
+		this.keepRevisions = keep.revisions;
+		this.keepBackups = keep.backups;
+		// One synchronous DELETE, so the page that saved the setting already sees the shorter History.
+		this.trimRevisions();
+		await this.exclusive(() => this.trimBackups());
+	}
+
+	/** Revisions and backup files kept now. */
+	async historyCounts(): Promise<{ revisions: number; backups: number }> {
+		const { n } = this.db.prepare('SELECT COUNT(*) AS n FROM revisions').get() as { n: number };
+		let backups = 0;
+		try {
+			backups = (await readdir(this.backupDir)).filter((f) => f.startsWith(BACKUP_PREFIX)).length;
+		} catch {
+			// No backup written yet.
+		}
+		return { revisions: n, backups };
+	}
+
+	private trimRevisions(): void {
+		this.db
+			.prepare('DELETE FROM revisions WHERE id NOT IN (SELECT id FROM revisions ORDER BY id DESC LIMIT ?)')
+			.run(this.keepRevisions);
 	}
 
 	// ── revisions ─────────────────────────────────────────────────────────────────────────────
@@ -495,9 +540,7 @@ export class ConfigService {
 		const info = this.db
 			.prepare('INSERT INTO revisions (ts, author, text, note) VALUES (?, ?, ?, ?)')
 			.run(this.now(), author, text, note);
-		this.db
-			.prepare('DELETE FROM revisions WHERE id NOT IN (SELECT id FROM revisions ORDER BY id DESC LIMIT ?)')
-			.run(this.keepRevisions);
+		this.trimRevisions();
 		return this.getRevision(Number(info.lastInsertRowid)) as RevisionRow;
 	}
 

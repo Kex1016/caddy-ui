@@ -5,9 +5,18 @@ import type { EditableSetting, EnvOnlySetting, SettingRow, SettingsView } from '
  * The server is the judge of a value; these only label and explain.
  */
 
-export type FieldKind = 'duration' | 'days' | 'timezone' | 'url' | 'readonly';
+export type FieldKind = 'duration' | 'days' | 'count' | 'timezone' | 'url' | 'readonly';
 
-export type FieldMeta = { label: string; hint: string; kind: FieldKind; placeholder?: string };
+export type FieldMeta = {
+	label: string;
+	hint: string;
+	kind: FieldKind;
+	placeholder?: string;
+	/** Shown after the input, for example "days" or "revisions". */
+	unit?: string;
+	/** What an empty value means, in the reset button ("Use the default (automatic)"). */
+	emptyText?: string;
+};
 
 export const FIELDS: Record<string, FieldMeta> = {
 	CADDY_UI_PROBE_INTERVAL: {
@@ -50,12 +59,47 @@ export const FIELDS: Record<string, FieldMeta> = {
 		hint: 'How long a Porkbun answer is reused before asking again. 0s asks every time.',
 		kind: 'duration',
 		placeholder: '60s'
+	},
+	CADDY_UI_PROBE_TIMEOUT: {
+		label: 'Probe timeout',
+		hint: 'How long a probe waits for an answer before the site counts as down. 1s to 60s, and never longer than the probe interval. Empty is automatic: a third of the interval, between 2s and 10s.',
+		kind: 'duration',
+		placeholder: 'automatic',
+		emptyText: 'automatic'
+	},
+	CADDY_UI_CERT_WARN_DAYS: {
+		label: 'Warn about certificates',
+		hint: 'A certificate with fewer days left is flagged on Overview and Sites. 1 to 365. Caddy renews 30 days before expiry, so a flag below that means a renewal is failing.',
+		kind: 'days',
+		placeholder: '14',
+		unit: 'days before expiry'
+	},
+	CADDY_UI_REVISIONS_KEEP: {
+		label: 'Caddyfile revisions kept',
+		hint: 'How many versions of the Caddyfile History keeps. 10 to 10000. Lowering it deletes the oldest at once.',
+		kind: 'count',
+		placeholder: '200',
+		unit: 'revisions'
+	},
+	CADDY_UI_BACKUPS_KEEP: {
+		label: 'Backup files kept',
+		hint: 'Each apply writes the previous Caddyfile to a backup file next to the database. 1 to 10000. Lowering it deletes the oldest at once.',
+		kind: 'count',
+		placeholder: '50',
+		unit: 'files'
 	}
 };
 
 /** The page's sections and the editable keys each one saves. Later workstreams (S3 to S6) add their own. */
 export const SECTION_KEYS = {
-	monitoring: ['CADDY_UI_PROBE_INTERVAL', 'CADDY_UI_SCRAPE_INTERVAL', 'CADDY_UI_RETENTION_DAYS'],
+	monitoring: [
+		'CADDY_UI_PROBE_INTERVAL',
+		'CADDY_UI_SCRAPE_INTERVAL',
+		'CADDY_UI_RETENTION_DAYS',
+		'CADDY_UI_PROBE_TIMEOUT',
+		'CADDY_UI_CERT_WARN_DAYS'
+	],
+	storage: ['CADDY_UI_REVISIONS_KEEP', 'CADDY_UI_BACKUPS_KEEP'],
 	display: ['TZ', 'CADDY_UI_PUBLIC_URL'],
 	domains: ['CADDY_UI_PORKBUN_READONLY', 'CADDY_UI_PORKBUN_CACHE_TTL']
 } as const;
@@ -151,6 +195,7 @@ export const TABLE_LABELS: Record<string, string> = {
 	porkbun_audit: 'Porkbun activity',
 	settings_log: 'Settings changes',
 	settings: 'Saved settings',
+	probe_options: 'Per-site probe options',
 	sites: 'Sites',
 	certs: 'Certificates',
 	sqlite_schema: 'Schema',

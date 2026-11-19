@@ -39,7 +39,10 @@
 	const describedBy = $derived(
 		[`${id}-hint`, `${id}-src`, error ? `${id}-err` : ''].filter(Boolean).join(' ')
 	);
-	const backText = $derived(back.value === null || back.value === '' ? 'none' : back.value);
+	const backText = $derived(
+		back.value === null || back.value === '' ? (meta.emptyText ?? 'none') : back.value
+	);
+	const unit = $derived(meta.unit ?? (meta.kind === 'days' ? 'days' : undefined));
 </script>
 
 <div class="setting" class:setting--error={!!error}>
@@ -75,12 +78,16 @@
 				autocapitalize="off"
 				spellcheck="false"
 				disabled={locked}
-				inputmode={meta.kind === 'days' ? 'numeric' : meta.kind === 'url' ? 'url' : undefined}
+				inputmode={meta.kind === 'days' || meta.kind === 'count'
+					? 'numeric'
+					: meta.kind === 'url'
+						? 'url'
+						: undefined}
 				list={meta.kind === 'timezone' && timeZones.length ? `${id}-zones` : undefined}
 				aria-invalid={error ? 'true' : undefined}
 				aria-describedby={describedBy}
 			/>
-			{#if meta.kind === 'days'}<span class="t-caption">days</span>{/if}
+			{#if unit}<span class="t-caption">{unit}</span>{/if}
 		</span>
 		{#if meta.kind === 'timezone' && timeZones.length}
 			<datalist id="{id}-zones">

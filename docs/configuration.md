@@ -25,6 +25,10 @@ Seven of the variables can also be changed while the UI runs, from Settings (or
 | `CADDY_UI_SCRAPE_INTERVAL` | `15s` | Caddy `/metrics` scrape (minimum 1s) | Editable, applies at once |
 | `CADDY_UI_RETENTION_DAYS` | `90` | Days of probe results and metric samples kept | Editable, applies at once |
 | `CADDY_UI_PUBLIC_URL` | unset | Used in links | Editable, applies at once |
+| `CADDY_UI_PROBE_TIMEOUT` | automatic | How long a probe waits (1s to 60s, never longer than the probe interval); unset is a third of the interval, between 2s and 10s | Editable, applies at once |
+| `CADDY_UI_CERT_WARN_DAYS` | `14` | A certificate with fewer days left is flagged on Overview and Sites (1 to 365) | Editable, applies at once |
+| `CADDY_UI_REVISIONS_KEEP` | `200` | Caddyfile revisions kept in History (10 to 10000) | Editable, applies at once |
+| `CADDY_UI_BACKUPS_KEEP` | `50` | Caddyfile backup files kept in `CADDY_UI_DATA/backups` (1 to 10000) | Editable, applies at once |
 | `CADDY_UI_UPDATE_INTERVAL` | `1h` | Updater poll period (minimum 1m in the UI; 30s in the sidecar) | Shown, environment only |
 | `CADDY_UI_UPDATE_WEBHOOK_PORT` | unset | Updater listens for a push webhook when set | Shown, environment only |
 | `CADDY_UI_UPDATE_SOURCE` | `ghcr` | `ghcr` (pull image) or `git` (clone and build) | Shown, environment only |
@@ -49,13 +53,35 @@ The example compose file also reads `CADDY_UI_TAG`, `CADDY_UI_HOST_PORT` and
 
 Settings (in the sidebar under System) has these sections, each saved on its own:
 
-- **Monitoring**: probe interval, metrics interval and retention. Lowering retention says,
-  before you save, how many probe results and metric samples the next hourly clean-up deletes
-  and about how much space that is. The database file does not shrink; the space is reused.
-  Below the fields: the database size, the free space on the volume that holds
+- **Diagnostics**: **Check everything** asks, in one go, whether the admin API answers (and
+  whether the running config matches the file), whether metrics are on and per host, whether
+  the access log is found and how far behind its reader is, every path check, Porkbun's
+  `/ping` and the key's scopes, whether each collector job ran on time, certificates near
+  expiry, the database against the free space, and the slowest page loads since the UI
+  started. A problem links to where it is fixed. **Copy as text** copies the report.
+- **Monitoring**: probe interval, metrics interval, retention, probe timeout and the
+  certificate warning. Lowering retention says, before you save, how many probe results and
+  metric samples the next hourly clean-up deletes and about how much space that is. Below the
+  fields, **Per-site probes** lists every site: untick **Probe** to skip a site (it and its
+  upstreams show as unknown), give a **Path** to probe instead of the site's own (for example
+  `/health`), or list statuses that **also** count as up (for example `503` for a
+  maintenance page). Each row saves on its own and applies from the next probe cycle.
+- **Data and storage**: the database size, the free space on the volume that holds
   `CADDY_UI_DATA`, the oldest probe result, and the size and row count of every table. Table
   sizes are measured in the background (it reads the whole database) and remembered for 15
-  minutes; **Measure again** measures now.
+  minutes; **Measure again** measures now. Then three tools: **Prune now** runs the hourly
+  clean-up at once; **Compact** rewrites the database without its free pages so the file
+  shrinks (it needs about twice the database's size free, and probes pause while it runs,
+  minutes on a large database); **Download backup** gives a `.tar.gz` with a consistent copy
+  of the database and the Caddyfile, made while everything keeps running. The backup holds the
+  Caddyfile history and saved settings but no environment secret; keep it private. Last, how
+  many Caddyfile revisions and backup files are kept; lowering either deletes the oldest at
+  once.
+- **Caddy helpers**: one click each for `metrics { per_host }` in the global options and for
+  Caddy's JSON access log at `CADDY_LOG_PATH` (a snippet, imported in every site that has no
+  `log` of its own). Each shows the change as a diff; **Apply and reload Caddy** saves it the
+  same way the editor does, so Caddy checks it first and the previous file stays in History.
+  Caddy and the UI must see the log at the same path, which the example compose file does.
 - **Display**: time zone and public address.
 - **Domains**: the Porkbun read-only switch and cache lifetime, both keys as set or not set,
   the API address, the private key download switch, and **Test connection**, which asks
@@ -67,7 +93,8 @@ Settings (in the sidebar under System) has these sections, each saved on its own
 - **Sign-in**: the mode in use and whether the user, password and session secret are set.
 - **Updates**: the updater's variables as this container sees them. The updater sidecar reads
   its own copy from compose.
-- **Recent changes**: the last 50 values saved or reset, with who and when.
+- **Recent changes**: the last 50 values saved or reset, and per-site probe options changed,
+  with who and when.
 
 Each editable field says where its value comes from: **Saved here**, **From the environment**
 or **Default**. When a saved value differs from the environment, the field shows the
@@ -79,8 +106,9 @@ force, and saving is off; **Use the environment's value** still removes a saved 
 ## Settings and the environment
 
 The editable variables are `CADDY_UI_PROBE_INTERVAL`, `CADDY_UI_SCRAPE_INTERVAL`,
-`CADDY_UI_RETENTION_DAYS`, `TZ`, `CADDY_UI_PUBLIC_URL`, `CADDY_UI_PORKBUN_READONLY` and
-`CADDY_UI_PORKBUN_CACHE_TTL`. For each of them the value in force is:
+`CADDY_UI_RETENTION_DAYS`, `CADDY_UI_PROBE_TIMEOUT`, `CADDY_UI_CERT_WARN_DAYS`,
+`CADDY_UI_REVISIONS_KEEP`, `CADDY_UI_BACKUPS_KEEP`, `TZ`, `CADDY_UI_PUBLIC_URL`,
+`CADDY_UI_PORKBUN_READONLY` and `CADDY_UI_PORKBUN_CACHE_TTL`. For each of them the value in force is:
 
 1. the value saved in Settings, if there is one;
 2. otherwise the environment variable, if it is set;

@@ -194,3 +194,9 @@ Newest at the bottom. Format: date · workstream · what · why.
   Connections: each path has a check, and the admin API a **Test** button. A warning on the access log only means
   Caddy's JSON access log is not at `CADDY_LOG_PATH` yet (see the W4 item above) · it is the quickest way to see
   that the mounts in compose are what the UI expects.
+- [ ] 2026-11-19 · S3 · Nothing is required. After deploying, open Settings and press **Check everything** once:
+  anything marked Problem or Check links to its fix. If it says metrics are not per host or the access log is not
+  found, **Caddy helpers** turns each on as a reviewed Caddyfile change. The access log helper writes Caddy's log to
+  `CADDY_LOG_PATH`, so the `caddy` and `caddy-ui` services must mount the same log directory at that path (the
+  example compose file does: `/var/log/caddy`) and Caddy must be able to write there · otherwise the status-code
+  and top-path charts stay empty.

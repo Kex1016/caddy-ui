@@ -388,6 +388,10 @@ function pickEditable(c: Config) {
 		probeIntervalMs: c.probeIntervalMs,
 		scrapeIntervalMs: c.scrapeIntervalMs,
 		retentionDays: c.retentionDays,
+		certWarnDays: c.certWarnDays,
+		probeTimeoutMs: c.probeTimeoutMs,
+		revisionsKeep: c.revisionsKeep,
+		backupsKeep: c.backupsKeep,
 		timeZone: c.timeZone,
 		publicUrl: c.publicUrl
 	};
@@ -414,5 +418,13 @@ export function effectiveOf(c: Config, key: EditableKey): string {
 			return String(c.porkbun.readonly);
 		case 'CADDY_UI_PORKBUN_CACHE_TTL':
 			return String(c.porkbun.cacheTtlMs);
+		case 'CADDY_UI_CERT_WARN_DAYS':
+			return String(c.certWarnDays);
+		case 'CADDY_UI_PROBE_TIMEOUT':
+			return String(c.probeTimeoutMs ?? '');
+		case 'CADDY_UI_REVISIONS_KEEP':
+			return String(c.revisionsKeep);
+		case 'CADDY_UI_BACKUPS_KEEP':
+			return String(c.backupsKeep);
 	}
 }

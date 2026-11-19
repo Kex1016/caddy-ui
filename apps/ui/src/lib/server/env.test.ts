@@ -17,6 +17,10 @@ describe('loadConfig', () => {
 			probeIntervalMs: 30_000,
 			scrapeIntervalMs: 15_000,
 			retentionDays: 90,
+			certWarnDays: 14,
+			probeTimeoutMs: undefined,
+			revisionsKeep: 200,
+			backupsKeep: 50,
 			publicUrl: undefined,
 			updateIntervalMs: 3_600_000,
 			updateWebhookPort: undefined,
@@ -149,5 +153,29 @@ describe('checkSetting', () => {
 	it('CADDY_UI_SETTINGS_IGNORE is a strict boolean', () => {
 		expect(loadConfig({ CADDY_UI_SETTINGS_IGNORE: 'true' }).settingsIgnore).toBe(true);
 		expect(() => loadConfig({ CADDY_UI_SETTINGS_IGNORE: 'please' })).toThrow(/CADDY_UI_SETTINGS_IGNORE/);
+	});
+});
+
+describe('S3 thresholds and history', () => {
+	it('reads the certificate warning, probe timeout and history sizes', () => {
+		const c = loadConfig({
+			CADDY_UI_CERT_WARN_DAYS: '21',
+			CADDY_UI_PROBE_TIMEOUT: '4s',
+			CADDY_UI_REVISIONS_KEEP: '500',
+			CADDY_UI_BACKUPS_KEEP: '10'
+		});
+		expect(c).toMatchObject({ certWarnDays: 21, probeTimeoutMs: 4000, revisionsKeep: 500, backupsKeep: 10 });
+	});
+
+	it('checks each with the same messages as the environment', () => {
+		expect(() => checkSetting('CADDY_UI_CERT_WARN_DAYS', '0')).toThrow(/between 1 and 365/);
+		expect(() => checkSetting('CADDY_UI_PROBE_TIMEOUT', '2m')).toThrow(/between 1s and 60s/);
+		expect(() => checkSetting('CADDY_UI_PROBE_TIMEOUT', 'soon')).toThrow(/duration/);
+		// Empty is "automatic" for the timeout, but not allowed for a number.
+		expect(checkSetting('CADDY_UI_PROBE_TIMEOUT', '')).toBe('');
+		expect(() => checkSetting('CADDY_UI_REVISIONS_KEEP', '')).toThrow(/must not be empty/);
+		expect(() => checkSetting('CADDY_UI_REVISIONS_KEEP', '5')).toThrow(/between 10 and 10000/);
+		expect(checkSetting('CADDY_UI_BACKUPS_KEEP', '1')).toBe('1');
+		expect(() => loadConfig({ CADDY_UI_PROBE_TIMEOUT: '0s' })).toThrow(ConfigError);
 	});
 });

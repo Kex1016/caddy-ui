@@ -6,7 +6,11 @@
 	import type { PorkbunStatus } from '$lib/api/porkbun';
 	import { AsOf, EmptyState, Notice, PageHero, StatTile, Tag } from '$lib/design/components';
 	import { formatBytes, formatDate, formatDateTime, formatMs, formatNumber } from '$lib/format';
+	import CaddyHelpers from '$lib/settings/components/CaddyHelpers.svelte';
+	import DiagnosticsPanel from '$lib/settings/components/DiagnosticsPanel.svelte';
+	import ProbeOptionsTable from '$lib/settings/components/ProbeOptionsTable.svelte';
 	import SettingField from '$lib/settings/components/SettingField.svelte';
+	import StorageTools from '$lib/settings/components/StorageTools.svelte';
 	import {
 		ENV_LABELS,
 		FIELDS,
@@ -29,7 +33,10 @@
 	// Sections in the order of docs/settings-and-perf-plan.md §2.3. S3 to S6 add theirs (diagnostics, storage tools,
 	// thresholds, notifications, updates, display preferences, export and import) to this list and the markup.
 	const NAV = [
+		{ id: 'diagnostics', label: 'Diagnostics' },
 		{ id: 'monitoring', label: 'Monitoring' },
+		{ id: 'storage', label: 'Data and storage' },
+		{ id: 'helpers', label: 'Caddy helpers' },
 		{ id: 'display', label: 'Display' },
 		{ id: 'domains', label: 'Domains' },
 		{ id: 'connections', label: 'Connections' },
@@ -304,6 +311,12 @@
 	{#each NAV as s (s.id)}<a class="fp-chip" href="#{s.id}">{s.label}</a>{/each}
 </nav>
 
+<!-- Diagnostics -->
+<section class="fp-section" id="diagnostics" aria-labelledby="diagnostics-h">
+	<div class="fp-section__head"><h2 class="t-title-2" id="diagnostics-h">Diagnostics</h2></div>
+	<DiagnosticsPanel timeZone={data.timeZone} />
+</section>
+
 <!-- Monitoring -->
 <section class="fp-section" id="monitoring" aria-labelledby="monitoring-h">
 	<div class="fp-section__head"><h2 class="t-title-2" id="monitoring-h">Monitoring</h2></div>
@@ -342,7 +355,16 @@
 	</form>
 
 	<div class="fp-section__head">
-		<h3 class="t-title-3" id="storage-h">Database size</h3>
+		<h3 class="t-title-3" id="probes-h">Per-site probes</h3>
+	</div>
+	<ProbeOptionsTable rows={data.probeOptions} />
+</section>
+
+<!-- Data and storage -->
+<section class="fp-section" id="storage" aria-labelledby="storage-h">
+	<div class="fp-section__head"><h2 class="t-title-2" id="storage-h">Data and storage</h2></div>
+	<div class="fp-section__head">
+		<h3 class="t-title-3" id="dbsize-h">Database size</h3>
 	</div>
 	<div class="fp-tiles">
 		<StatTile
@@ -427,6 +449,59 @@
 			</button>
 		</form>
 	{/await}
+
+	<div class="fp-section__head">
+		<h3 class="t-title-3" id="tools-h">Tools</h3>
+	</div>
+	<StorageTools
+		jobs={data.maintenance}
+		timeZone={data.timeZone}
+		retentionDays={rowOf('CADDY_UI_RETENTION_DAYS').value}
+		dbBytes={dbTotal}
+		freeInFileBytes={data.storage.freeInFileBytes}
+		volumeFreeBytes={data.storage.volumeFreeBytes}
+	/>
+
+	<div class="fp-section__head">
+		<h3 class="t-title-3" id="history-h">Caddyfile history</h3>
+	</div>
+	<form
+		class="fp-panel fields"
+		onsubmit={(e) => {
+			e.preventDefault();
+			save('storage');
+		}}
+	>
+		{#each SECTION_KEYS.storage as key (key)}
+			<SettingField
+				row={rowOf(key)}
+				bind:value={() => valueOf(key), (v) => (drafts = { ...drafts, [key]: v })}
+				error={errors[key]}
+				{locked}
+				busy={busy !== null}
+				onreset={() => reset(key)}
+			/>
+		{/each}
+		{#if data.history}
+			<p class="full t-ui t-muted">
+				Kept now: {formatNumber(data.history.revisions)}
+				{data.history.revisions === 1 ? 'revision' : 'revisions'} in
+				<a class="inline-link" href="/history">History</a>
+				and {formatNumber(data.history.backups)} backup {data.history.backups === 1 ? 'file' : 'files'}.
+			</p>
+		{/if}
+		<div class="full">{@render saveBar('storage')}</div>
+	</form>
+</section>
+
+<!-- Caddy helpers -->
+<section class="fp-section" id="helpers" aria-labelledby="helpers-h">
+	<div class="fp-section__head"><h2 class="t-title-2" id="helpers-h">Caddy helpers</h2></div>
+	<p class="t-body t-muted">
+		One-click changes to the Caddyfile that turn on what the charts need. Each is shown as a change to review;
+		Caddy checks it before it is saved, and the previous file stays in History.
+	</p>
+	<CaddyHelpers metrics={data.helpers.metrics} accessLog={data.helpers.accessLog} />
 </section>
 
 <!-- Display -->
@@ -638,8 +713,13 @@
 							<td class="t-ui when">{formatDateTime(entry.ts, data.timeZone)}</td>
 							<td class="t-ui">{entry.author}</td>
 							<td class="name">
-								<span class="t-ui">{FIELDS[entry.key]?.label ?? entry.key}</span>
-								<span class="t-mono t-caption">{entry.key}</span>
+								{#if entry.key.startsWith('probe:')}
+									<span class="t-ui">Probe options</span>
+									<span class="t-mono t-caption">{entry.key.slice('probe:'.length)}</span>
+								{:else}
+									<span class="t-ui">{FIELDS[entry.key]?.label ?? entry.key}</span>
+									<span class="t-mono t-caption">{entry.key}</span>
+								{/if}
 							</td>
 							<td class="t-mono value">
 								{logText(entry.oldValue)} → {logText(entry.newValue)}
@@ -725,6 +805,10 @@
 	.skel {
 		height: 20px;
 		margin-top: var(--space-3);
+	}
+	.inline-link {
+		text-decoration: underline;
+		text-underline-offset: 3px;
 	}
 	.warnings {
 		margin: var(--space-1) 0 0;

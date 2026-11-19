@@ -152,5 +152,18 @@ export const migrations: Migration[] = [
 		old_value TEXT,
 		new_value TEXT
 	);
+	`,
+	// 6 · S3 · Per-site probe options (docs/settings-and-perf-plan.md §3, monitoring thresholds): skip a site, probe
+	// another path, treat more statuses as up. A new, empty table keyed by the site id, so the migration is instant
+	// however many probe rows the database holds. A site with no row is probed as before.
+	`
+	CREATE TABLE probe_options (
+		site_id TEXT PRIMARY KEY,
+		skip INTEGER NOT NULL DEFAULT 0,
+		path TEXT,
+		up_statuses TEXT,
+		updated_at INTEGER NOT NULL,
+		author TEXT NOT NULL
+	) WITHOUT ROWID;
 	`
 ];

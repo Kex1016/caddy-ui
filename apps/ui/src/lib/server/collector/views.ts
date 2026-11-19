@@ -21,7 +21,6 @@ import {
 	type LatestProbe,
 	type Range
 } from './queries';
-import { probeTarget } from './sites';
 import type { State } from './store';
 import type { Collector, CollectorStatus } from './worker';
 
@@ -98,6 +97,8 @@ export type SiteView = {
 	status: State;
 	since: number | null;
 	probe: ProbeView | null;
+	/** Probing is off for this site (Settings → Monitoring → per-site probes). */
+	probeSkipped: boolean;
 	upstreams: UpstreamView[];
 	cert: CertRow | null;
 	uptime24h: number | null;
@@ -126,7 +127,7 @@ export function sitesPayload(c: Collector, db: Db, now = Date.now(), t?: Timing)
 	);
 	const sites = c.sites.map((s): SiteView => {
 		const st = states.get(`${s.id}|`);
-		const target = probeTarget(s.addresses, c.connectHost);
+		const target = c.siteTarget(s);
 		const probe = target ? (probes.get(`${s.id}|${target.url}`) ?? null) : null;
 		return {
 			id: s.id,
@@ -136,6 +137,7 @@ export function sitesPayload(c: Collector, db: Db, now = Date.now(), t?: Timing)
 			status: st?.state ?? 'unknown',
 			since: st?.since ?? null,
 			probe,
+			probeSkipped: c.probeOptions.get(s.id)?.skip ?? false,
 			upstreams: s.upstreams.map((u) => {
 				const us = states.get(`${s.id}|${u.address}`);
 				const lv = live?.get(u.address) ?? live?.get(u.address.replace(/^[a-z0-9]+:\/\//, ''));
@@ -200,8 +202,6 @@ export function siteStats(c: Collector, db: Db, siteId: string, range: Range, no
 	};
 }
 
-const CERT_WARN_DAYS = 14;
-
 /** Overview, part 1: what is up right now and the certificates. Cheap; the page shows it at once. */
 export function overviewStatus(c: Collector, db: Db, now = Date.now(), t?: Timing) {
 	if (c.status.caddyfile.lastRun === null) c.refreshSites();
@@ -219,6 +219,7 @@ export function overviewStatus(c: Collector, db: Db, now = Date.now(), t?: Timin
 	}
 	const start = step(t, 'gauges', () => latestGauge(db, 'process_start_time_seconds', { site: '*' }));
 	const certs = step(t, 'certs', () => allCerts(db, now));
+	const warnDays = c.certWarnDays;
 	return {
 		asOf: now,
 		tiles: {
@@ -230,8 +231,8 @@ export function overviewStatus(c: Collector, db: Db, now = Date.now(), t?: Timin
 			certs: {
 				count: certs.length,
 				soonest: certs[0] ?? null,
-				expiringSoon: certs.filter((x) => x.daysLeft < CERT_WARN_DAYS).length,
-				warnDays: CERT_WARN_DAYS
+				expiringSoon: certs.filter((x) => x.daysLeft < warnDays).length,
+				warnDays
 			}
 		},
 		certs,
