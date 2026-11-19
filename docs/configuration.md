@@ -45,6 +45,37 @@ updater sidecar; the full list is in [`deploy/updater/README.md`](../deploy/upda
 The example compose file also reads `CADDY_UI_TAG`, `CADDY_UI_HOST_PORT` and
 `CADDY_UI_COMPOSE_DIR`; those are compose variables, not settings of the app.
 
+## The Settings page
+
+Settings (in the sidebar under System) has these sections, each saved on its own:
+
+- **Monitoring**: probe interval, metrics interval and retention. Lowering retention says,
+  before you save, how many probe results and metric samples the next hourly clean-up deletes
+  and about how much space that is. The database file does not shrink; the space is reused.
+  Below the fields: the database size, the free space on the volume that holds
+  `CADDY_UI_DATA`, the oldest probe result, and the size and row count of every table. Table
+  sizes are measured in the background (it reads the whole database) and remembered for 15
+  minutes; **Measure again** measures now.
+- **Display**: time zone and public address.
+- **Domains**: the Porkbun read-only switch and cache lifetime, both keys as set or not set,
+  the API address, the private key download switch, and **Test connection**, which asks
+  Porkbun's `/ping` with the keys.
+- **Connections**: `CADDY_ADMIN_URL` with a **Test** button, and each path with a check:
+  the Caddyfile must be readable and writable, the access log readable (missing is only a
+  warning, since logging is optional), Caddy's data directory readable, and `CADDY_UI_DATA`
+  writable. Also the port and listener variables.
+- **Sign-in**: the mode in use and whether the user, password and session secret are set.
+- **Updates**: the updater's variables as this container sees them. The updater sidecar reads
+  its own copy from compose.
+- **Recent changes**: the last 50 values saved or reset, with who and when.
+
+Each editable field says where its value comes from: **Saved here**, **From the environment**
+or **Default**. When a saved value differs from the environment, the field shows the
+environment's value next to **Use the environment's value**.
+
+With `CADDY_UI_SETTINGS_IGNORE=true`, every page shows a banner, the fields show the values in
+force, and saving is off; **Use the environment's value** still removes a saved value.
+
 ## Settings and the environment
 
 The editable variables are `CADDY_UI_PROBE_INTERVAL`, `CADDY_UI_SCRAPE_INTERVAL`,

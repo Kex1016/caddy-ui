@@ -170,7 +170,7 @@ Newest at the bottom. Format: date · workstream · what · why.
   tinyauth in front does the sign-in): the Domains area is then read-only by default. Add
   `CADDY_UI_PORKBUN_READONLY: "false"` to the `caddy-ui` service to allow changes. With
   `CADDY_UI_AUTH_MODE=forward` or a local user, changes are allowed without it · an open UI
-  should not be able to change DNS by accident. The About page shows the value in use.
+  should not be able to change DNS by accident. Settings shows the value in use, and can switch it there too.
 - [ ] 2026-11-19 · Settings and speed plan · When
   [docs/settings-and-perf-plan.md](docs/settings-and-perf-plan.md) should start, merge its
   PR and replace the coordinator goal in the project's instructions with the block in
@@ -190,3 +190,7 @@ Newest at the bottom. Format: date · workstream · what · why.
      `docker compose logs caddy-ui | grep "slow load"` in the project chat · this is how we confirm the fix on
      your disk and CPU before any Settings work starts (docs/settings-and-perf-plan.md §1.3). Go back to your
      usual tag at the v1.2.0 release.
+- [ ] 2026-11-19 · S2 · Nothing is required. When the S2 build is running, open Settings once and look at
+  Connections: each path has a check, and the admin API a **Test** button. A warning on the access log only means
+  Caddy's JSON access log is not at `CADDY_LOG_PATH` yet (see the W4 item above) · it is the quickest way to see
+  that the mounts in compose are what the UI expects.

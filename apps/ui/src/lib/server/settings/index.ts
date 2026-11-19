@@ -1,6 +1,7 @@
 import { getDb, type Db } from '../db';
 import { envConfig, setConfigResolver, type Config } from '../env';
 import { SettingsService, type SettingsListener } from './service';
+import { StorageMeter } from './storage';
 
 /**
  * The process-wide settings service (docs/settings-and-perf-plan.md §2.2). `installSettings()` runs first
@@ -8,6 +9,8 @@ import { SettingsService, type SettingsListener } from './service';
  */
 
 export { SettingsRefused, SettingsService, KEY_PREFIX, type SettingsListener } from './service';
+export { pathChecks } from './checks';
+export { StorageMeter, storageFacts } from './storage';
 
 const KEY = Symbol.for('caddy-ui.settings');
 type G = typeof globalThis & { [KEY]?: SettingsService };
@@ -54,4 +57,14 @@ export function effectiveConfig(): Config {
 export function resetSettingsForTests(): void {
 	delete (globalThis as G)[KEY];
 	setConfigResolver(undefined);
+}
+
+const METER = Symbol.for('caddy-ui.storage-meter');
+type GM = typeof globalThis & { [METER]?: StorageMeter };
+
+/** The process-wide table-size meter for the Settings page, on the shared database's file. */
+export function getStorageMeter(): StorageMeter {
+	const g = globalThis as GM;
+	g[METER] ??= new StorageMeter(getDb().name);
+	return g[METER];
 }

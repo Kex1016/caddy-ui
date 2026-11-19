@@ -1084,3 +1084,36 @@ Format: date · workstream · decision · why · how to reverse.
   (`probe_latest`). A new empty table, so it is instant on any database · confidence 80.
 - 2026-11-19 · S1 · A saved settings store that can not be read at all (database error) is logged and the UI runs
   on the environment, in line with D11; only a bad environment variable stops the container · confidence 78.
+- 2026-11-19 · S2 · The Settings page adds no API route and changes no §3.2 contract. Saving and the per-key reset use
+  S1's `PATCH /api/settings`; the page's `load` returns the same object as `GET /api/settings` plus the path checks
+  and storage facts; "Test" reuses `GET /api/caddy/status` (through `adminFetch`, as before) and
+  `GET /api/porkbun/status?force` (Porkbun's `/ping`); "Measure again" is a form action on the page (`?/measure`),
+  not a route · confidence 85.
+- 2026-11-19 · S2 · Table sizes come from SQLite's `dbstat` (exact bytes and rows per table, indexes counted with their
+  table). It reads every page of the database, about 2.6 GB at 90 days, so it runs in a `worker_threads` worker on
+  its own read-only connection, never on the main thread (D5 still holds for request-path queries). The worker's
+  source is inlined and started with `eval`, so the build needs no extra entry point. The answer is remembered for
+  15 minutes and streamed into the page when it is not; a failure shows a notice and is not remembered. File size,
+  free space on the volume (`statfs`) and the oldest pruned row are read at once in `load` · confidence 78.
+- 2026-11-19 · S2 · Lowering retention shows, before saving, what the next hourly prune deletes: the cutoff time and
+  about how many probe and metric rows (the measured row count times the share of the time span before the cutoff,
+  since rows are one per target per cycle) and bytes. The Save button then reads "Save and delete older data"; there
+  is no extra confirmation dialog, because the notice is next to the button and nothing is deleted until the prune
+  runs · confidence 74.
+- 2026-11-19 · S2 · Each section saves its own changed keys in one PATCH; "Use the environment's value" (or "Use the
+  default" when the variable is unset) applies at once, per key. After a save the page reloads its data, so the time
+  zone in the footer and every other page follow at once · confidence 82.
+- 2026-11-19 · S2 · Path checks ask for what the UI does with each path: the Caddyfile must be readable and writable
+  (error otherwise), a missing access log or Caddy data directory is a warning (both are optional), Caddy's data
+  directory only needs reading, `CADDY_UI_DATA` must be writable. A few `stat`/`access` calls in `load`; "Check
+  again" reloads · confidence 80.
+- 2026-11-19 · S2 · With `CADDY_UI_SETTINGS_IGNORE=true` the layout shows a banner on every page (S1's
+  `settingsIgnored`), and the Settings fields show the value in force rather than the ignored saved text, with
+  saving off and the reset still working. Without the flag, a saved value ignored for failing its check stays in the
+  field so it can be fixed · confidence 80.
+- 2026-11-19 · S2 · About keeps the version and uptime and links to Settings; its configuration table is gone (D12).
+  Docs that pointed to About for the values in use now point to Settings · confidence 85.
+- 2026-11-19 · S2 · The Updates section shows the updater's variables as this container sees them, read-only, and
+  says the sidecar reads its own copy; S4 makes the interval and "check now" editable through its file channel
+  (D13). Sections later workstreams add go into `SECTION_KEYS` (lib/settings/meta.ts) and the page's section list
+  · confidence 80.

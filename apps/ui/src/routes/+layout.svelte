@@ -47,8 +47,23 @@
 					can change your Caddyfile. Set both, or set CADDY_UI_AUTH_MODE to forward or none to make the choice explicit.
 				</Notice>
 			{/if}
+			{#if data.settingsIgnored}
+				<Notice kind="warning">
+					<b>Saved settings are not in use.</b> CADDY_UI_SETTINGS_IGNORE is on, so this UI runs on environment
+					values and defaults only. Nothing saved was deleted; <a class="inline" href="/settings">Settings</a> shows
+					what is in force.
+				</Notice>
+			{/if}
 			{@render children()}
 			<Footer version={data.version} timeZone={data.timeZone} />
 		</div>
 	</Shell>
 {/if}
+
+<style>
+	/* A link inside a sentence is underlined, so it does not rely on colour alone (WCAG 1.4.1). */
+	.inline {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+</style>

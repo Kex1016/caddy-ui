@@ -217,6 +217,13 @@ switch, cache TTL, key status with a "Test connection" button that runs `/ping`)
 **Updates** (updater values), **Recent changes** (the settings log). Fishnet components
 only; each section saves on its own.
 
+**Built in S2 (19 Nov 2026).** As described, with no new API route: the page reads the S1 view in its `load`,
+saves through `PATCH /api/settings`, and its Test buttons reuse `/api/caddy/status` and
+`/api/porkbun/status?force`. The database size (D15) sits in Monitoring: file and free space at once, and every
+table's size and row count from `dbstat`, measured in a worker thread so the server never waits on it. Lowering
+retention shows what the next prune deletes before it is saved. Choices are in [DECISIONS.md](../DECISIONS.md)
+under S2.
+
 ## 3. What else the Settings page gets
 
 David picked from the menu on 19 Nov. "In" items have a workstream in §6.

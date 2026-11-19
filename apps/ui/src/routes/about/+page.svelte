@@ -5,11 +5,7 @@
 	let { data } = $props();
 </script>
 
-<PageHero
-	kicker="System"
-	title="About"
-	lede="The version of this UI and the configuration it was started with."
-/>
+<PageHero kicker="System" title="About" lede="The version of this UI and how long it has been running." />
 <section class="fp-section">
 	<div class="fp-section__head"><h2 class="t-title-2">This instance</h2></div>
 	<div class="fp-panel">
@@ -19,19 +15,9 @@
 				data.timeZone
 			)}.
 		</p>
-	</div>
-</section>
-<section class="fp-section">
-	<div class="fp-section__head"><h2 class="t-title-2">Configuration</h2></div>
-	<div class="fp-panel fp-table__wrap">
-		<table class="fp-table">
-			<caption class="visually-hidden">Environment variables this instance read at start</caption>
-			<thead><tr><th scope="col">Variable</th><th scope="col">Value</th></tr></thead>
-			<tbody>
-				{#each data.rows as row (row.name)}
-					<tr><td class="t-mono">{row.name}</td><td class="t-mono">{row.value}</td></tr>
-				{/each}
-			</tbody>
-		</table>
+		<p class="t-body t-muted">
+			The configuration it runs with, and what can be changed without a restart, is in Settings.
+		</p>
+		<p><a class="fp-btn" href="/settings">Open Settings</a></p>
 	</div>
 </section>

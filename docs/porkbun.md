@@ -68,7 +68,8 @@ with the reason, not hidden.
 | `CADDY_UI_PORKBUN_CACHE_TTL` | `60s` | How long reads are cached. |
 | `CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD` | `false` | Allows downloading the private key of the Porkbun-issued certificate. |
 
-The About page shows both keys only as set or unset, and the value of the read-only switch in use.
+Settings shows both keys only as set or unset, with a **Test connection** button, and the read-only switch
+and cache lifetime, which can be changed there.
 
 The keys stay on the server. The browser never receives them, they are never written to the
 database, a Caddyfile revision, a log line or an error message.

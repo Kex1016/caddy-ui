@@ -3,7 +3,8 @@
 ## The UI says Caddy is unreachable.
 Check `CADDY_ADMIN_URL` and that Caddy's global options include `admin 0.0.0.0:2019` (or
 another address the UI can reach). Both containers must share a network. Do not publish the
-admin port to the internet. The About page lists the URL in use.
+admin port to the internet. Settings lists the URL in use and has a
+**Test** button for it.
 
 ## Per-site charts are empty.
 Per-site request and latency charts need `metrics { per_host }` in global options. Charts for
