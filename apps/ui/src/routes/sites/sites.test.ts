@@ -2,6 +2,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Timing } from '$lib/server/timing';
 import { setConfigServiceForTests } from '$lib/server/config';
 import { FakeAdmin } from '$lib/server/config/fake-admin';
 import { ConfigService } from '$lib/server/config/service';
@@ -17,7 +18,11 @@ let file: string;
 let admin: FakeAdmin;
 let svc: ConfigService;
 
-const locals: App.Locals = { identity: { user: 'david', via: 'session' }, theme: 'system' };
+const locals: App.Locals = {
+	identity: { user: 'david', via: 'session' },
+	theme: 'system',
+	timing: new Timing()
+};
 
 type Action = (e: never) => Promise<unknown>;
 async function run(name: keyof typeof actions, fields: Record<string, string>, baseHash?: string) {

@@ -1,14 +1,12 @@
 import { fail } from '@sveltejs/kit';
-import { getCollector, sitesPayload } from '$lib/server/collector';
+import { getCollector, getSnapshot, type Part, type SitesPayload } from '$lib/server/collector';
 import { getConfigService } from '$lib/server/config';
 import { authorOf } from '$lib/server/config/http';
 import { ApplyError } from '$lib/server/config/service';
 import { AdminError, AdminUnreachableError } from '$lib/server/caddy/admin';
 import { siteHost } from '$lib/server/caddy/porkbun/caddyfile';
 import { SiteEditError, addPorkbunToSite } from '$lib/server/caddy/porkbun/site-edit';
-import { getDb } from '$lib/server/db';
 import { isConfigured } from '$lib/server/porkbun';
-import { config } from '$lib/server/env';
 import {
 	BlockError,
 	addSite,
@@ -34,15 +32,10 @@ export type SiteRow = {
 	uptime24h: number | null;
 };
 
-export const load: PageServerLoad = async () => {
-	const collector = getCollector();
-	// Cheap (compares the file's mtime): makes a site that was just added show up without waiting a probe cycle.
-	collector.refreshSites();
-	const [file, payload] = await Promise.all([
-		getConfigService().readFile(),
-		sitesPayload(collector, getDb(), config().adminUrl)
-	]);
-	const scan = scanBlocks(file.text);
+type Scan = ReturnType<typeof scanBlocks>;
+
+/** The list in Caddyfile order, with each site's status from the collector's snapshot. */
+function siteRows(scan: Scan, payload: SitesPayload) {
 	const views = new Map(payload.sites.map((s) => [s.id, s]));
 	const rows: SiteRow[] = scan.blocks
 		.filter((b) => b.kind === 'site')
@@ -65,10 +58,37 @@ export const load: PageServerLoad = async () => {
 		});
 	return {
 		asOf: payload.asOf,
+		rows,
+		caddyfileError: payload.sources.caddyfile.error,
+		probing: payload.sources.probes.ok
+	};
+}
+
+export type SiteList = ReturnType<typeof siteRows>;
+
+export const load: PageServerLoad = async ({ depends, locals }) => {
+	depends('app:stats');
+	const t = locals.timing;
+	const collector = getCollector();
+	const snap = getSnapshot();
+	// Cheap (compares the file's mtime): makes a site that was just added show up without waiting a probe cycle.
+	t.measure('caddyfile', () => collector.refreshSites());
+	const start = performance.now();
+	const file = await getConfigService().readFile();
+	t.add('read', performance.now() - start);
+	const scan = scanBlocks(file.text);
+	// The list comes with the page when the snapshot is ready (always, after the first probe cycle); otherwise
+	// the page is sent first and the list streams in (docs/settings-and-perf-plan.md §1.3 F).
+	const list: Part<SiteList> = snap.sitesReady
+		? siteRows(scan, snap.sitesPayload(t))
+		: t.defer('sites', () => siteRows(scan, snap.sitesPayload(t)));
+	return {
 		hash: file.hash,
 		fileExists: file.exists,
 		unsupported: scan.unsupported,
-		rows,
+		list,
+		// Counted from the file, so the page can size its placeholder while the list is on its way.
+		siteCount: scan.blocks.filter((b) => b.kind === 'site').length,
 		globals: scan.blocks.some((b) => b.kind === 'global'),
 		snippets: scan.blocks.filter((b) => b.kind === 'snippet').map((b) => b.addresses[0] as string),
 		recipes: RECIPES.filter((r) => r.kind === 'site').map(({ id, title, line, kind, fields }) => ({
@@ -78,8 +98,6 @@ export const load: PageServerLoad = async () => {
 			kind,
 			fields
 		})),
-		caddyfileError: payload.sources.caddyfile.error,
-		probing: payload.sources.probes.ok,
 		// With Porkbun keys the page asks `/api/porkbun/caddy` for its DNS column, after it has rendered.
 		porkbunOn: isConfigured()
 	};

@@ -34,6 +34,22 @@ jobs:
       - name: Build
         run: pnpm build
 
+  perf:
+    name: Overview and Sites on 90 days of data
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # docs/settings-and-perf-plan.md §1.3 G: seeds 90 days for 35 sites (about 3.5 GB) and fails over 200 ms.
+      - name: Performance budget
+        run: pnpm --filter @caddy-ui/ui test:perf
+
   image:
     name: Docker image builds and answers /api/health
     runs-on: ubuntu-latest

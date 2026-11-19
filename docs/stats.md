@@ -64,9 +64,30 @@ A chart is **stale** when its source is failing now or probes are more than thre
 late. It then shows the last good data and the time of it. Fewer than two points shows the
 frame with an empty state. A gap means no data; zero means the source ran and saw nothing.
 
+## How the pages stay fast
+
+The collector does the work, not the page. After every probe cycle it builds what Sites and
+the 24-hour Overview show and keeps it in memory, and it rebuilds the site list after every
+upstream poll, certificate scan and Caddyfile change. A page load reads that snapshot, so it
+costs the same on day 1 and day 90. Other Overview ranges are computed when first asked for,
+streamed into the page after its shell (placeholders show until they land), and remembered
+for one step of the range, five minutes at most. Sums over days that are over are computed
+once and remembered. Caddy's `/reverse_proxy/upstreams` is polled on the scrape timer, never
+during a page load.
+
+Every page response carries a `Server-Timing` header: each step with its time in
+milliseconds, `snapshot` with the snapshot's age, `tail` with how many bytes of the access
+log are not read yet, and `total`. Browser developer tools show it under the request's
+Timing tab. A load that takes over 500 ms, streamed parts included, also writes one line to
+the container log:
+
+```
+caddy-ui: slow load /?range=30d 984 ms: states=0(snapshot) ... traffic=262.6(streamed) ...
+```
+
 ## Retention and time
 
 Probe results and metric samples are kept `CADDY_UI_RETENTION_DAYS` days (default 90) and then
-pruned. State changes, certificates and the access-log minute rollups are kept. The log
+pruned, a few thousand rows at a time so the pruning never holds up a page. State changes, certificates and the access-log minute rollups are kept. The log
 reader starts at the end of an existing log and remembers its position across restarts, so
 history before first start is not read. Times use `TZ`, and the zone is named.

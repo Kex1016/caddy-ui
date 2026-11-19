@@ -65,5 +65,12 @@ share the same two environment variables.
 ## Can the UI register or renew domains?
 No. It manages domains you already own and never spends money.
 
+## Overview or Sites is slow.
+Open the page with the browser's developer tools on the Network tab, pick the document
+request and look at its Timing: the `Server-Timing` entries say which step took the time
+(see [stats.md](stats.md#how-the-pages-stay-fast)). Loads over 500 ms are also logged by the
+container (`docker compose logs caddy-ui | grep "slow load"`). Include those lines when you
+report it.
+
 ## Where do I report problems?
 Open an issue on the GitHub repository.

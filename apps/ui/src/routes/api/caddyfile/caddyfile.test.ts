@@ -2,6 +2,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Timing } from '$lib/server/timing';
 import { setConfigServiceForTests } from '$lib/server/config';
 import { FakeAdmin } from '$lib/server/config/fake-admin';
 import { ConfigService } from '$lib/server/config/service';
@@ -22,7 +23,11 @@ let admin: FakeAdmin;
 
 // The handlers only read these fields of the event.
 type Ev = { request: Request; locals: App.Locals; params: Record<string, string> };
-const locals: App.Locals = { identity: { user: 'david', via: 'session' }, theme: 'system' };
+const locals: App.Locals = {
+	identity: { user: 'david', via: 'session' },
+	theme: 'system',
+	timing: new Timing()
+};
 const ev = (init?: { method?: string; body?: unknown; params?: Record<string, string> }) =>
 	({
 		request: new Request('http://ui/api/caddyfile', {
