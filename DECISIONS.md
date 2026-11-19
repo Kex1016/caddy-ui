@@ -1159,6 +1159,7 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-19 · S6 · The collector's prepared Overview range follows the saved default range (`setDefaultRange`), so the
   default page stays instant whichever range is chosen. `RangeSwitch` leaves `?range=` off only for that default ·
   confidence 82.
+<<<<<<< HEAD
 - 2026-11-19 · S3 · New API route `GET /api/settings/backup` (a file download cannot be a form action). It answers a
   `.tar.gz` with `caddy-ui.db` (a `VACUUM INTO` copy made in a worker thread on a read-only connection, which in WAL
   mode is a read, so probes keep being written) and the `Caddyfile`; the copy is written next to the database and
@@ -1201,3 +1202,67 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-19 · S3 · The database size view moved from Monitoring to the new "Data and storage" section with the
   storage tools; the retention field and its "what will be deleted" notice stay in Monitoring. Section order:
   Diagnostics, Monitoring, Data and storage, Caddy helpers, then S2's sections · confidence 78.
+=======
+- 2026-11-19 · S5 · Discord's documentation (docs.discord.com, read 19 Nov) confirms the plan's premise: Execute
+  Webhook ignores `components` unless `?with_components=true`, and then lets a webhook no app owns send
+  non-interactive components; `flags: 32768` (IS_COMPONENTS_V2) may be set on a webhook message and makes it
+  components-only. The docs do not name link buttons either way; they open a URL and send no interaction, so the
+  default template uses one, and a webhook that refuses the message still gets it as a classic embed · confidence 80.
+- 2026-11-19 · S5 · New API routes, logged as §3.2 additions (no existing contract changes): `GET /api/notifications`
+  (thresholds, every event's template, whether a webhook is saved and its id, never the URL; the latest 20
+  deliveries), `PUT /api/notifications` (`{ webhook?, downCycles?, flapMinutes?, events?, retryComponents? }`, all
+  checked first and saved together; a template `null` resets it, a webhook `null` removes it) and
+  `POST /api/notifications/test` (`{ event, template?, webhook? }`: sample values, sent now, answers what Discord
+  said). Behind sign-in like every `/api` route · confidence 85.
+- 2026-11-19 · S5 · Storage (D19): the webhook URL, the config, the embed-fallback marker, the last version seen and
+  the certificates already warned about are rows in `settings` under `notify.` (next to S1's `cfg.`). The config
+  holds the thresholds and only the events that differ from the default, so an improved default reaches every event
+  nobody edited. Deliveries go to a new table `notify_log`, migration 7, kept to the newest 200 rows; a new empty
+  table, so the migration is instant on millions of probe rows. S6's export reads `notify.config` and, only when
+  asked, `notify.webhook` · confidence 80.
+- 2026-11-19 · S5 · A webhook URL is accepted only on discord.com, discordapp.com and their ptb/canary hosts in the
+  form `/api[/vN]/webhooks/<id>/<token>`, and stored as `https://discord.com/api/webhooks/<id>/<token>`, so the
+  UI cannot be made to post to an internal host. Messages go to `CADDY_UI_DISCORD_API_URL` (default
+  `https://discord.com/api/v10`, environment only, a §3.2 variable-table addition) so tests can use a fake; no test
+  posts to the real Discord, and the unit-test setup now refuses discord.com like porkbun.com · confidence 78.
+- 2026-11-19 · S5 · Down and up are judged by the notifier from every probe cycle's results (the collector now keeps
+  `lastCycle`, read on its existing `probes` event), not from the collector's state flips: "down" needs
+  `downCycles` failed cycles in a row (default 2, 1 to 20), on top of the probe's own one retry. At boot the notifier
+  starts from the collector's last known states, so a restart neither repeats "down" nor forgets "back up". S3
+  touches the same collector files; this adds one field and a result list in `probeAll` · confidence 80.
+- 2026-11-19 · S5 · The flap limit (default 5 minutes, 0 off) holds a change made within the window instead of
+  dropping it; when the window ends and the change still holds, it is sent, so the channel's last word is always
+  the true state. "Back up" reports the time from the first failed probe to the first good one · confidence 78.
+- 2026-11-19 · S5 · Upstream events are off by default: a down upstream nearly always takes its site down, which is
+  already sent. When on, an upstream shared by several sites is one message naming all of them · confidence 72.
+- 2026-11-19 · S5 · Certificate warnings go only for hosts that match a site in the Caddyfile (Caddy keeps certificates
+  of removed sites until they expire), once when under the warning window (14 days, a parameter S3 can wire to its
+  threshold setting) and once more at 3 days left. Warned stages are saved, so a restart does not repeat them; a
+  renewed certificate (a later expiry) starts over · confidence 75.
+- 2026-11-19 · S5 · "Update applied" and "rolled back" are found at boot by comparing the version with the one saved
+  last time: newer is applied, older is rolled back, a change between non-version tags (`edge`) counts as applied,
+  and the first start, `dev` and `ci-*` builds send nothing. It needs nothing from the updater, so it works with S4
+  or without it · confidence 76.
+- 2026-11-19 · S5 · `{since}`, `{time}` and `{expires}` are Discord timestamps (`<t:…:f>`), so each reader sees their
+  own time zone; the preview shows them in the UI's time zone and says so. An embed title, where Discord does not
+  render timestamps, gets plain text instead · confidence 74.
+- 2026-11-19 · S5 · Values are markdown-escaped, and every payload sets `allowed_mentions` to exactly the template's
+  mention field (a role, a user, or @here/@everyone), so a site name or an error text can never format the message
+  or ping anyone · confidence 85.
+- 2026-11-19 · S5 · A 400 answer to a Components v2 message is read as "this webhook refuses v2": the same message is
+  sent as an embed at once, and when that works the webhook is marked and later messages go as embeds straight away.
+  Settings says so and offers "Try Components v2 again"; saving another webhook clears the mark. Delivery: one
+  message at a time, 429 waited out up to 60 s (longer is dropped and logged), network errors and 5xx retried three
+  times (1 s, 3 s, 9 s), an empty rate-limit bucket waited for, failures logged and listed, never blocking probes
+  · confidence 78.
+- 2026-11-19 · S5 · Raw JSON (advanced switch) accepts the non-interactive component types and link buttons only, at
+  most 38 components and 3,800 characters of text before placeholders (Discord allows 40 and 4,000; the mention and
+  a test's marker line need room). A link button whose URL is empty after filling in is dropped, so templates work
+  without a public address · confidence 75.
+- 2026-11-19 · S5 · Notifications are not environment variables, so `CADDY_UI_SETTINGS_IGNORE` does not switch them
+  off (removing the webhook does). Changes are written to `settings_log` so Recent changes lists them: the webhook as
+  `webhook <id>` only, thresholds by value, events as on/off and edited · confidence 72.
+- 2026-11-19 · S5 · The section is its own component (`lib/notify/components/NotificationsSection.svelte`), so the
+  shared Settings page gains one NAV entry, one line of markup and one `load` field; it needs no `SECTION_KEYS`
+  entry because it saves through its own route, not `PATCH /api/settings` · confidence 85.
+>>>>>>> d30ab65 (S5: Discord notifications with editable Components v2 templates)

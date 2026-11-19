@@ -143,6 +143,24 @@ export class ConfigService {
 		return this.external;
 	}
 
+	private externalListeners = new Set<(c: ExternalChange) => void>();
+
+	/** Run `fn` for each edit made outside the UI, including one found at start (notifications, S5). */
+	onExternalChange(fn: (c: ExternalChange) => void): () => void {
+		this.externalListeners.add(fn);
+		return () => this.externalListeners.delete(fn);
+	}
+
+	private announceExternal(c: ExternalChange): void {
+		for (const fn of this.externalListeners) {
+			try {
+				fn(c);
+			} catch (err) {
+				console.error('caddy-ui: an outside-edit listener failed:', err);
+			}
+		}
+	}
+
 	// ── validation ────────────────────────────────────────────────────────────────────────────
 
 	private parse(text: string): { cst: unknown; diagnostics: Diagnostic[]; ready: boolean } {
@@ -574,7 +592,10 @@ export class ConfigService {
 				'outside the UI',
 				latest ? 'Changed on disk while the UI was stopped' : 'First seen on disk'
 			);
-			if (latest) this.external = { at: this.now(), hash: file.hash, revisionId: row.id };
+			if (latest) {
+				this.external = { at: this.now(), hash: file.hash, revisionId: row.id };
+				this.announceExternal(this.external);
+			}
 		});
 	}
 
@@ -586,6 +607,7 @@ export class ConfigService {
 			const row = this.record(file.text, 'outside the UI', 'Edited outside the UI');
 			this.knownHash = file.hash;
 			this.external = { at: this.now(), hash: file.hash, revisionId: row.id };
+			this.announceExternal(this.external);
 			return this.external;
 		});
 	}

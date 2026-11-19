@@ -11,6 +11,7 @@
 	import CaddyHelpers from '$lib/settings/components/CaddyHelpers.svelte';
 	import DiagnosticsPanel from '$lib/settings/components/DiagnosticsPanel.svelte';
 	import ProbeOptionsTable from '$lib/settings/components/ProbeOptionsTable.svelte';
+	import NotificationsSection from '$lib/notify/components/NotificationsSection.svelte';
 	import SettingField from '$lib/settings/components/SettingField.svelte';
 	import StorageTools from '$lib/settings/components/StorageTools.svelte';
 	import {
@@ -20,6 +21,7 @@
 		editable,
 		envOnly,
 		envOnlyText,
+		logLabel,
 		rowsOlderThan,
 		startValue,
 		tableLabel,
@@ -90,6 +92,7 @@
 		{ id: 'display', label: 'Display' },
 		{ id: 'preferences', label: 'Preferences' },
 		{ id: 'domains', label: 'Domains' },
+		{ id: 'notifications', label: 'Notifications' },
 		{ id: 'connections', label: 'Connections' },
 		{ id: 'sign-in', label: 'Sign-in' },
 		{ id: 'updates', label: 'Updates' },
@@ -697,6 +700,9 @@
 	</div>
 </section>
 
+<!-- Notifications (S5) -->
+<NotificationsSection view={data.notifications} />
+
 <!-- Connections -->
 <section class="fp-section" id="connections" aria-labelledby="connections-h">
 	<div class="fp-section__head">
@@ -954,7 +960,7 @@
 									<span class="t-ui">Probe options</span>
 									<span class="t-mono t-caption">{entry.key.slice('probe:'.length)}</span>
 								{:else}
-									<span class="t-ui">{FIELDS[entry.key]?.label ?? entry.key}</span>
+									<span class="t-ui">{logLabel(entry.key)}</span>
 									<span class="t-mono t-caption">{entry.key}</span>
 								{/if}
 							</td>

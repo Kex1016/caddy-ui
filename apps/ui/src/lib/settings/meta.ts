@@ -1,4 +1,6 @@
 import type { EditableSetting, EnvOnlySetting, SettingRow, SettingsView } from '$lib/api/settings';
+import { EVENT_LABELS } from '$lib/notify/templates';
+import { isEventKind } from '$lib/notify/types';
 
 /**
  * What the Settings page says about each variable (docs/settings-and-perf-plan.md §2.1 and §2.3). Client-safe.
@@ -135,8 +137,25 @@ export const ENV_LABELS: Record<string, string> = {
 	CADDY_UI_UPDATER_DIR: 'Updater channel directory',
 	CADDY_UI_UPDATE_SOURCE: 'Update from',
 	CADDY_UI_UPDATE_WEBHOOK_PORT: 'Push webhook port',
-	CADDY_UI_SETTINGS_IGNORE: 'Ignore saved settings'
+	CADDY_UI_SETTINGS_IGNORE: 'Ignore saved settings',
+	CADDY_UI_DISCORD_API_URL: 'Discord API address'
 };
+
+/** Settings-log rows the notifier writes (S5); never the webhook URL, only its id. */
+const NOTIFY_LOG_LABELS: Record<string, string> = {
+	'notify.webhook': 'Discord webhook',
+	'notify.down_cycles': 'Notify: down after',
+	'notify.flap_minutes': 'Notify: one message per site every'
+};
+
+/** The name a settings-log row is shown with. */
+export function logLabel(key: string): string {
+	if (FIELDS[key]) return FIELDS[key].label;
+	if (NOTIFY_LOG_LABELS[key]) return NOTIFY_LOG_LABELS[key];
+	const event = key.startsWith('notify.') ? key.slice('notify.'.length) : '';
+	if (isEventKind(event)) return `Notify: ${EVENT_LABELS[event]}`;
+	return key;
+}
 
 export function editable(view: SettingsView, key: string): EditableSetting | undefined {
 	const row = view.settings.find((s) => s.key === key);

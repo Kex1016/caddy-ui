@@ -208,9 +208,21 @@ Newest at the bottom. Format: date · workstream · what · why.
   Preferences once and pick the clock, date format, landing page and default range you want. They are saved on the
   server, so they apply in every browser; a browser where you used the theme button keeps its own theme until you
   press **Use the saved default here**.
+<<<<<<< HEAD
 - [ ] 2026-11-19 · S3 · Nothing is required. After deploying, open Settings and press **Check everything** once:
   anything marked Problem or Check links to its fix. If it says metrics are not per host or the access log is not
   found, **Caddy helpers** turns each on as a reviewed Caddyfile change. The access log helper writes Caddy's log to
   `CADDY_LOG_PATH`, so the `caddy` and `caddy-ui` services must mount the same log directory at that path (the
   example compose file does: `/var/log/caddy`) and Caddy must be able to write there · otherwise the status-code
   and top-path charts stay empty.
+=======
+- [ ] 2026-11-19 · S5 · When the S5 build is running (`edge` after the merge, or v1.2.0), set up Discord notifications;
+  nothing changes in compose:
+  1. In Discord, open the channel's settings, **Integrations → Webhooks → New Webhook**, and press **Copy Webhook
+     URL**. Treat it like a password: do not paste it into the chat, a commit or the compose file.
+  2. In the UI, **Settings → Notifications**, paste it into **Discord webhook** and press **Save webhook**.
+  3. Open **Site down → Edit message** and press **Send test**; the message lands in the channel marked as a test.
+  4. Optional: set **Public address** (Settings → Display) to the address you open the UI at, so messages get an
+     "Open site" button; and put a role in **Mention** (for example `<@&role id>`) if you want to be pinged.
+  · the webhook can only be entered in the UI (D19); docs/notifications.md has the details.
+>>>>>>> d30ab65 (S5: Discord notifications with editable Components v2 templates)

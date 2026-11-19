@@ -40,6 +40,7 @@ Seven of the variables can also be changed while the UI runs, from Settings (or
 | `CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD` | `false` | Allows downloading the private key of the Porkbun-issued certificate | Shown, environment only |
 | `TZ` | `UTC` | Display timezone (an IANA name such as `Europe/Budapest`) | Editable, applies at once |
 | `CADDY_UI_SETTINGS_IGNORE` | `false` | `true` runs on environment values and defaults only; saved settings are kept but not used | Shown, environment only |
+| `CADDY_UI_DISCORD_API_URL` | `https://discord.com/api/v10` | Where Discord notifications are posted. Only the test suites change it (a fake Discord) | Shown, environment only |
 
 The two Porkbun keys are secrets like the session secret: keep them in `.env`, never in
 the compose file or the Caddyfile. They are shown only as set or unset.
@@ -96,6 +97,12 @@ Settings (in the sidebar under System) has these sections, each saved on its own
 - **Domains**: the Porkbun read-only switch and cache lifetime, both keys as set or not set,
   the API address, the private key download switch, and **Test connection**, which asks
   Porkbun's `/ping` with the keys.
+- **Notifications**: the Discord webhook (write-only: saved, never shown again), how many failed
+  checks count as down, the per-site message limit, an on/off switch per event, and per event a
+  message editor with placeholders, a live preview, **Send test**, **Reset to default** and the
+  raw Components v2 JSON behind a switch. **Recently sent** lists what Discord answered. See
+  [notifications.md](notifications.md). These are not environment variables, so
+  `CADDY_UI_SETTINGS_IGNORE` does not switch them off; removing the webhook does.
 - **Connections**: `CADDY_ADMIN_URL` with a **Test** button, and each path with a check:
   the Caddyfile must be readable and writable, the access log readable (missing is only a
   warning, since logging is optional), Caddy's data directory readable, and `CADDY_UI_DATA`
