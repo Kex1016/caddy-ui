@@ -100,7 +100,7 @@ test('the saved theme and sidebar are the default, and this browser can keep its
 	await other.goto('/about');
 	await expect(other.locator('html')).toHaveAttribute('data-theme', 'light');
 	await other.goto('/settings');
-	await expect(other.getByText(/This browser keeps its own theme/)).toBeVisible();
+	await expect(other.getByText(/This browser keeps its own\s*theme/)).toBeVisible();
 	await expectAccessible(other, 'Settings preferences');
 
 	// "Use the saved default here" drops the override.

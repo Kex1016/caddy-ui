@@ -67,6 +67,11 @@
 		}
 	];
 	const shown = $derived<Display>(data.display);
+	const overrideNames = $derived(
+		[data.prefs.overrides.theme && 'theme', data.prefs.overrides.sidebar && 'sidebar']
+			.filter(Boolean)
+			.join(' and ')
+	);
 	const overridden = $derived(data.prefs.overrides.theme || data.prefs.overrides.sidebar);
 	const locked = $derived(view.ignoringSaved);
 
@@ -530,10 +535,8 @@
 	{#if overridden}
 		<form class="override" method="POST" action="?/clearOverrides" use:enhance>
 			<p class="t-caption">
-				This browser keeps its own
-				{[data.prefs.overrides.theme && 'theme', data.prefs.overrides.sidebar && 'sidebar']
-					.filter(Boolean)
-					.join(' and ')}, set with the buttons in the page. It does not follow the saved default.
+				This browser keeps its own {overrideNames}, set with the buttons in the page. It does not follow the
+				saved default.
 			</p>
 			<button type="submit" class="fp-btn">Use the saved default here</button>
 		</form>
