@@ -171,8 +171,9 @@ Newest at the bottom. Format: date · workstream · what · why.
   `CADDY_UI_PORKBUN_READONLY: "false"` to the `caddy-ui` service to allow changes. With
   `CADDY_UI_AUTH_MODE=forward` or a local user, changes are allowed without it · an open UI
   should not be able to change DNS by accident. The About page shows the value in use.
-- [ ] 2026-11-19 · Settings and speed plan · Say "build it" when
-  [docs/settings-and-perf-plan.md](docs/settings-and-perf-plan.md) should start; every
-  question in it is answered. For Discord notifications later: create a webhook in the
+- [ ] 2026-11-19 · Settings and speed plan · When
+  [docs/settings-and-perf-plan.md](docs/settings-and-perf-plan.md) should start, merge its
+  PR and replace the coordinator goal in the project's instructions with the block in
+  [COORDINATOR.md](COORDINATOR.md); every question in the plan is answered. For Discord notifications later: create a webhook in the
   channel that should get them (Channel settings, Integrations, Webhooks) and paste its URL
   into Settings once S5 is merged · nothing is built until then.
