@@ -1224,7 +1224,10 @@
 						{
 							"name": "duration",
 							"type": "duration",
-							"doc": "A duration; -1 disables buffering (low-latency mode)."
+							"doc": "A duration; -1 disables buffering (low-latency mode).",
+							"literals": [
+								"-1"
+							]
 						}
 					],
 					"examples": [],
@@ -2166,7 +2169,10 @@
 						{
 							"name": "duration",
 							"type": "duration",
-							"doc": "A duration value which delays streaming requests such as WebSockets from being forcibly closed when the config is unloaded; instead, the stream will remain open until the delay is complete."
+							"doc": "A duration value which delays streaming requests such as WebSockets from being forcibly closed when the config is unloaded; instead, the stream will remain open until the delay is complete.",
+							"literals": [
+								"-1"
+							]
 						}
 					],
 					"examples": [],
@@ -2185,7 +2191,10 @@
 						{
 							"name": "duration",
 							"type": "duration",
-							"doc": "A duration value after which streaming requests such as WebSockets will be forcibly closed at the end of the timeout."
+							"doc": "A duration value after which streaming requests such as WebSockets will be forcibly closed at the end of the timeout.",
+							"literals": [
+								"-1"
+							]
 						}
 					],
 					"examples": [],
@@ -5113,7 +5122,10 @@
 						{
 							"name": "duration",
 							"type": "duration",
-							"doc": "A duration; -1 disables buffering (low-latency mode)."
+							"doc": "A duration; -1 disables buffering (low-latency mode).",
+							"literals": [
+								"-1"
+							]
 						}
 					],
 					"examples": [],
@@ -6148,7 +6160,10 @@
 						{
 							"name": "duration",
 							"type": "duration",
-							"doc": "A duration value which delays streaming requests such as WebSockets from being forcibly closed when the config is unloaded; instead, the stream will remain open until the delay is complete."
+							"doc": "A duration value which delays streaming requests such as WebSockets from being forcibly closed when the config is unloaded; instead, the stream will remain open until the delay is complete.",
+							"literals": [
+								"-1"
+							]
 						}
 					],
 					"examples": [],
@@ -6167,7 +6182,10 @@
 						{
 							"name": "duration",
 							"type": "duration",
-							"doc": "A duration value after which streaming requests such as WebSockets will be forcibly closed at the end of the timeout."
+							"doc": "A duration value after which streaming requests such as WebSockets will be forcibly closed at the end of the timeout.",
+							"literals": [
+								"-1"
+							]
 						}
 					],
 					"examples": [],
@@ -7782,7 +7800,10 @@
 						{
 							"name": "duration",
 							"type": "duration",
-							"doc": "A duration; -1 disables buffering (low-latency mode)."
+							"doc": "A duration; -1 disables buffering (low-latency mode).",
+							"literals": [
+								"-1"
+							]
 						}
 					],
 					"examples": [],
@@ -8724,7 +8745,10 @@
 						{
 							"name": "duration",
 							"type": "duration",
-							"doc": "A duration value which delays streaming requests such as WebSockets from being forcibly closed when the config is unloaded; instead, the stream will remain open until the delay is complete."
+							"doc": "A duration value which delays streaming requests such as WebSockets from being forcibly closed when the config is unloaded; instead, the stream will remain open until the delay is complete.",
+							"literals": [
+								"-1"
+							]
 						}
 					],
 					"examples": [],
@@ -8743,7 +8767,10 @@
 						{
 							"name": "duration",
 							"type": "duration",
-							"doc": "A duration value after which streaming requests such as WebSockets will be forcibly closed at the end of the timeout."
+							"doc": "A duration value after which streaming requests such as WebSockets will be forcibly closed at the end of the timeout.",
+							"literals": [
+								"-1"
+							]
 						}
 					],
 					"examples": [],
@@ -11055,7 +11082,10 @@
 										{
 											"name": "duration",
 											"type": "duration",
-											"doc": "A duration value that sets the maximum time to wait for the DNS TXT records to appear when using the DNS challenge."
+											"doc": "A duration value that sets the maximum time to wait for the DNS TXT records to appear when using the DNS challenge.",
+											"literals": [
+												"-1"
+											]
 										}
 									],
 									"examples": [],
@@ -11320,7 +11350,10 @@
 										{
 											"name": "duration",
 											"type": "duration",
-											"doc": "How long to wait for CNAME record propagation before giving up."
+											"doc": "How long to wait for CNAME record propagation before giving up.",
+											"literals": [
+												"-1"
+											]
 										}
 									],
 									"examples": [],
@@ -11460,7 +11493,10 @@
 						{
 							"name": "duration",
 							"type": "duration",
-							"doc": "A duration value that sets the maximum time to wait for the DNS TXT records to appear when using the DNS challenge."
+							"doc": "A duration value that sets the maximum time to wait for the DNS TXT records to appear when using the DNS challenge.",
+							"literals": [
+								"-1"
+							]
 						}
 					],
 					"examples": [],

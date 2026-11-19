@@ -6,8 +6,11 @@
  */
 import type { ArgSchema, ArgType } from './types.ts';
 
-/** Go duration units plus Caddy's `d` (days). */
-export const DURATION_RE = /^-?(?:(?:\d+(?:\.\d+)?|\.\d+)(?:ns|us|µs|ms|s|m|h|d))+$/;
+/**
+ * Go's time.ParseDuration plus Caddy's `d` (days): an optional sign, then number+unit pairs. Go also
+ * takes `1.s` and both micro signs (µ U+00B5, μ U+03BC), and a unitless zero.
+ */
+export const DURATION_RE = /^[-+]?(?:(?:\d+\.?\d*|\.\d+)(?:ns|us|µs|μs|ms|s|m|h|d))+$|^[-+]?0$/;
 /** go-humanize sizes: 512, 4KiB, 10MB, 1.5 GB … */
 export const SIZE_RE = /^\d+(?:\.\d+)?\s?(?:[kKmMgGtTpPeE]i?[bB]?|[bB])?$/;
 export const INT_RE = /^-?\d+$/;
@@ -90,9 +93,7 @@ export function checkValue(
 		case 'int':
 			return INT_RE.test(v) ? null : `expected a whole number, got "${value}"`;
 		case 'duration':
-			return DURATION_RE.test(v) || v === '0'
-				? null
-				: `expected a duration like 30s, 5m or 1h30m, got "${value}"`;
+			return DURATION_RE.test(v) ? null : `expected a duration like 30s, 5m or 1h30m, got "${value}"`;
 		case 'size':
 			return SIZE_RE.test(v) ? null : `expected a size like 512, 4KiB or 10MB, got "${value}"`;
 		case 'status':
