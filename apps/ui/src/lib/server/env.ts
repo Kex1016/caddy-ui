@@ -18,6 +18,14 @@ export type Config = {
 	probeIntervalMs: number;
 	scrapeIntervalMs: number;
 	retentionDays: number;
+	/** `CADDY_UI_CERT_WARN_DAYS`: a certificate with fewer days left than this is flagged. */
+	certWarnDays: number;
+	/** `CADDY_UI_PROBE_TIMEOUT`; undefined means automatic (a third of the probe interval, 2 to 10 s). */
+	probeTimeoutMs: number | undefined;
+	/** `CADDY_UI_REVISIONS_KEEP`: Caddyfile revisions kept in the database. */
+	revisionsKeep: number;
+	/** `CADDY_UI_BACKUPS_KEEP`: Caddyfile backup files kept next to the database. */
+	backupsKeep: number;
 	publicUrl: string | undefined;
 	updateIntervalMs: number;
 	updateWebhookPort: number | undefined;
@@ -120,6 +128,18 @@ function url(env: Env, name: string, fallback: string | undefined): string | und
 	return raw.replace(/\/+$/, '');
 }
 
+/** An optional duration between `minMs` and `maxMs`; unset or empty means undefined (automatic). */
+function optDuration(env: Env, name: string, minMs: number, maxMs: number): number | undefined {
+	const raw = env[name]?.trim();
+	if (!raw) return undefined;
+	const ms = parseDuration(raw);
+	if (ms === null) throw new ConfigError(`${name} must be a duration such as 5s or 1m, got "${raw}"`);
+	if (ms < minMs || ms > maxMs) {
+		throw new ConfigError(`${name} must be between ${minMs / 1000}s and ${maxMs / 1000}s, got "${raw}"`);
+	}
+	return ms;
+}
+
 function timeZone(env: Env): string {
 	const tz = str(env, 'TZ', 'UTC');
 	try {
@@ -169,6 +189,10 @@ export function loadConfig(env: Env): Config {
 		probeIntervalMs: duration(env, 'CADDY_UI_PROBE_INTERVAL', '30s', 1000),
 		scrapeIntervalMs: duration(env, 'CADDY_UI_SCRAPE_INTERVAL', '15s', 1000),
 		retentionDays: int(env, 'CADDY_UI_RETENTION_DAYS', 90, 1, 36500),
+		certWarnDays: int(env, 'CADDY_UI_CERT_WARN_DAYS', 14, 1, 365),
+		probeTimeoutMs: optDuration(env, 'CADDY_UI_PROBE_TIMEOUT', 1000, 60_000),
+		revisionsKeep: int(env, 'CADDY_UI_REVISIONS_KEEP', 200, 10, 10000),
+		backupsKeep: int(env, 'CADDY_UI_BACKUPS_KEEP', 50, 1, 10000),
 		publicUrl: url(env, 'CADDY_UI_PUBLIC_URL', undefined),
 		updateIntervalMs: updateInterval(env),
 		updateWebhookPort:
@@ -194,6 +218,11 @@ export const EDITABLE = [
 	'CADDY_UI_PUBLIC_URL',
 	'CADDY_UI_PORKBUN_READONLY',
 	'CADDY_UI_PORKBUN_CACHE_TTL',
+	// S3: thresholds and history (docs/settings-and-perf-plan.md §3).
+	'CADDY_UI_CERT_WARN_DAYS',
+	'CADDY_UI_PROBE_TIMEOUT',
+	'CADDY_UI_REVISIONS_KEEP',
+	'CADDY_UI_BACKUPS_KEEP',
 	'CADDY_UI_UPDATE_INTERVAL'
 ] as const;
 
@@ -213,6 +242,11 @@ export const EDITABLE_DEFAULTS: Record<EditableKey, string | undefined> = {
 	// Depends on the sign-in; see porkbun(). Shown as `false` with a sign-in and `true` without.
 	CADDY_UI_PORKBUN_READONLY: undefined,
 	CADDY_UI_PORKBUN_CACHE_TTL: '60s',
+	CADDY_UI_CERT_WARN_DAYS: '14',
+	// Unset means automatic: a third of the probe interval, between 2 and 10 seconds.
+	CADDY_UI_PROBE_TIMEOUT: undefined,
+	CADDY_UI_REVISIONS_KEEP: '200',
+	CADDY_UI_BACKUPS_KEEP: '50',
 	CADDY_UI_UPDATE_INTERVAL: '1h'
 };
 
@@ -224,18 +258,25 @@ const CHECKS: Record<EditableKey, (env: Env) => unknown> = {
 	CADDY_UI_PUBLIC_URL: (e) => url(e, 'CADDY_UI_PUBLIC_URL', undefined),
 	CADDY_UI_PORKBUN_READONLY: (e) => bool(e, 'CADDY_UI_PORKBUN_READONLY', false),
 	CADDY_UI_PORKBUN_CACHE_TTL: (e) => duration(e, 'CADDY_UI_PORKBUN_CACHE_TTL', '60s', 0),
+	CADDY_UI_CERT_WARN_DAYS: (e) => int(e, 'CADDY_UI_CERT_WARN_DAYS', 14, 1, 365),
+	CADDY_UI_PROBE_TIMEOUT: (e) => optDuration(e, 'CADDY_UI_PROBE_TIMEOUT', 1000, 60_000),
+	CADDY_UI_REVISIONS_KEEP: (e) => int(e, 'CADDY_UI_REVISIONS_KEEP', 200, 10, 10000),
+	CADDY_UI_BACKUPS_KEEP: (e) => int(e, 'CADDY_UI_BACKUPS_KEEP', 50, 1, 10000),
 	CADDY_UI_UPDATE_INTERVAL: (e) => updateInterval(e)
 };
+
+/** Keys where an empty value means "unset": no public URL, or the automatic probe timeout. */
+const EMPTY_ALLOWED: ReadonlySet<EditableKey> = new Set(['CADDY_UI_PUBLIC_URL', 'CADDY_UI_PROBE_TIMEOUT']);
 
 /**
  * Check one value for an editable variable with the parser `loadConfig` uses. Returns the value as it will
  * be stored (trimmed), or throws a ConfigError with the same message a bad environment variable gets. Only
- * `CADDY_UI_PUBLIC_URL` may be empty, which means unset; anywhere else an empty value would silently mean
+ * `CADDY_UI_PUBLIC_URL` and `CADDY_UI_PROBE_TIMEOUT` may be empty, which means unset; anywhere else an empty value would silently mean
  * "the default", which is what removing the saved value is for.
  */
 export function checkSetting(key: EditableKey, raw: string): string {
 	const value = raw.trim();
-	if (value === '' && key !== 'CADDY_UI_PUBLIC_URL') {
+	if (value === '' && !EMPTY_ALLOWED.has(key)) {
 		throw new ConfigError(`${key} must not be empty; reset it to use the environment's value instead`);
 	}
 	CHECKS[key]({ [key]: value });

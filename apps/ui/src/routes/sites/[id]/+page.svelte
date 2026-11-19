@@ -116,7 +116,7 @@
 								site.cert.notAfter,
 								tz
 							)}{site.cert.issuer ? ` · ${site.cert.issuer}` : ''}
-							{#if site.cert.daysLeft < 14}<Tag kind="warning">renewal due</Tag>{/if}
+							{#if site.cert.daysLeft < data.certWarnDays}<Tag kind="warning">renewal due</Tag>{/if}
 						{:else}
 							None read for this address
 						{/if}

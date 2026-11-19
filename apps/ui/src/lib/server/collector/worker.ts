@@ -6,6 +6,7 @@ import { readCerts } from './certs';
 import { FileTailer, LogRollup, parseAccessLine, type TailPosition } from './logs';
 import { MetricsRollup, parsePrometheus } from './metrics';
 import { probeSite, probeUpstream, type ProbeResult } from './probe';
+import { loadProbeOptions, NO_OPTIONS, withPath, type ProbeOptions } from './probe-options';
 import {
 	HostMatcher,
 	probeTarget,
@@ -63,8 +64,14 @@ const RETRY_DELAY_MS = 1_000;
 /** A repeating job. `ms` is read each time the job is scheduled again, so a new interval applies at once. */
 type Loop = { ms: number; fn: () => unknown; timer: NodeJS.Timeout | undefined; running: boolean };
 
-/** Probe timeout: a third of the interval, between 2 and 10 seconds. */
-const probeTimeout = (intervalMs: number) => Math.min(10_000, Math.max(2_000, intervalMs / 3));
+/**
+ * Probe timeout: `CADDY_UI_PROBE_TIMEOUT` when set, else a third of the interval, between 2 and 10 seconds.
+ * Never longer than the interval, so a cycle that times out still ends before the next one is due.
+ */
+export const probeTimeout = (intervalMs: number, setMs?: number) =>
+	setMs !== undefined
+		? Math.min(setMs, Math.max(1_000, intervalMs))
+		: Math.min(10_000, Math.max(2_000, intervalMs / 3));
 
 const job = (): JobStatus => ({ lastRun: null, lastOk: null, error: null });
 
@@ -102,6 +109,12 @@ export class Collector {
 	private stopped = false;
 	readonly connectHost: string;
 	private probeTimeoutMs: number;
+	/** Per-site probe options (Settings → Monitoring), by site id. */
+	probeOptions: Map<string, ProbeOptions>;
+	/** Certificates with fewer days left are flagged (`CADDY_UI_CERT_WARN_DAYS`). */
+	certWarnDays: number;
+	/** While set, the jobs that write to the database wait (Settings → compact database). */
+	private held: Promise<void> | null = null;
 
 	constructor(
 		private db: Db,
@@ -109,7 +122,9 @@ export class Collector {
 		private now: () => number = Date.now
 	) {
 		this.connectHost = new URL(cfg.adminUrl).hostname;
-		this.probeTimeoutMs = probeTimeout(cfg.probeIntervalMs);
+		this.probeTimeoutMs = probeTimeout(cfg.probeIntervalMs, cfg.probeTimeoutMs);
+		this.certWarnDays = cfg.certWarnDays;
+		this.probeOptions = loadProbeOptions(db);
 		this.states = loadStates(db);
 		const siteFor = (host: string) => this.matcher.match(host);
 		this.metrics = new MetricsRollup(siteFor);
@@ -190,6 +205,18 @@ export class Collector {
 		return t;
 	}
 
+	/** Where a site is probed: its first address through Caddy, at the path its probe options name. */
+	siteTarget(s: Pick<SiteBlock, 'id' | 'addresses'>) {
+		const t = probeTarget(s.addresses, this.connectHost);
+		return t ? { ...t, url: withPath(t.url, this.probeOptions.get(s.id)?.path ?? null) } : undefined;
+	}
+
+	/** Use new per-site probe options from the next probe cycle on. */
+	setProbeOptions(options: Map<string, ProbeOptions>): void {
+		this.probeOptions = options;
+		this.emit('sites');
+	}
+
 	/** Probes every site through Caddy and every upstream directly, once each, and records state flips. */
 	async probeAll(): Promise<void> {
 		const st = this.status.probes;
@@ -197,14 +224,17 @@ export class Collector {
 		this.refreshSites();
 		const siteResults = new Map<string, ProbeResult>();
 		const upstreamResults = new Map<string, ProbeResult>();
-		const siteJobs = this.sites.flatMap((s) => {
-			const t = probeTarget(s.addresses, this.connectHost);
-			return t ? [{ id: s.id, t }] : [];
+		const opts = (id: string) => this.probeOptions.get(id) ?? NO_OPTIONS;
+		const probed = this.sites.filter((s) => !opts(s.id).skip);
+		const targetOf = (s: SiteBlock) => this.siteTarget(s);
+		const siteJobs = probed.flatMap((s) => {
+			const t = targetOf(s);
+			return t ? [{ id: s.id, t, alsoUp: opts(s.id).upStatuses }] : [];
 		});
-		const upstreams = [...new Set(this.sites.flatMap((s) => s.upstreams.map((u) => u.address)))];
+		const upstreams = [...new Set(probed.flatMap((s) => s.upstreams.map((u) => u.address)))];
 		const jobs: (() => Promise<void>)[] = [
-			...siteJobs.map(({ id, t }) => async () => {
-				siteResults.set(id, await this.withRetry(() => probeSite(t, this.probeTimeoutMs)));
+			...siteJobs.map(({ id, t, alsoUp }) => async () => {
+				siteResults.set(id, await this.withRetry(() => probeSite(t, this.probeTimeoutMs, alsoUp)));
 			}),
 			...upstreams.map((address) => async () => {
 				const t = this.upstreamTarget(address);
@@ -219,11 +249,17 @@ export class Collector {
 		const rows: ProbeRow[] = [];
 		this.db.transaction(() => {
 			for (const s of this.sites) {
+				if (opts(s.id).skip) {
+					// Not probed: say so with "unknown" rather than keep showing the last result.
+					for (const u of s.upstreams) recordState(this.db, this.states, s.id, u.address, 'unknown', ts);
+					recordState(this.db, this.states, s.id, '', 'unknown', ts);
+					continue;
+				}
 				const own = siteResults.get(s.id);
 				if (own)
 					rows.push({
 						siteId: s.id,
-						target: probeTarget(s.addresses, this.connectHost)!.url,
+						target: targetOf(s)!.url,
 						kind: 'site',
 						ts,
 						...own
@@ -346,8 +382,34 @@ export class Collector {
 	}
 
 	/** Retention, in batches with pauses between them. Raw probes are kept for the full retention. */
-	async prune(): Promise<void> {
-		await pruneInBatches(this.db, this.cfg.retentionDays, this.now());
+	async prune(): Promise<{ probes: number; metrics: number }> {
+		return pruneInBatches(this.db, this.cfg.retentionDays, this.now());
+	}
+
+	/** The probe timeout in force, in ms. */
+	get probeTimeout(): number {
+		return this.probeTimeoutMs;
+	}
+
+	/**
+	 * Pause every job that writes to the database, for work that needs the database to itself (compacting it).
+	 * Resolves once no job is running; call the returned function to let them run again. Jobs that came due
+	 * meanwhile run once when released, so the access-log tail catches up from where it was.
+	 */
+	async hold(): Promise<() => void> {
+		let release!: () => void;
+		const held = new Promise<void>((r) => (release = r));
+		this.held = held;
+		while ([...this.loops.values()].some((l) => l.running)) await new Promise((r) => setTimeout(r, 25));
+		return () => {
+			if (this.held === held) this.held = null;
+			release();
+		};
+	}
+
+	/** True while `hold()` is in force. */
+	get holding(): boolean {
+		return this.held !== null;
 	}
 
 	private schedule(loop: Loop, delay: number): void {
@@ -358,6 +420,8 @@ export class Collector {
 
 	private async tick(loop: Loop): Promise<void> {
 		loop.timer = undefined;
+		if (this.stopped) return;
+		while (this.held) await this.held;
 		if (this.stopped) return;
 		loop.running = true;
 		try {
@@ -407,9 +471,15 @@ export class Collector {
 			...this.cfg,
 			probeIntervalMs: next.probeIntervalMs,
 			scrapeIntervalMs: next.scrapeIntervalMs,
-			retentionDays: next.retentionDays
+			retentionDays: next.retentionDays,
+			probeTimeoutMs: next.probeTimeoutMs,
+			certWarnDays: next.certWarnDays
 		};
-		this.probeTimeoutMs = probeTimeout(next.probeIntervalMs);
+		this.probeTimeoutMs = probeTimeout(next.probeIntervalMs, next.probeTimeoutMs);
+		if (this.certWarnDays !== next.certWarnDays) {
+			this.certWarnDays = next.certWarnDays;
+			this.emit('certs');
+		}
 		this.status.probes.intervalMs = next.probeIntervalMs;
 		this.status.metrics.intervalMs = next.scrapeIntervalMs;
 		this.rearm('probes', next.probeIntervalMs);

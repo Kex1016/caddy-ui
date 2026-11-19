@@ -172,6 +172,17 @@ describe('ConfigService.apply', () => {
 		expect(await readdir(join(dir, 'backups'))).toHaveLength(2);
 	});
 
+	it('trims at once when fewer revisions and backups are to be kept (Settings)', async () => {
+		const small = make({ keepRevisions: 10, keepBackups: 10, db: openDb(':memory:') });
+		await small.init();
+		for (let i = 0; i < 5; i++) await small.apply(`${SAMPLE}# ${i}\n`, { author: 'david' });
+		const before = await small.historyCounts();
+		expect(before.revisions).toBe(6);
+		await small.setKeep({ revisions: 2, backups: 1 });
+		expect(small.keeping).toEqual({ revisions: 2, backups: 1 });
+		expect(await small.historyCounts()).toEqual({ revisions: 2, backups: 1 });
+	});
+
 	it('runs applies one at a time', async () => {
 		const a = svc.apply(SAMPLE.replace('8096', '8001'), { author: 'a' });
 		const b = svc.apply(SAMPLE.replace('8096', '8002'), { author: 'b' });

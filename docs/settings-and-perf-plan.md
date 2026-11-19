@@ -265,6 +265,12 @@ David picked from the menu on 19 Nov. "In" items have a workstream in §6.
 
 Out of scope as before: renewals, WHOIS contacts, email forwarding, dynamic DNS.
 
+**Built in S3 (19 Nov 2026).** Diagnostics, Caddy helpers, storage tools and monitoring thresholds as described,
+plus a backup download route (`GET /api/settings/backup`) and migration 6 (`probe_options`). The four new
+editable variables are `CADDY_UI_PROBE_TIMEOUT`, `CADDY_UI_CERT_WARN_DAYS`, `CADDY_UI_REVISIONS_KEEP` and
+`CADDY_UI_BACKUPS_KEEP`; backups kept is its own setting (50 today). Everything else is a form action on the
+Settings page. Choices are in [DECISIONS.md](../DECISIONS.md) under S3.
+
 ### 3.1 Discord notifications
 
 David asked whether the message can be editable, or else use a good Components v2

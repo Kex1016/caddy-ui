@@ -208,3 +208,9 @@ Newest at the bottom. Format: date · workstream · what · why.
   Preferences once and pick the clock, date format, landing page and default range you want. They are saved on the
   server, so they apply in every browser; a browser where you used the theme button keeps its own theme until you
   press **Use the saved default here**.
+- [ ] 2026-11-19 · S3 · Nothing is required. After deploying, open Settings and press **Check everything** once:
+  anything marked Problem or Check links to its fix. If it says metrics are not per host or the access log is not
+  found, **Caddy helpers** turns each on as a reviewed Caddyfile change. The access log helper writes Caddy's log to
+  `CADDY_LOG_PATH`, so the `caddy` and `caddy-ui` services must mount the same log directory at that path (the
+  example compose file does: `/var/log/caddy`) and Caddy must be able to write there · otherwise the status-code
+  and top-path charts stay empty.

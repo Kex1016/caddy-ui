@@ -40,6 +40,10 @@ describe('/api/settings', () => {
 			'CADDY_UI_PUBLIC_URL',
 			'CADDY_UI_PORKBUN_READONLY',
 			'CADDY_UI_PORKBUN_CACHE_TTL',
+			'CADDY_UI_CERT_WARN_DAYS',
+			'CADDY_UI_PROBE_TIMEOUT',
+			'CADDY_UI_REVISIONS_KEEP',
+			'CADDY_UI_BACKUPS_KEEP',
 			'CADDY_UI_UPDATE_INTERVAL'
 		]);
 		expect(JSON.stringify(body)).not.toContain('pk1_x');

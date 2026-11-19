@@ -64,8 +64,15 @@ function describe(err: unknown): string {
 	return err instanceof Error ? err.message : String(err);
 }
 
-/** GETs a site through Caddy, following redirects that stay on the same host. */
-export async function probeSite(target: ProbeTarget, timeoutMs: number): Promise<ProbeResult> {
+/**
+ * GETs a site through Caddy, following redirects that stay on the same host. `alsoUp` are statuses that count as
+ * up on top of `statusIsUp` (a per-site probe option, for example 503 for a maintenance page).
+ */
+export async function probeSite(
+	target: ProbeTarget,
+	timeoutMs: number,
+	alsoUp: readonly number[] = []
+): Promise<ProbeResult> {
 	const started = performance.now();
 	let current = target;
 	try {
@@ -91,7 +98,7 @@ export async function probeSite(target: ProbeTarget, timeoutMs: number): Promise
 					continue;
 				}
 			}
-			const ok = statusIsUp(status);
+			const ok = statusIsUp(status) || alsoUp.includes(status);
 			return { ok, latencyMs, status, error: ok ? null : `HTTP ${status}` };
 		}
 	} catch (err) {

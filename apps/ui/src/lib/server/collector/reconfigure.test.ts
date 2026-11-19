@@ -28,6 +28,7 @@ function collector() {
 	c.scanCerts = vi.fn();
 	c.prune = vi.fn(async () => {
 		calls.prune++;
+		return { probes: 0, metrics: 0 };
 	});
 	return { c, calls };
 }

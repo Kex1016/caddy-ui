@@ -17,6 +17,10 @@ const EDITABLE = [
 	'CADDY_UI_PUBLIC_URL',
 	'CADDY_UI_PORKBUN_READONLY',
 	'CADDY_UI_PORKBUN_CACHE_TTL',
+	'CADDY_UI_CERT_WARN_DAYS',
+	'CADDY_UI_PROBE_TIMEOUT',
+	'CADDY_UI_REVISIONS_KEEP',
+	'CADDY_UI_BACKUPS_KEEP',
 	'CADDY_UI_UPDATE_INTERVAL'
 ];
 
@@ -134,10 +138,10 @@ test('the admin API test, the path checks and the table sizes answer', async ({ 
 	const caddyfile = connections.getByRole('row').filter({ hasText: 'CADDYFILE_PATH' });
 	await expect(caddyfile).toContainText('Found, readable and writable.');
 
-	const monitoring = section(page, 'Monitoring');
-	await expect(monitoring.getByRole('row').filter({ hasText: 'Probe results' })).toBeVisible();
-	await monitoring.getByRole('button', { name: 'Measure again' }).click();
-	await expect(monitoring.getByRole('button', { name: 'Measure again' })).toBeEnabled();
+	const storage = section(page, 'Data and storage');
+	await expect(storage.getByRole('row').filter({ hasText: 'Probe results' })).toBeVisible();
+	await storage.getByRole('button', { name: 'Measure again' }).click();
+	await expect(storage.getByRole('button', { name: 'Measure again' })).toBeEnabled();
 
 	const signIn = section(page, 'Sign-in');
 	await expect(signIn).toContainText('Local user and password');

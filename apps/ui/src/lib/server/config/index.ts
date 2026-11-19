@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { CaddyAdmin } from '../caddy/admin';
 import { getDb } from '../db';
 import { config } from '../env';
+import { onSettingsChange } from '../settings';
 import { getParser } from './parser';
 import { ConfigService } from './service';
 
@@ -16,7 +17,16 @@ export function getConfigService(): ConfigService {
 			db: getDb(),
 			caddyfilePath: cfg.caddyfilePath,
 			backupDir: join(cfg.uiData, 'backups'),
-			parser: getParser
+			parser: getParser,
+			keepRevisions: cfg.revisionsKeep,
+			keepBackups: cfg.backupsKeep
+		});
+		const s = service;
+		onSettingsChange((next, prev) => {
+			if (next.revisionsKeep === prev.revisionsKeep && next.backupsKeep === prev.backupsKeep) return;
+			void s
+				.setKeep({ revisions: next.revisionsKeep, backups: next.backupsKeep })
+				.catch((err) => console.error('caddy-ui: trimming the Caddyfile history:', err));
 		});
 	}
 	return service;
