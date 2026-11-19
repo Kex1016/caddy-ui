@@ -71,6 +71,29 @@
 			choices: Object.entries(DISPLAY_LABELS.sidebar)
 		}
 	];
+
+	// Export and import (S6). The export is a form action whose answer is the file; the page offers it as a download.
+	let importText = $state('');
+	let importName = $state('');
+	let importBusy = $state(false);
+	const plan = $derived(form?.importPlan ?? null);
+
+	async function pickFile(e: Event) {
+		const file = (e.currentTarget as HTMLInputElement).files?.[0];
+		importName = file?.name ?? '';
+		importText = file ? await file.text() : '';
+	}
+
+	function download(name: string, text: string) {
+		const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = name;
+		document.body.append(a);
+		a.click();
+		a.remove();
+		URL.revokeObjectURL(url);
+	}
 	const shown = $derived<Display>(data.display);
 	const overrideNames = $derived(
 		[data.prefs.overrides.theme && 'theme', data.prefs.overrides.sidebar && 'sidebar']
@@ -93,6 +116,7 @@
 		{ id: 'connections', label: 'Connections' },
 		{ id: 'sign-in', label: 'Sign-in' },
 		{ id: 'updates', label: 'Updates' },
+		{ id: 'transfer', label: 'Export and import' },
 		{ id: 'changes', label: 'Recent changes' }
 	];
 
@@ -925,6 +949,118 @@
 	</p>
 </section>
 
+<!-- Export and import (S6) -->
+<section class="fp-section" id="transfer" aria-labelledby="transfer-h">
+	<div class="fp-section__head"><h2 class="t-title-2" id="transfer-h">Export and import</h2></div>
+	<div class="fp-panel xfer">
+		<form
+			class="xfer__part"
+			method="POST"
+			action="?/export"
+			use:enhance={() =>
+				async ({ result }) => {
+					if (result.type === 'success' && result.data?.exportFile) {
+						const f = result.data.exportFile as { name: string; text: string };
+						download(f.name, f.text);
+					}
+				}}
+		>
+			<h3 class="t-title-3">Export</h3>
+			<p class="t-caption">
+				One JSON file with every saved setting, your display preferences and the per-site probe options. The
+				environment’s own values, the sign-in and the Porkbun keys are never in it.
+			</p>
+			{#if data.transferSecrets.length > 0}
+				<label class="check">
+					<input type="checkbox" name="secrets" />
+					<span class="t-ui">Include {data.transferSecrets.join(', ').toLowerCase()}</span>
+				</label>
+				<p class="t-caption">
+					Leave this off unless you are moving to another instance. Anyone with the file can use it.
+				</p>
+			{/if}
+			<div><button type="submit" class="fp-btn">Download settings file</button></div>
+		</form>
+
+		<div class="xfer__part">
+			<h3 class="t-title-3">Import</h3>
+			<p class="t-caption">
+				Choose a file from an export. You see what would change before anything is saved. Values in the file
+				are set; anything it does not mention stays as it is. A file from a newer Caddy UI is refused.
+			</p>
+			<form
+				class="xfer__pick"
+				method="POST"
+				action="?/importPreview"
+				use:enhance={() => {
+					importBusy = true;
+					return async ({ update }) => {
+						await update({ reset: false });
+						importBusy = false;
+					};
+				}}
+			>
+				<label class="t-ui" for="import-file">Settings file</label>
+				<input id="import-file" type="file" accept="application/json,.json" onchange={pickFile} />
+				<input type="hidden" name="text" value={importText} />
+				<div>
+					<button type="submit" class="fp-btn" disabled={importText === '' || importBusy}
+						>Review changes</button
+					>
+				</div>
+			</form>
+			{#if form?.importError}<Notice kind="error">{form.importError}</Notice>{/if}
+			{#if form?.importDone !== undefined}
+				<Notice kind="success">
+					Imported. {form.importDone === 0
+						? 'Nothing needed changing.'
+						: `${form.importDone} ${form.importDone === 1 ? 'change' : 'changes'} applied now.`}
+				</Notice>
+			{/if}
+		</div>
+	</div>
+
+	{#if plan}
+		<div class="fp-panel review" aria-live="polite">
+			<h3 class="t-title-3">Review{importName ? ` · ${importName}` : ''}</h3>
+			<p class="t-caption">
+				{plan.uiVersion ? `From Caddy UI ${plan.uiVersion}` : 'From an unknown version'}{plan.exportedAt
+					? `, exported ${formatDateTime(Date.parse(plan.exportedAt), data.timeZone)}`
+					: ''}. {plan.unchanged} already the same.
+			</p>
+			{#each plan.errors as e (e)}<Notice kind="error">{e}</Notice>{/each}
+			{#each plan.notes as n (n)}<Notice>{n}</Notice>{/each}
+			{#if plan.changes.length === 0}
+				<p class="t-ui">Nothing here would change anything.</p>
+			{:else}
+				<div class="fp-table-wrap">
+					<table class="fp-table">
+						<thead><tr><th>Setting</th><th>Now</th><th>After import</th></tr></thead>
+						<tbody>
+							{#each plan.changes as c (c.kind + c.key)}
+								<tr>
+									<td class="name">{c.label}</td>
+									<td class="value t-mono">{c.from ?? 'not saved'}</td>
+									<td class="value t-mono">{c.to ?? 'not saved'}</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{/if}
+			{#if plan.errors.length === 0 && plan.changes.length > 0}
+				<form method="POST" action="?/importApply" use:enhance>
+					<input type="hidden" name="text" value={form?.importText ?? ''} />
+					<button type="submit" class="fp-btn fp-btn--primary">
+						Apply {plan.changes.length}
+						{plan.changes.length === 1 ? 'change' : 'changes'}
+					</button>
+				</form>
+			{/if}
+		</div>
+	{/if}
+</section>
+
 <!-- Recent changes -->
 <section class="fp-section" id="changes" aria-labelledby="changes-h">
 	<div class="fp-section__head"><h2 class="t-title-2" id="changes-h">Recent changes</h2></div>
@@ -970,6 +1106,26 @@
 </section>
 
 <style>
+	.xfer {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+		gap: var(--space-6);
+	}
+	.xfer__part,
+	.xfer__pick,
+	.review {
+		display: grid;
+		gap: var(--space-3);
+		align-content: start;
+	}
+	.review {
+		margin-top: var(--space-4);
+	}
+	.check {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
 	.setting {
 		display: grid;
 		gap: var(--space-2);

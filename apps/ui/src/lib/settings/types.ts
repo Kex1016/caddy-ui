@@ -97,3 +97,36 @@ export type ProbeOptionsRow = {
 	/** The address the site is probed at now, with the path in force. */
 	target: string | null;
 };
+
+/** The settings export file (S6). `secrets` is present only when the person asked for them. */
+export type TransferFile = {
+	format: string;
+	formatVersion: number;
+	uiVersion: string;
+	exportedAt: string;
+	/** Saved settings, in each variable's own syntax. */
+	settings: Record<string, string>;
+	/** Saved display preferences. */
+	preferences: Record<string, string>;
+	probeOptions: { siteId: string; label: string; skip: boolean; path: string | null; upStatuses: number[] }[];
+	secrets?: Record<string, string>;
+};
+
+/** One line of the import review. A secret's value is never in it: `from` and `to` are "set" or null. */
+export type TransferChange = {
+	kind: 'setting' | 'preference' | 'probe' | 'secret';
+	key: string;
+	label: string;
+	from: string | null;
+	to: string | null;
+};
+
+/** What an import would do, and what stops it. */
+export type TransferPlan = {
+	uiVersion: string | null;
+	exportedAt: string | null;
+	changes: TransferChange[];
+	unchanged: number;
+	notes: string[];
+	errors: string[];
+};

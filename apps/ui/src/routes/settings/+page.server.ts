@@ -8,6 +8,7 @@ import { config } from '$lib/server/env';
 import { getRuntime } from '$lib/server/runtime';
 import {
 	PrefsRefused,
+	SettingsRefused,
 	getPrefs,
 	getSettings,
 	getStorageMeter,
@@ -26,6 +27,17 @@ import type { HelperId } from '$lib/settings/types';
 import { DISPLAY_KEYS, type DisplayKey } from '$lib/display';
 import { SIDEBAR_COOKIE, THEME_COOKIE } from '$lib/theme';
 import { checkNow, getUpdates } from '$lib/server/updater';
+import {
+	SECRET_ROWS,
+	TransferRefused,
+	applyImport,
+	buildExport,
+	hasSecrets,
+	planImport,
+	type TransferDeps
+} from '$lib/server/settings/transfer';
+import { UI_VERSION } from '$lib/server/version';
+import { loadProbeOptions } from '$lib/server/collector/probe-options';
 import type { Actions, PageServerLoad } from './$types';
 
 /**
@@ -39,6 +51,27 @@ import type { Actions, PageServerLoad } from './$types';
  * download): Check everything, the Caddy helpers' proposals (applied with the editor's `PUT /api/caddyfile`),
  * prune now, compact, and per-site probe options.
  */
+/** The running server behind the export and import of the Settings page (S6). */
+function transferDeps(): TransferDeps {
+	const db = getDb();
+	return {
+		settings: getSettings(),
+		prefs: getPrefs(),
+		sites: () => getCollector().sites.map((s) => ({ id: s.id, addresses: s.addresses })),
+		probeOptions: () => loadProbeOptions(db),
+		saveProbeOptions: saveSiteProbeOptions,
+		readSecret: (key) =>
+			(db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as { value: string } | undefined)
+				?.value ?? null,
+		writeSecret: (key, value) => {
+			db.prepare(
+				'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value'
+			).run(key, value);
+		},
+		uiVersion: UI_VERSION
+	};
+}
+
 export const load: PageServerLoad = async ({ depends, cookies }) => {
 	depends('settings:tools');
 	const cfg = config();
@@ -53,6 +86,8 @@ export const load: PageServerLoad = async ({ depends, cookies }) => {
 		/** A promise only while a measurement runs; SvelteKit streams it in after the page's shell. */
 		tables: getStorageMeter().current(),
 		maintenance: getMaintenance().state(),
+		/** Whether this build stores a secret an export can carry (the checkbox is shown only then). */
+		transferSecrets: hasSecrets() ? SECRET_ROWS.map((r) => r.label) : [],
 		history: await getConfigService()
 			.historyCounts()
 			.catch((err: unknown) => {
@@ -90,6 +125,40 @@ export const load: PageServerLoad = async ({ depends, cookies }) => {
 const HELPERS: readonly HelperId[] = ['metrics', 'access-log'];
 
 export const actions: Actions = {
+	/** Export: the file's text, which the page offers as a download. Secrets only when the box is ticked. */
+	export: async ({ request }) => {
+		const form = await request.formData();
+		const file = buildExport(transferDeps(), { includeSecrets: form.get('secrets') === 'on' });
+		const day = file.exportedAt.slice(0, 10);
+		return {
+			exportFile: { name: `caddy-ui-settings-${day}.json`, text: JSON.stringify(file, null, 2) + '\n' }
+		};
+	},
+
+	/** Import, step 1: read the file and say what would change. Nothing is written. */
+	importPreview: async ({ request }) => {
+		const text = String((await request.formData()).get('text') ?? '');
+		try {
+			return { importText: text, importPlan: planImport(transferDeps(), text) };
+		} catch (err) {
+			if (err instanceof TransferRefused) return fail(400, { importError: err.message });
+			throw err;
+		}
+	},
+
+	/** Import, step 2: apply the same file. It is planned again first, so a file that fails changes nothing. */
+	importApply: async ({ request, locals }) => {
+		const text = String((await request.formData()).get('text') ?? '');
+		try {
+			const plan = applyImport(transferDeps(), text, authorOf(locals));
+			return { importDone: plan.changes.length };
+		} catch (err) {
+			if (err instanceof TransferRefused) return fail(400, { importError: err.message });
+			if (err instanceof SettingsRefused) return fail(400, { importError: err.message });
+			throw err;
+		}
+	},
+
 	/** "Check now": asks the updater through control.json (D13). It answers within one poll. */
 	checkNow: async () => {
 		try {

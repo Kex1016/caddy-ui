@@ -106,6 +106,16 @@ Settings (in the sidebar under System) has these sections, each saved on its own
   or from its own environment). **Check now** asks the updater to check at once, and the
   interval is a field like the others. The source, the webhook port and the shared folder are
   shown for reference; they are set in compose. See [Updates and the updater](#updates-and-the-updater).
+- **Export and import**: **Download settings file** writes one JSON file with every saved
+  setting, your display preferences and the per-site probe options. The environment's own
+  values, the sign-in and the Porkbun keys are never in it. Anything this UI stores itself as a
+  secret (the Discord webhook URL) is left out unless you tick the box next to the button.
+  To import, choose a file and press **Review changes**: you see each setting, preference or
+  site option that would change, with its value now and after. Nothing is saved until you press
+  **Apply**. An import is a merge: it sets what the file holds and leaves everything else as it
+  is, and every changed setting shows in Recent changes. A file with a value that does not pass
+  its check, or from a newer Caddy UI, is refused as a whole. Probe options for a site this
+  instance does not have are skipped.
 - **Recent changes**: the last 50 values saved or reset, and per-site probe options changed,
   with who and when.
 

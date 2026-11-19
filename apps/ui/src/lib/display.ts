@@ -71,3 +71,13 @@ export function parseDisplay(raw: Partial<Record<string, unknown>>): Display {
 	for (const key of DISPLAY_KEYS) if (isDisplayChoice(key, raw[key])) out[key] = raw[key];
 	return out as Display;
 }
+
+/** The names the Preferences section uses, for the import review. */
+export const DISPLAY_NAMES: Record<DisplayKey, string> = {
+	range: 'Stats range',
+	clock: 'Clock',
+	dateFormat: 'Date format',
+	landing: 'Landing page',
+	theme: 'Theme',
+	sidebar: 'Sidebar'
+};

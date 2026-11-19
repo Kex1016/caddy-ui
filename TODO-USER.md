@@ -214,3 +214,6 @@ Newest at the bottom. Format: date · workstream · what · why.
   `CADDY_LOG_PATH`, so the `caddy` and `caddy-ui` services must mount the same log directory at that path (the
   example compose file does: `/var/log/caddy`) and Caddy must be able to write there · otherwise the status-code
   and top-path charts stay empty.
+- [ ] 2026-11-19 · S6 · Optional, after the v1.2.0 build is running: open Settings → Export and import and download a
+  settings file once. Keep it somewhere safe; it is the quickest way to restore your settings on a new install
+  (Import → Review changes → Apply). Tick the box for secrets only if you want the Discord webhook URL in it.

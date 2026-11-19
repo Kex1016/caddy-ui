@@ -1201,3 +1201,16 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-19 · S3 · The database size view moved from Monitoring to the new "Data and storage" section with the
   storage tools; the retention field and its "what will be deleted" notice stay in Monitoring. Section order:
   Diagnostics, Monitoring, Data and storage, Caddy helpers, then S2's sections · confidence 78.
+- 2026-11-19 · S6 · Export and import are form actions on `/settings` (`?/export`, `?/importPreview`,
+  `?/importApply`), not API routes: the export's answer is the file text, which the page offers as a download. No
+  migration. The file format is `caddy-ui-settings` version 1 (settings, preferences, probeOptions, optional secrets);
+  a higher version is refused as "from a newer Caddy UI" · confidence 78.
+- 2026-11-19 · S6 · Import is a merge, not a replace: it sets what the file holds and leaves everything else alone, so
+  an import into a fresh instance matches the source and an import into a used one never silently deletes a setting.
+  The review is planned again on apply, and any value that fails its check (the same `checkSetting` the editor uses)
+  refuses the whole file. Probe options for a site id this instance does not have are skipped with a note ·
+  confidence 74.
+- 2026-11-19 · S6 · Secrets the UI stores itself are listed in `SECRET_ROWS` (lib/server/settings/transfer.ts), left out
+  of an export unless the box is ticked, shown in the review only as "set", and imported only when the file carries
+  them. The checkbox shows only when the build has such a secret. The Porkbun keys, the password and every other
+  environment-only value are never exported · confidence 82.
