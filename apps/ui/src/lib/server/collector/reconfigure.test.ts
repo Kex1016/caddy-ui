@@ -23,9 +23,10 @@ function collector() {
 	c.scrapeMetrics = vi.fn(async () => {
 		calls.metrics++;
 	});
-	c.tailLogs = vi.fn();
+	c.pollUpstreams = vi.fn(async () => {});
+	c.tailLogs = vi.fn(async () => {});
 	c.scanCerts = vi.fn();
-	c.prune = vi.fn(() => {
+	c.prune = vi.fn(async () => {
 		calls.prune++;
 	});
 	return { c, calls };
@@ -53,7 +54,7 @@ describe('Collector.reconfigure', () => {
 		c.stop();
 	});
 
-	it('re-arms the scrape timer to a longer interval', async () => {
+	it('re-arms the scrape timer and the upstream poll to a longer interval', async () => {
 		const { c, calls } = collector();
 		c.start();
 		await vi.advanceTimersByTimeAsync(0);
@@ -64,6 +65,8 @@ describe('Collector.reconfigure', () => {
 		await vi.advanceTimersByTimeAsync(60_000);
 		expect(calls.metrics).toBe(2);
 		expect(c.status.metrics.intervalMs).toBe(120_000);
+		expect(c.intervalOf('upstreams')).toBe(120_000);
+		expect(c.pollUpstreams).toHaveBeenCalledTimes(2);
 		c.stop();
 	});
 
@@ -85,14 +88,15 @@ describe('Collector.reconfigure', () => {
 		c.stop();
 	});
 
-	it('uses the new retention at the next prune and leaves environment-only fields alone', () => {
+	it('uses the new retention at the next prune and leaves environment-only fields alone', async () => {
 		const db = openDb(':memory:');
 		const c = new Collector(db, base);
 		db.prepare(
 			`INSERT INTO probes (site_id, target, kind, ts, ok) VALUES ('s', 't', 'site', ?, 1), ('s', 't', 'site', ?, 1)`
 		).run(Date.now() - 20 * 86_400_000, Date.now() - 2 * 86_400_000);
 		c.reconfigure({ ...base, retentionDays: 10, logPath: '/elsewhere', adminUrl: 'http://other:2019' });
-		c.prune();
+		vi.useRealTimers(); // pruning pauses between batches
+		await c.prune();
 		expect(db.prepare('SELECT count(*) AS n FROM probes').get()).toEqual({ n: 1 });
 		expect(c.status.logs.path).toBe('/nonexistent/access.log');
 	});

@@ -138,6 +138,14 @@ been running.
 
 Expected result: both pages answer in tens of milliseconds regardless of database age.
 
+**Built in S0 (19 Nov 2026).** A–G as described, plus one addition: sums over whole days that
+are over (top lists, requests per site) are computed once and remembered, because the 30-day
+Overview still took about a second on 90 days of data without it. On the seeded 90-day
+database: sites payload 1.4 ms, 24-hour Overview 31 ms, the old latest-probe query 24 s. The
+`log_minutes (minute)` index is part of migration 4; it takes about 1.5 s to build once on 90
+days of minute rows for 35 busy sites, and does not read `probes`. Choices are in
+[DECISIONS.md](../DECISIONS.md) under S0.
+
 ## 2. Settings page
 
 ### 2.1 Inventory of environment variables

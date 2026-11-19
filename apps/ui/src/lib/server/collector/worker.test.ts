@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { openDb } from '../db';
 import { loadConfig } from '../env';
-import { overview, resetLiveCacheForTests, siteStats, sitesPayload } from '.';
+import { overview, siteStats, sitesPayload } from '.';
 import { siteId } from './sites';
 import { prune } from './store';
 import { Collector } from './worker';
@@ -124,8 +124,8 @@ describe('Collector', () => {
 		const id = (h: string) => siteId([`http://${h}:${port}`]);
 
 		await c.probeAll();
-		resetLiveCacheForTests();
-		let sites = await sitesPayload(c, db, cfgEnv.CADDY_ADMIN_URL as string, now);
+		await c.pollUpstreams();
+		let sites = sitesPayload(c, db, now);
 		const by = (h: string) => sites.sites.find((s) => s.id === id(h))!;
 		expect(sites.sites).toHaveLength(3);
 		expect(by('up.test')).toMatchObject({ status: 'up', since: now });
@@ -142,8 +142,8 @@ describe('Collector', () => {
 		const firstUp = now;
 		now += 6_000;
 		await c.probeAll();
-		resetLiveCacheForTests();
-		sites = await sitesPayload(c, db, cfgEnv.CADDY_ADMIN_URL as string, now);
+		await c.pollUpstreams();
+		sites = sitesPayload(c, db, now);
 		expect(by('up.test').upstreams[0]).toMatchObject({ status: 'down', since: now });
 		expect(by('up.test')).toMatchObject({ status: 'up', since: firstUp }); // the site itself still answers
 		upstream = net.createServer((s) => s.end());
@@ -192,7 +192,7 @@ describe('Collector', () => {
 		expect(stats.totals.latencyP50).toBeGreaterThan(0);
 
 		// The access log wins over metrics once it has data in the window.
-		c.tailLogs(); // first sight: start at the end
+		await c.tailLogs(); // first sight: start at the end
 		const line = (ts: number, uri: string, status: number) =>
 			JSON.stringify({
 				ts: ts / 1000,
@@ -207,9 +207,9 @@ describe('Collector', () => {
 			cfgEnv.CADDY_LOG_PATH as string,
 			line(now, '/a', 200) + line(now + 1000, '/a', 200) + line(now + 2000, '/b?x', 500)
 		);
-		c.tailLogs();
+		await c.tailLogs();
 		now += 90_000;
-		c.tailLogs();
+		await c.tailLogs();
 		stats = siteStats(c, db, up, '1h', now)!;
 		expect(stats.series.requests.source).toBe('logs');
 		expect(stats.totals).toMatchObject({ requests: 3, errors5xx: 1, bytesOut: 3 * 1234 });
@@ -223,6 +223,40 @@ describe('Collector', () => {
 		ov = await overview(c, db, '24h', now);
 		expect(ov.tiles.requests).toEqual({ value: 3, source: 'logs' });
 		expect(siteStats(c, db, 'nope', '1h', now)).toBeUndefined();
+	});
+
+	it('reads a large log backlog in slices, yields between them, and reports how far behind it is', async () => {
+		const now = Date.UTC(2026, 10, 5, 14, 0, 5);
+		const logPath = join(dir, 'busy.log');
+		writeFileSync(logPath, '');
+		const c = new Collector(
+			openDb(':memory:'),
+			loadConfig({ ...cfgEnv, CADDY_LOG_PATH: logPath }),
+			() => now
+		);
+		c.refreshSites();
+		await c.tailLogs(); // first sight: start at the end
+		const line =
+			JSON.stringify({
+				ts: now / 1000,
+				request: { client_ip: '198.51.100.4', host: `up.test:${port}`, uri: '/x', method: 'GET' },
+				duration: 0.01,
+				size: 10,
+				status: 200
+			}) + '\n';
+		// About 10 MB: more than one tick reads (8 slices of 1 MB).
+		const n = Math.ceil((10 * 1024 * 1024) / line.length);
+		appendFileSync(logPath, line.repeat(n));
+		let pauses = 0;
+		await c.tailLogs(async () => {
+			pauses++;
+		});
+		expect(pauses).toBe(7);
+		expect(c.status.logs.lagBytes).toBeGreaterThan(1024 * 1024);
+		expect(c.status.logs.lagBytes).toBeLessThan(3 * 1024 * 1024);
+		await c.tailLogs(async () => {});
+		expect(c.status.logs.lagBytes).toBe(0);
+		expect(c.status.logs.error).toBeNull();
 	});
 
 	it('keeps minute rollups and drops raw rows past retention', () => {

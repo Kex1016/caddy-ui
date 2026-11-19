@@ -5,11 +5,24 @@ Background worker inside the UI process, started from `hooks.server.ts` `init`. 
 | Job | Every | Reads | Writes |
 | --- | --- | --- | --- |
 | Site list | each probe cycle, when the Caddyfile mtime changes | `CADDYFILE_PATH` | `sites` |
-| Probes | `CADDY_UI_PROBE_INTERVAL` | sites through Caddy (Host + SNI to the admin URL's host), upstreams by TCP (+ HEAD when the scheme is known) | `probes`, `state_changes` |
+| Probes | `CADDY_UI_PROBE_INTERVAL` | sites through Caddy (Host + SNI to the admin URL's host), upstreams by TCP (+ HEAD when the scheme is known) | `probes` and `probe_latest` in one transaction, `state_changes` |
 | Metrics | `CADDY_UI_SCRAPE_INTERVAL` | `CADDY_ADMIN_URL/metrics` | `metric_samples` (per minute) |
-| Access log | 5s | `CADDY_LOG_PATH` (JSON) | `log_minutes`, `settings.collector.log_position` |
+| Upstream health | `CADDY_UI_SCRAPE_INTERVAL` | `CADDY_ADMIN_URL/reverse_proxy/upstreams` (with `adminFetch`) | memory only (`Collector.live`) |
+| Access log | 5s, in 1 MB slices (8 MB a tick) with a yield between them | `CADDY_LOG_PATH` (JSON) | `log_minutes`, `settings.collector.log_position` |
 | Certificates | 1h | `CADDY_DATA_PATH/certificates/**.crt` | `certs` |
-| Retention | 1h | | prunes `probes`, `metric_samples` |
+| Retention | 1h, in batches of 5,000 rows | | prunes `probes`, `metric_samples`, stale `probe_latest` rows |
+
+## Read side and snapshot (S0)
+
+`views.ts` shapes rows into the API payloads. `snapshot.ts` keeps them ready: after each probe cycle the
+collector rebuilds the sites payload and the default (24 h) Overview, and the sites payload again after each
+upstream poll, certificate scan and site list change (`Collector.onChange`). Pages, `/api/sites` and
+`/api/overview` read the snapshot. Other Overview ranges are computed on first request (streamed into the page
+with `Timing.defer`, computed at once for the API) and kept for one step of the range, five minutes at most.
+Sums over whole days that are over (`topLists`, `requestsBySite`) are remembered per database and forgotten
+when a write lands in that day. States come from `Collector.currentStates`, the latest probe per target from
+`probe_latest`, and the 24 h uptime of every site from one query (`siteSpans`). Every request carries
+`locals.timing`; `hooks.server.ts` turns it into a `Server-Timing` header and logs loads over 500 ms.
 
 Choices and their reasons are in `DECISIONS.md` (entries tagged W4).
 

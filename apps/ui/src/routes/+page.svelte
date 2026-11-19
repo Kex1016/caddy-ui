@@ -13,32 +13,54 @@
 		formatMs,
 		formatNumber
 	} from '$lib/format';
+	import CardSkeleton from '$lib/stats/CardSkeleton.svelte';
+	import TileSkeleton from '$lib/stats/TileSkeleton.svelte';
+	import { Streamed } from '$lib/stats/streamed.svelte';
 	import { frameFor, missingLine, sourceNote, sourceNotices } from '$lib/stats/sources';
 	import { RANGE_LABEL, autoRefresh, pct, statusKind, statusLine, stepLabel } from '$lib/stats/view';
+	import type { PageData } from './$types';
+
+	type OverviewTraffic = Awaited<PageData['traffic']>;
+	type OverviewTop = Awaited<PageData['top']>;
 
 	let { data } = $props();
 	onMount(() => autoRefresh());
 
-	const ov = $derived(data.overview);
+	// What is up comes with the page. Traffic and the top lists come with it too when the server has them ready
+	// (the default range), otherwise they stream in after it, with placeholders until then. A refresh keeps the
+	// numbers on screen until the new ones land; another range shows placeholders, not the old range's numbers.
+	const traffic = new Streamed<OverviewTraffic>(
+		() => data.traffic,
+		() => data.range
+	);
+	const topPart = new Streamed<OverviewTop>(
+		() => data.top,
+		() => data.range
+	);
+
+	const st = $derived(data.status);
+	const tr = $derived(traffic.current);
+	const top = $derived(topPart.current);
 	const tz = $derived(data.timeZone);
 	const view = $derived(viewParam(page.url));
-	const now = $derived(ov.asOf);
-	const per = $derived(stepLabel(ov.stepMs));
-	const rangeWords = $derived(RANGE_LABEL[ov.range] ?? ov.range);
-	const sources = $derived({ ...ov.sources, admin: { ok: data.adminOk } });
+	const now = $derived(st.asOf);
+	const per = $derived(tr ? stepLabel(tr.stepMs) : '');
+	const rangeWords = $derived(RANGE_LABEL[data.range] ?? data.range);
+	const sources = $derived({ ...st.sources, admin: { ok: data.adminOk } });
 	const notices = $derived(sourceNotices(sources));
-	const t = $derived(ov.tiles);
-	const common = $derived({ timeZone: tz, view, stepMs: ov.stepMs });
-	const frame = (s: (typeof ov.series)['requests'], kind: 'traffic' | 'process' = 'traffic') =>
+	const t = $derived(st.tiles);
+	const common = $derived({ timeZone: tz, view, stepMs: tr?.stepMs ?? 0 });
+	const frame = (s: OverviewTraffic['series']['requests'], kind: 'traffic' | 'process' = 'traffic') =>
 		frameFor(s, sources, now, kind);
 	const topFrame = $derived({
 		timeZone: tz,
 		view,
 		asOf: now,
-		note: sourceNote(ov.top ? 'logs' : null),
+		note: sourceNote(top?.top ? 'logs' : null),
 		emptyTitle: 'No access log data',
 		emptyLine: missingLine('top', sources)
 	});
+	const failed = $derived(traffic.error ?? topPart.error);
 </script>
 
 <PageHero
@@ -58,6 +80,13 @@
 		</Notice>
 	</section>
 {/if}
+{#if failed}
+	<section class="fp-section">
+		<Notice kind="error"
+			><b>Part of this page did not load.</b> {failed} It is tried again in 30 seconds.</Notice
+		>
+	</section>
+{/if}
 {#each notices as n (n.title)}
 	<section class="fp-section">
 		<Notice kind={n.kind}><b>{n.title}</b> {n.line}</Notice>
@@ -68,7 +97,7 @@
 	<div class="fp-section__head">
 		<h2 class="t-title-2">Right now</h2>
 		<div class="controls">
-			<RangeSwitch url={page.url} range={ov.range as RangeKey} />
+			<RangeSwitch url={page.url} range={data.range as RangeKey} />
 			<ViewSwitch url={page.url} {view} />
 		</div>
 	</div>
@@ -90,28 +119,34 @@
 			unit=" of {formatNumber(t.upstreams.up + t.upstreams.down + t.upstreams.unknown)}"
 			note={t.upstreams.down > 0 ? `${t.upstreams.down} down` : 'from probes'}
 		/>
-		<StatTile
-			label="Requests"
-			value={t.requests.value === null ? '—' : formatNumber(t.requests.value)}
-			note="{rangeWords}{t.requests.source
-				? ` · ${t.requests.source === 'logs' ? 'access log' : 'metrics'}`
-				: ' · no source'}"
-		>
-			{#snippet spark()}<Sparkline
-					points={ov.series.requests.points}
-					label="Requests {per}, {rangeWords}"
-				/>{/snippet}
-		</StatTile>
-		<StatTile
-			label="5xx error rate"
-			value={pct(t.errorRate.value)}
-			note="{rangeWords}{t.errorRate.source ? '' : ' · no source'}"
-		/>
-		<StatTile
-			label="Latency p95"
-			value={t.latencyP95.value === null ? '—' : formatMs(t.latencyP95.value)}
-			note="{rangeWords} · request-weighted"
-		/>
+		{#if tr}
+			<StatTile
+				label="Requests"
+				value={tr.tiles.requests.value === null ? '—' : formatNumber(tr.tiles.requests.value)}
+				note="{rangeWords}{tr.tiles.requests.source
+					? ` · ${tr.tiles.requests.source === 'logs' ? 'access log' : 'metrics'}`
+					: ' · no source'}"
+			>
+				{#snippet spark()}<Sparkline
+						points={tr.series.requests.points}
+						label="Requests {per}, {rangeWords}"
+					/>{/snippet}
+			</StatTile>
+			<StatTile
+				label="5xx error rate"
+				value={pct(tr.tiles.errorRate.value)}
+				note="{rangeWords}{tr.tiles.errorRate.source ? '' : ' · no source'}"
+			/>
+			<StatTile
+				label="Latency p95"
+				value={tr.tiles.latencyP95.value === null ? '—' : formatMs(tr.tiles.latencyP95.value)}
+				note="{rangeWords} · request-weighted"
+			/>
+		{:else}
+			<TileSkeleton label="Requests" spark />
+			<TileSkeleton label="5xx error rate" />
+			<TileSkeleton label="Latency p95" />
+		{/if}
 		<StatTile
 			label="Caddy up for"
 			value={t.caddyStartedAt.value === null ? '—' : formatElapsed(now - t.caddyStartedAt.value)}
@@ -133,94 +168,108 @@
 <section class="fp-section">
 	<div class="fp-section__head"><h2 class="t-title-2">Traffic</h2></div>
 	<div class="fp-panels">
-		<LineChart
-			{...common}
-			{...frame(ov.series.requests)}
-			title="Requests"
-			sub="whole server · {per}"
-			label="Requests"
-			series={ov.series.requests}
-			format={formatNumber}
-			tick={formatCompact}
-		/>
-		<LineChart
-			{...common}
-			{...frame(ov.series.errors5xx)}
-			title="Errors"
-			sub="whole server · {per}"
-			label="5xx"
-			series={ov.series.errors5xx}
-			shadow={{ label: '4xx', series: ov.series.errors4xx }}
-			format={formatNumber}
-			tick={formatCompact}
-		/>
-		<LineChart
-			{...common}
-			{...frame(ov.series.latencyP95)}
-			title="Latency"
-			sub="whole server · request-weighted"
-			label="p95"
-			series={ov.series.latencyP95}
-			shadow={{ label: 'p50', series: ov.series.latencyP50 }}
-			format={formatMs}
-		/>
-		<LineChart
-			{...common}
-			{...frame(ov.series.bytesOut)}
-			title="Bytes out"
-			sub="whole server · {per}"
-			label="Bytes out"
-			series={ov.series.bytesOut}
-			format={formatBytes}
-		/>
-		<LineChart
-			{...common}
-			{...frame(ov.series.inFlight)}
-			title="Requests in flight"
-			sub="whole server · peak {per}"
-			label="In flight"
-			series={ov.series.inFlight}
-			format={formatNumber}
-			tick={formatCompact}
-		/>
+		{#if tr}
+			<LineChart
+				{...common}
+				{...frame(tr.series.requests)}
+				title="Requests"
+				sub="whole server · {per}"
+				label="Requests"
+				series={tr.series.requests}
+				format={formatNumber}
+				tick={formatCompact}
+			/>
+			<LineChart
+				{...common}
+				{...frame(tr.series.errors5xx)}
+				title="Errors"
+				sub="whole server · {per}"
+				label="5xx"
+				series={tr.series.errors5xx}
+				shadow={{ label: '4xx', series: tr.series.errors4xx }}
+				format={formatNumber}
+				tick={formatCompact}
+			/>
+			<LineChart
+				{...common}
+				{...frame(tr.series.latencyP95)}
+				title="Latency"
+				sub="whole server · request-weighted"
+				label="p95"
+				series={tr.series.latencyP95}
+				shadow={{ label: 'p50', series: tr.series.latencyP50 }}
+				format={formatMs}
+			/>
+			<LineChart
+				{...common}
+				{...frame(tr.series.bytesOut)}
+				title="Bytes out"
+				sub="whole server · {per}"
+				label="Bytes out"
+				series={tr.series.bytesOut}
+				format={formatBytes}
+			/>
+			<LineChart
+				{...common}
+				{...frame(tr.series.inFlight)}
+				title="Requests in flight"
+				sub="whole server · peak {per}"
+				label="In flight"
+				series={tr.series.inFlight}
+				format={formatNumber}
+				tick={formatCompact}
+			/>
+		{:else}
+			<CardSkeleton title="Requests" sub="whole server" />
+			<CardSkeleton title="Errors" sub="whole server" />
+			<CardSkeleton title="Latency" sub="whole server · request-weighted" />
+			<CardSkeleton title="Bytes out" sub="whole server" />
+			<CardSkeleton title="Requests in flight" sub="whole server" />
+		{/if}
 	</div>
 </section>
 
 <section class="fp-section">
 	<div class="fp-section__head"><h2 class="t-title-2">Busiest</h2></div>
 	<div class="fp-panels">
-		<BarList
-			timeZone={tz}
-			{view}
-			asOf={now}
-			note={sourceNote(ov.topSites[0]?.source)}
-			title="Sites by requests"
-			sub={rangeWords}
-			valueLabel="Requests"
-			emptyTitle="No per-site traffic"
-			emptyLine={missingLine('traffic', sources)}
-			rows={ov.topSites.map((s) => ({
-				key: s.siteId,
-				label: s.label,
-				v: s.requests,
-				display: formatNumber(s.requests),
-				href: `/sites/${s.siteId}`
-			}))}
-		/>
-		<BarList
-			{...topFrame}
-			title="Top paths"
-			sub="{rangeWords} · all sites"
-			valueLabel="Requests"
-			rows={(ov.top?.paths ?? []).map(([p, n]) => ({ key: p, label: p, v: n, display: formatNumber(n) }))}
-		/>
-		<BarList
-			{...topFrame}
-			title="Top client IPs"
-			sub="{rangeWords} · all sites"
-			valueLabel="Requests"
-			rows={(ov.top?.ips ?? []).map(([ip, n]) => ({ key: ip, label: ip, v: n, display: formatNumber(n) }))}
-		/>
+		{#if top}
+			<BarList
+				timeZone={tz}
+				{view}
+				asOf={now}
+				note={sourceNote(top.topSites[0]?.source)}
+				title="Sites by requests"
+				sub={rangeWords}
+				valueLabel="Requests"
+				emptyTitle="No per-site traffic"
+				emptyLine={missingLine('traffic', sources)}
+				rows={top.topSites.map((s) => ({
+					key: s.siteId,
+					label: s.label,
+					v: s.requests,
+					display: formatNumber(s.requests),
+					href: `/sites/${s.siteId}`
+				}))}
+			/>
+			<BarList
+				{...topFrame}
+				title="Top paths"
+				sub="{rangeWords} · all sites"
+				valueLabel="Requests"
+				rows={(top.top?.paths ?? []).map(([p, n]) => ({ key: p, label: p, v: n, display: formatNumber(n) }))}
+			/>
+			<BarList
+				{...topFrame}
+				title="Top client IPs"
+				sub="{rangeWords} · all sites"
+				valueLabel="Requests"
+				rows={(top.top?.ips ?? []).map(([ip, n]) => ({ key: ip, label: ip, v: n, display: formatNumber(n) }))}
+			/>
+		{:else}
+			<CardSkeleton title="Sites by requests" sub={rangeWords} kind="list" />
+			<CardSkeleton title="Top paths" sub="{rangeWords} · all sites" kind="list" />
+			<CardSkeleton title="Top client IPs" sub="{rangeWords} · all sites" kind="list" />
+		{/if}
 	</div>
 </section>
 
@@ -281,25 +330,30 @@
 <section class="fp-section">
 	<div class="fp-section__head"><h2 class="t-title-2">Caddy process</h2></div>
 	<div class="fp-panels">
-		<LineChart
-			{...common}
-			{...frame(ov.series.memory, 'process')}
-			title="Memory"
-			sub="resident set size · peak {per}"
-			label="Memory"
-			series={ov.series.memory}
-			format={formatBytes}
-		/>
-		<LineChart
-			{...common}
-			{...frame(ov.series.goroutines, 'process')}
-			title="Goroutines"
-			sub="peak {per}"
-			label="Goroutines"
-			series={ov.series.goroutines}
-			format={formatNumber}
-			tick={formatCompact}
-		/>
+		{#if tr}
+			<LineChart
+				{...common}
+				{...frame(tr.series.memory, 'process')}
+				title="Memory"
+				sub="resident set size · peak {per}"
+				label="Memory"
+				series={tr.series.memory}
+				format={formatBytes}
+			/>
+			<LineChart
+				{...common}
+				{...frame(tr.series.goroutines, 'process')}
+				title="Goroutines"
+				sub="peak {per}"
+				label="Goroutines"
+				series={tr.series.goroutines}
+				format={formatNumber}
+				tick={formatCompact}
+			/>
+		{:else}
+			<CardSkeleton title="Memory" sub="resident set size" />
+			<CardSkeleton title="Goroutines" />
+		{/if}
 		<BarList
 			timeZone={tz}
 			{view}
@@ -311,7 +365,7 @@
 			emptyTitle="No certificates read"
 			emptyLine={sources.certs.error ??
 				"Mount Caddy's data directory read-only and set CADDY_DATA_PATH to read expiry dates."}
-			rows={ov.certs.map((c) => ({
+			rows={st.certs.map((c) => ({
 				key: c.host,
 				label: c.host,
 				v: Math.max(0, c.daysLeft),

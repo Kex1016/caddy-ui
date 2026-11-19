@@ -3,6 +3,7 @@ import type { CertInfo } from './certs';
 import type { LogMinuteRow } from './logs';
 import type { MetricRow } from './metrics';
 import type { ProbeResult } from './probe';
+import { forgetSums } from './queries';
 import type { SiteBlock } from './sites';
 
 /** Collector writes. Reads for the API live in `queries.ts`. Every function takes the db so tests can pass one. */
@@ -31,13 +32,26 @@ export type ProbeRow = {
 	ts: number;
 } & ProbeResult;
 
+/**
+ * Inserts probe rows and moves `probe_latest` to them, in one transaction, so the pages read the newest probe
+ * per target from a table of about 70 rows instead of scanning `probes` (docs/settings-and-perf-plan.md §1.3 B).
+ */
 export function insertProbes(db: Db, rows: ProbeRow[]): void {
 	const ins = db.prepare(
 		`INSERT INTO probes (site_id, target, kind, ts, ok, latency_ms, status, error) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 	);
+	const latest = db.prepare(
+		`INSERT INTO probe_latest (site_id, target, kind, ts, ok, latency_ms, status, error) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		 ON CONFLICT (site_id, target) DO UPDATE SET kind = excluded.kind, ts = excluded.ts, ok = excluded.ok,
+		 latency_ms = excluded.latency_ms, status = excluded.status, error = excluded.error
+		 WHERE excluded.ts >= probe_latest.ts`
+	);
 	db.transaction(() => {
-		for (const r of rows)
-			ins.run(r.siteId, r.target, r.kind, r.ts, r.ok ? 1 : 0, r.latencyMs, r.status, r.error);
+		for (const r of rows) {
+			const args = [r.siteId, r.target, r.kind, r.ts, r.ok ? 1 : 0, r.latencyMs, r.status, r.error] as const;
+			ins.run(...args);
+			latest.run(...args);
+		}
 	})();
 }
 
@@ -77,6 +91,7 @@ export function recordState(
 
 export function insertMetricRows(db: Db, rows: MetricRow[]): void {
 	if (rows.length === 0) return;
+	forgetSums(db, Math.min(...rows.map((r) => r.ts)));
 	const ins = db.prepare(`INSERT INTO metric_samples (ts, name, labels_json, value) VALUES (?, ?, ?, ?)`);
 	db.transaction(() => {
 		for (const r of rows) ins.run(r.ts, r.name, JSON.stringify(r.labels), r.value);
@@ -95,6 +110,7 @@ function mergeTop(a: [string, number][], b: [string, number][]): [string, number
  */
 export function upsertLogMinutes(db: Db, rows: LogMinuteRow[]): void {
 	if (rows.length === 0) return;
+	forgetSums(db, Math.min(...rows.map((r) => r.minute)));
 	const get = db.prepare(`SELECT * FROM log_minutes WHERE site_id = ? AND minute = ?`);
 	const put = db.prepare(
 		`INSERT OR REPLACE INTO log_minutes (site_id, minute, requests, errors_4xx, errors_5xx, bytes_out, p50_ms,
@@ -157,15 +173,63 @@ export function replaceCerts(db: Db, certs: CertInfo[], now: number): void {
 	})();
 }
 
+/** Rows deleted per statement when pruning, so one delete never holds the server for long. */
+export const PRUNE_BATCH = 5_000;
+
+type PruneTable = 'probes' | 'metric_samples' | 'probe_latest';
+
+/** Deletes at most `limit` rows older than `cutoff` from one table. Returns how many went. */
+export function pruneBatch(db: Db, table: PruneTable, cutoff: number, limit = PRUNE_BATCH): number {
+	if (table === 'probe_latest')
+		return db.prepare(`DELETE FROM probe_latest WHERE ts < ?`).run(cutoff).changes;
+	return db
+		.prepare(`DELETE FROM ${table} WHERE rowid IN (SELECT rowid FROM ${table} WHERE ts < ? LIMIT ?)`)
+		.run(cutoff, limit).changes;
+}
+
+const PRUNED: PruneTable[] = ['probes', 'metric_samples', 'probe_latest'];
+
 /**
- * Drops raw rows older than the retention window: probes and metric samples. Minute rollups of the access
- * log, state changes and certificates are kept (PLAN.md §3.2: "minute rollups kept forever").
+ * Drops raw rows older than the retention window: probes and metric samples (and the latest probe of a target
+ * nothing has probed since). Minute rollups of the access log, state changes and certificates are kept
+ * (PLAN.md §3.2: "minute rollups kept forever"). Raw probes are kept for the full retention (David, 19 Nov).
+ * Deletes in batches; `pause` runs between batches, which is where the collector lets requests through.
  */
+export async function pruneInBatches(
+	db: Db,
+	retentionDays: number,
+	now: number,
+	pause: () => Promise<void> = () => new Promise((r) => setImmediate(r))
+): Promise<{ probes: number; metrics: number }> {
+	const cutoff = now - retentionDays * 86_400_000;
+	const done = { probes: 0, metrics: 0 };
+	for (const table of PRUNED) {
+		for (;;) {
+			const n = pruneBatch(db, table, cutoff);
+			if (table === 'probes') done.probes += n;
+			if (table === 'metric_samples') done.metrics += n;
+			if (n > 0) forgetSums(db);
+			if (n < PRUNE_BATCH) break;
+			await pause();
+		}
+	}
+	return done;
+}
+
+/** The same as `pruneInBatches` without the pauses, for tests and one-off use. */
 export function prune(db: Db, retentionDays: number, now: number): { probes: number; metrics: number } {
 	const cutoff = now - retentionDays * 86_400_000;
-	const probes = db.prepare(`DELETE FROM probes WHERE ts < ?`).run(cutoff).changes;
-	const metrics = db.prepare(`DELETE FROM metric_samples WHERE ts < ?`).run(cutoff).changes;
-	return { probes, metrics };
+	const done = { probes: 0, metrics: 0 };
+	for (const table of PRUNED) {
+		let n: number;
+		do {
+			n = pruneBatch(db, table, cutoff);
+			if (table === 'probes') done.probes += n;
+			if (table === 'metric_samples') done.metrics += n;
+			if (n > 0) forgetSums(db);
+		} while (n >= PRUNE_BATCH);
+	}
+	return done;
 }
 
 export function getSetting(db: Db, key: string): string | undefined {
