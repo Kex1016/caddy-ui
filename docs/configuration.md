@@ -173,10 +173,11 @@ counted unless you add it.
 - Charts drawn from Caddy's `/metrics` (when there is no access log) cannot be filtered: Caddy's
   counters do not know the client.
 - **Check everything** shows how many requests were left out since the UI started.
-- If Docker hands IPv6 visitors to Caddy through its userland proxy (no IPv6 on the Docker
-  network), they arrive from the bridge gateway, such as `172.18.0.1`, and would be left out.
-  If the count in Check everything looks too high, narrow the list, for example to the
-  containers' subnet without its `.1` gateway, or set it to `none`.
+- The UI container's own default gateway (the Docker network's gateway, such as `172.18.0.1`)
+  is always counted. Requests from the host itself, and IPv6 visitors that Docker's userland
+  proxy hands to Caddy on an IPv4-only network, arrive from that address, so they are real
+  traffic. This works when Caddy and the UI share a Docker network, as in the example compose
+  file. If the count in Check everything still looks too high, narrow the list or set `none`.
 
 ## Settings and the environment
 

@@ -5,7 +5,7 @@ import type { Db } from '../db';
 import { readCerts } from './certs';
 import { FileTailer, LogRollup, parseAccessLine, type TailPosition } from './logs';
 import { MetricsRollup, parsePrometheus } from './metrics';
-import { NetworkMatcher } from '../netlist';
+import { defaultGateway, NetworkMatcher } from '../netlist';
 import { probeSite, probeUpstream, type ProbeResult } from './probe';
 import { loadProbeOptions, NO_OPTIONS, withPath, type ProbeOptions } from './probe-options';
 import {
@@ -125,6 +125,11 @@ export class Collector {
 	private tailer: FileTailer;
 	/** Clients whose requests are not counted (`CADDY_UI_LOG_EXCLUDE_NETWORKS`). */
 	private excludeNetworks: NetworkMatcher;
+	/**
+	 * This container's default gateway: requests from it (the host, Docker's proxy for IPv6 visitors) are counted
+	 * even inside an excluded range. Tests set it.
+	 */
+	countedGateway: string | null = defaultGateway();
 	private caddyfileMtime = -1;
 	private loops = new Map<string, Loop>();
 	private stopped = false;
@@ -385,7 +390,7 @@ export class Collector {
 				for (const line of lines) {
 					const e = parseAccessLine(line);
 					if (!e) continue;
-					if (this.excludeNetworks.has(e.ip)) {
+					if (this.excludeNetworks.has(e.ip) && !this.isGateway(e.ip)) {
 						// Still marks the minute as read, so a quiet minute shows zero requests rather than a gap.
 						this.logs.touch(e.ts);
 						st.excluded++;
@@ -428,6 +433,11 @@ export class Collector {
 	/** Retention, in batches with pauses between them. Raw probes are kept for the full retention. */
 	async prune(): Promise<{ probes: number; metrics: number }> {
 		return pruneInBatches(this.db, this.cfg.retentionDays, this.now());
+	}
+
+	private isGateway(ip: string): boolean {
+		const gw = this.countedGateway;
+		return gw !== null && (ip === gw || ip === `::ffff:${gw}`);
 	}
 
 	/** The probe timeout in force, in ms. */

@@ -1298,3 +1298,9 @@ Format: date · workstream · decision · why · how to reverse.
   or a fall-back to metrics. Already stored minutes are not rewritten · confidence 80.
 - 2026-11-19 · Log exclusion · The CIDR check uses Node's `net.BlockList`, no new dependency; IPv4-mapped IPv6
   (`::ffff:172.18.0.3`), brackets and zone ids are normalised first · confidence 88.
+- 2026-11-19 · Log exclusion · The UI container's default IPv4 gateway (read from `/proc/net/route` at start) is
+  counted even inside an excluded range. Requests from the Docker host and IPv6 visitors forwarded by Docker's
+  userland proxy arrive from that address, so excluding it would drop real traffic; CI's collector job showed it
+  (curl from the runner reaches Caddy as the bridge gateway). Holds when Caddy and the UI share a network, as in the
+  example compose · confidence 68 (asked David: alternative is to drop the gateway too and treat host traffic as
+  internal).

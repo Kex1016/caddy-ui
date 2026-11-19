@@ -266,6 +266,7 @@ describe('Collector', () => {
 		const db = openDb(':memory:');
 		const c = new Collector(db, loadConfig({ ...cfgEnv, CADDY_LOG_PATH: logPath }), () => now);
 		c.refreshSites();
+		c.countedGateway = '172.18.0.1';
 		const up = siteId([`http://up.test:${port}`]);
 		await c.tailLogs(); // first sight: start at the end
 		const line = (ts: number, ip: string) =>
@@ -292,14 +293,20 @@ describe('Collector', () => {
 			{ requests: 0 }
 		]);
 
-		// A LAN or public client is still counted next to Docker traffic.
-		appendFileSync(logPath, line(now, '10.0.0.7') + line(now + 1000, '172.20.1.2'));
+		// A LAN client and the Docker gateway (the host, Docker's proxy) are still counted next to Docker traffic.
+		appendFileSync(
+			logPath,
+			line(now, '10.0.0.7') + line(now + 1000, '172.20.1.2') + line(now + 2000, '172.18.0.1')
+		);
 		await c.tailLogs();
 		now += 90_000;
 		await c.tailLogs();
 		stats = siteStats(c, db, up, '1h', now)!;
-		expect(stats.totals.requests).toBe(1);
-		expect(stats.top?.ips).toEqual([['10.0.0.7', 1]]);
+		expect(stats.totals.requests).toBe(2);
+		expect(stats.top?.ips).toEqual([
+			['10.0.0.7', 1],
+			['172.18.0.1', 1]
+		]);
 
 		// "none" counts everything again from the next line on.
 		c.reconfigure(loadConfig({ ...cfgEnv, CADDY_LOG_PATH: logPath, CADDY_UI_LOG_EXCLUDE_NETWORKS: 'none' }));
@@ -307,7 +314,7 @@ describe('Collector', () => {
 		await c.tailLogs();
 		now += 90_000;
 		await c.tailLogs();
-		expect(siteStats(c, db, up, '1h', now)!.totals.requests).toBe(2);
+		expect(siteStats(c, db, up, '1h', now)!.totals.requests).toBe(3);
 		expect(c.status.logs.excluded).toBe(4);
 		c.stop();
 	});

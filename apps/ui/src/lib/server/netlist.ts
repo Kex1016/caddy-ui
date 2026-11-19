@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { BlockList, isIP } from 'node:net';
 
 /**
@@ -51,4 +52,28 @@ export class NetworkMatcher {
 		const n = normalise(ip);
 		return n ? this.#list.check(n.ip, n.family) : false;
 	}
+}
+
+/**
+ * The IPv4 default gateway from a Linux routing table (`/proc/net/route`), or null. Inside a container that is
+ * the Docker network's gateway, where requests from the host and from Docker's userland proxy (IPv6 visitors on
+ * an IPv4-only network) arrive, so the collector keeps counting it.
+ */
+export function defaultGateway(table?: string): string | null {
+	let text = table;
+	if (text === undefined) {
+		try {
+			text = readFileSync('/proc/net/route', 'utf8');
+		} catch {
+			return null;
+		}
+	}
+	for (const line of text.split('\n').slice(1)) {
+		const [, dest, gw] = line.trim().split(/\s+/);
+		if (dest !== '00000000' || !gw || !/^[0-9A-Fa-f]{8}$/.test(gw) || gw === '00000000') continue;
+		// The kernel prints the address in host byte order, which is little-endian on every platform the image ships for.
+		const n = parseInt(gw, 16);
+		return [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, n >>> 24].join('.');
+	}
+	return null;
 }

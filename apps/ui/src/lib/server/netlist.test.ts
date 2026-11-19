@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NetworkMatcher, parseNetworks } from './netlist';
+import { defaultGateway, NetworkMatcher, parseNetworks } from './netlist';
 
 describe('networks', () => {
 	it('parses addresses and ranges separated by commas or spaces', () => {
@@ -46,5 +46,12 @@ describe('networks', () => {
 
 	it('an empty list matches nothing', () => {
 		expect(new NetworkMatcher([]).has('127.0.0.1')).toBe(false);
+	});
+
+	it('reads the default gateway from a Linux routing table', () => {
+		const head = 'Iface\tDestination\tGateway \tFlags\tRefCnt\tUse\tMetric\tMask\n';
+		expect(defaultGateway(head + 'eth0\t00000000\t010012AC\t0003\t0\t0\t0\t00000000\n')).toBe('172.18.0.1');
+		expect(defaultGateway(head + 'eth0\t000012AC\t00000000\t0001\t0\t0\t0\t0000FFFF\n')).toBeNull();
+		expect(defaultGateway('')).toBeNull();
 	});
 });

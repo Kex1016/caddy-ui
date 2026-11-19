@@ -92,7 +92,7 @@ export const FIELDS: Record<string, FieldMeta> = {
 	},
 	CADDY_UI_LOG_EXCLUDE_NETWORKS: {
 		label: 'Leave out requests from',
-		hint: 'Access-log requests from these client addresses are not counted in traffic, errors, latency or top IPs: Docker’s own networks, health checks, the UI talking to its sites. IP addresses or ranges such as 172.16.0.0/12, separated by commas; none counts everything. Applies to new log lines only.',
+		hint: 'Access-log requests from these client addresses are not counted in traffic, errors, latency or top IPs: Docker’s own networks, health checks, the UI talking to its sites. IP addresses or ranges such as 172.16.0.0/12, separated by commas; none counts everything. The Docker gateway (the host, IPv6 visitors) is always counted. Applies to new log lines only.',
 		kind: 'networks',
 		placeholder: '127.0.0.0/8, ::1, 172.16.0.0/12'
 	},
