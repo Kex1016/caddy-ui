@@ -171,3 +171,10 @@ Newest at the bottom. Format: date · workstream · what · why.
   `CADDY_UI_PORKBUN_READONLY: "false"` to the `caddy-ui` service to allow changes. With
   `CADDY_UI_AUTH_MODE=forward` or a local user, changes are allowed without it · an open UI
   should not be able to change DNS by accident. The About page shows the value in use.
+- [ ] 2026-11-19 · Settings and speed plan · Read
+  [docs/settings-and-perf-plan.md](docs/settings-and-perf-plan.md) and answer Q1–Q4 in §4
+  (environment or UI wins, Porkbun keys in the UI, 7-day raw probes, which extras), then
+  say "build it" · nothing is built until then. Optional: note how long the Overview
+  document request takes in the browser's network panel and the size of
+  `caddy-ui.db` (`docker compose exec caddy-ui ls -la /etc/caddy-ui`) · it shows whether
+  the probe table explains all 15 seconds.

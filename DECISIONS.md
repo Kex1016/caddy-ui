@@ -952,3 +952,13 @@ Format: date · workstream · decision · why · how to reverse.
   pushed tag still publishes the same way as before. The run refuses to tag unless CI passed on the commit
   (`skip_ci_check` overrides it). Notes come from the input, else `docs/releases/vX.Y.Z.md`, else GitHub's
   generated notes · confidence 85.
+- 2026-11-19 · Settings and speed plan · Planning only, on David's word: `docs/settings-and-perf-plan.md` ranks
+  the causes of the 15 s Overview and Sites loads (first: `latestProbes` scans the whole `probes` table, measured
+  at 1.6 s for 1.4 million rows and 7.0 s for 6 million on a synthetic database), plans the fixes and a Settings
+  page, and adds workstreams S0–S5. Its decisions D1–D14 carry their own confidence (72–85) in §5 of that file ·
+  reverse by editing the plan before S0 starts · confidence 80.
+- 2026-11-19 · Settings and speed plan · Four choices are below 70 and wait for David (§4 of the plan): whether
+  the environment or the UI wins for a setting (recommended: environment wins and locks the field, 65), whether
+  the Porkbun keys can be typed into the UI (recommended: no, 60), whether raw probe rows are kept 7 days with an
+  hourly summary for the full retention (recommended: yes, 62), and which extras the page gets (55). S0 does not
+  need them, except the probe summary · confidence 60.

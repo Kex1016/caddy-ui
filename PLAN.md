@@ -334,3 +334,10 @@ table) and a new coordinator goal in [COORDINATOR.md](COORDINATOR.md). Everythin
 this file still applies to those workstreams, including the `adminFetch` rule for Caddy's
 admin API. "Certificate issuance outside what Caddy already does" stays a non-goal: the
 integration only reads the certificate Porkbun issues.
+
+## 10. After 1.1: faster pages and a Settings page
+
+Why Overview and Sites slow down as the database ages, how to fix it, and a Settings page
+that makes the runtime-safe environment variables editable in the UI are planned in
+[docs/settings-and-perf-plan.md](docs/settings-and-perf-plan.md). It adds workstreams
+S0–S5. Nothing there is built until David says so.
