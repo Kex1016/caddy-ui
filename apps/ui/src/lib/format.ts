@@ -1,4 +1,45 @@
-/** Display formatting per Fishnet's content rules: "4 Nov 2026", "17:44 CET", "4d 2h 9m". */
+import type { Clock, DateFormat } from './display';
+
+/**
+ * Display formatting per Fishnet's content rules: "4 Nov 2026", "17:44 CET", "4d 2h 9m". The date format and the
+ * clock follow the saved display preferences (S6). They are the same for every request, so `setDisplayFormat`
+ * keeps them in one place, set from the layout's data on the server and in the browser.
+ */
+
+let clock: Clock = '24h';
+let dateFormat: DateFormat = 'dmy';
+
+export function setDisplayFormat(next: { clock: Clock; dateFormat: DateFormat }): void {
+	clock = next.clock;
+	dateFormat = next.dateFormat;
+}
+
+const hourOptions = (): Intl.DateTimeFormatOptions =>
+	clock === '12h'
+		? { hour: 'numeric', minute: '2-digit', hour12: true }
+		: { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' };
+
+/** Day and month, and the year when asked, in the chosen date format. */
+function dateParts(ts: number, timeZone: string, withYear: boolean): string {
+	if (dateFormat === 'iso') {
+		const p = new Intl.DateTimeFormat('en-CA', {
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+			timeZone
+		}).format(ts);
+		return withYear ? p : p.slice(5);
+	}
+	const opts: Intl.DateTimeFormatOptions = {
+		day: 'numeric',
+		month: 'short',
+		...(withYear ? { year: 'numeric' as const } : {}),
+		timeZone
+	};
+	return new Intl.DateTimeFormat(dateFormat === 'mdy' ? 'en-US' : 'en-GB', opts)
+		.format(ts)
+		.replace(/Sept/, 'Sep');
+}
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
@@ -16,22 +57,19 @@ export function formatElapsed(ms: number): string {
 }
 
 export function formatDate(ts: number, timeZone: string): string {
-	return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone })
-		.format(ts)
-		.replace(/Sept/, 'Sep');
+	return dateParts(ts, timeZone, true);
 }
 
-/** "17:44 CET": 24-hour time with the zone named, so a reader never has to guess. */
+/** "17:44 CET" (or "5:44 PM CET"): the time with the zone named, so a reader never has to guess. */
 export function formatTime(ts: number, timeZone: string): string {
 	const parts = new Intl.DateTimeFormat('en-GB', {
-		hour: '2-digit',
-		minute: '2-digit',
-		hourCycle: 'h23',
+		...hourOptions(),
 		timeZone,
 		timeZoneName: 'short'
 	}).formatToParts(ts);
 	const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? '';
-	return `${get('hour')}:${get('minute')} ${get('timeZoneName')}`;
+	const period = clock === '12h' ? ` ${get('dayPeriod').toUpperCase()}` : '';
+	return `${get('hour')}:${get('minute')}${period} ${get('timeZoneName')}`;
 }
 
 export function formatDateTime(ts: number, timeZone: string): string {
@@ -42,21 +80,16 @@ export function formatNumber(n: number): string {
 	return new Intl.NumberFormat('en-GB').format(n);
 }
 
-/** "17:44": a clock time for chart ticks, where the zone is named once in the readout. */
+/** "17:44" or "5:44 PM": a clock time for chart ticks, where the zone is named once in the readout. */
 export function formatClock(ts: number, timeZone: string): string {
-	return new Intl.DateTimeFormat('en-GB', {
-		hour: '2-digit',
-		minute: '2-digit',
-		hourCycle: 'h23',
-		timeZone
-	}).format(ts);
+	return new Intl.DateTimeFormat('en-GB', { ...hourOptions(), timeZone })
+		.format(ts)
+		.replace(/\s?([ap])m$/i, (_, p: string) => ` ${p.toUpperCase()}M`);
 }
 
 /** "4 Nov": a day for chart ticks. */
 export function formatDay(ts: number, timeZone: string): string {
-	return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone })
-		.format(ts)
-		.replace(/Sept/, 'Sep');
+	return dateParts(ts, timeZone, false);
 }
 
 /** "4 Nov, 17:44 CET": a point in a multi-day chart. */

@@ -140,7 +140,7 @@
 	<div class="fp-section__head">
 		<h2 class="t-title-2">Over the {rangeWords}</h2>
 		<div class="controls">
-			<RangeSwitch url={page.url} range={st.range as RangeKey} />
+			<RangeSwitch url={page.url} range={st.range as RangeKey} defaultRange={data.display.range} />
 			<ViewSwitch url={page.url} {view} />
 		</div>
 	</div>

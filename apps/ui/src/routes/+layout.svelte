@@ -3,11 +3,17 @@
 	import { LogOut } from '@lucide/svelte';
 	import { page } from '$app/state';
 	import { Brand, Crumbs, Footer, NavGroup, Notice, Shell, ThemeToggle } from '$lib/design/components';
+	import { setDisplayFormat } from '$lib/format';
 	import { NAV, pageTitle } from '$lib/nav';
 
 	let { data, children } = $props();
 	const bare = $derived(page.url.pathname === '/login' || !data.identity);
 	const title = $derived(pageTitle(page.url.pathname));
+	// Clock and date format (S6): set before the page renders, and the page is rebuilt when they change.
+	const formatKey = $derived.by(() => {
+		setDisplayFormat(data.display);
+		return `${data.display.clock}/${data.display.dateFormat}`;
+	});
 </script>
 
 <svelte:head>
@@ -54,7 +60,9 @@
 					what is in force.
 				</Notice>
 			{/if}
-			{@render children()}
+			{#key formatKey}
+				{@render children()}
+			{/key}
 			<Footer version={data.version} timeZone={data.timeZone} />
 		</div>
 	</Shell>

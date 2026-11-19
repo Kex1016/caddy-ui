@@ -5,7 +5,7 @@
 	let { href = '/', name = 'Caddy UI' }: Props = $props();
 </script>
 
-<a class="fp-brand" {href}>
+<a class="fp-brand" {href} aria-label={name}>
 	<svg
 		class="fp-brand__mark"
 		viewBox="0 0 24 24"

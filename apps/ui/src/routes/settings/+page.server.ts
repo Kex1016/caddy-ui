@@ -6,7 +6,14 @@ import { authorOf } from '$lib/server/config/http';
 import { getDb } from '$lib/server/db';
 import { config } from '$lib/server/env';
 import { getRuntime } from '$lib/server/runtime';
-import { getSettings, getStorageMeter, pathChecks, storageFacts } from '$lib/server/settings';
+import {
+	PrefsRefused,
+	getPrefs,
+	getSettings,
+	getStorageMeter,
+	pathChecks,
+	storageFacts
+} from '$lib/server/settings';
 import { MaintenanceRefused } from '$lib/server/settings/maintenance';
 import {
 	checkEverything,
@@ -16,6 +23,8 @@ import {
 	saveSiteProbeOptions
 } from '$lib/server/settings/tools';
 import type { HelperId } from '$lib/settings/types';
+import { DISPLAY_KEYS, type DisplayKey } from '$lib/display';
+import { SIDEBAR_COOKIE, THEME_COOKIE } from '$lib/theme';
 import type { Actions, PageServerLoad } from './$types';
 
 /**
@@ -29,7 +38,7 @@ import type { Actions, PageServerLoad } from './$types';
  * download): Check everything, the Caddy helpers' proposals (applied with the editor's `PUT /api/caddyfile`),
  * prune now, compact, and per-site probe options.
  */
-export const load: PageServerLoad = async ({ depends }) => {
+export const load: PageServerLoad = async ({ depends, cookies }) => {
 	depends('settings:tools');
 	const cfg = config();
 	const db = getDb();
@@ -63,7 +72,15 @@ export const load: PageServerLoad = async ({ depends }) => {
 				lastEntry: c.status.logs.lastEntry
 			}
 		},
-		now: Date.now()
+		now: Date.now(),
+		/** Display preferences (S6) and which of them this browser overrides with a cookie. */
+		prefs: {
+			saved: getPrefs().saved(),
+			overrides: {
+				theme: cookies.get(THEME_COOKIE) !== undefined,
+				sidebar: cookies.get(SIDEBAR_COOKIE) !== undefined
+			}
+		}
 	};
 };
 
@@ -139,5 +156,29 @@ export const actions: Actions = {
 			}
 			throw err;
 		}
+	},
+
+	/** Save the display preferences (S6). An empty value goes back to the default. */
+	prefs: async ({ request }) => {
+		const form = await request.formData();
+		const patch: Partial<Record<DisplayKey, string | null>> = {};
+		for (const key of DISPLAY_KEYS) {
+			const v = form.get(key);
+			if (typeof v === 'string') patch[key] = v === '' ? null : v;
+		}
+		try {
+			getPrefs().set(patch);
+		} catch (err) {
+			if (err instanceof PrefsRefused) return fail(400, { prefsError: err.message });
+			throw err;
+		}
+		return { prefsSaved: true };
+	},
+
+	/** Drop this browser's theme and sidebar cookies so the saved defaults apply here again. */
+	clearOverrides: ({ cookies }) => {
+		cookies.delete(THEME_COOKIE, { path: '/' });
+		cookies.delete(SIDEBAR_COOKIE, { path: '/' });
+		return { overridesCleared: true };
 	}
 };
