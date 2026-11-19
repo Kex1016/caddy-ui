@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { applyViaApi, e2eCaddyfile } from '../support/helpers';
+import { fake } from '../support/porkbun';
 
 // The performance budget PLAN.md §5.1 asks W11 to set (W7's pages must render inside it). Measured on a cold
 // load of each page, against David's ~35-site Caddyfile, with the browser cache off. Budgets are about twice what
@@ -12,7 +13,13 @@ const BUDGETS: Record<string, Budget> = {
 	Sites: { url: '/sites', ttfbMs: 500, loadMs: 1500, jsKb: 120, totalKb: 600 },
 	Site: { url: 'SITE', ttfbMs: 500, loadMs: 1500, jsKb: 120, totalKb: 600 },
 	Editor: { url: '/editor', ttfbMs: 500, loadMs: 2000, jsKb: 450, totalKb: 1400 },
-	History: { url: '/history', ttfbMs: 500, loadMs: 1500, jsKb: 120, totalKb: 600 }
+	History: { url: '/history', ttfbMs: 500, loadMs: 1500, jsKb: 120, totalKb: 600 },
+	// The Domains area (Porkbun, P7), against the fake Porkbun. Every page asks Porkbun on the server first
+	// (the e2e stack caches nothing), so time to first byte includes those calls; the same budget holds.
+	Domains: { url: '/domains', ttfbMs: 500, loadMs: 1500, jsKb: 120, totalKb: 600 },
+	'Domain overview': { url: '/domains/example.com', ttfbMs: 500, loadMs: 1500, jsKb: 120, totalKb: 600 },
+	'Domain DNS': { url: '/domains/example.com/dns', ttfbMs: 500, loadMs: 1500, jsKb: 150, totalKb: 600 },
+	'Domain Caddy': { url: '/domains/example.com/caddy', ttfbMs: 500, loadMs: 1500, jsKb: 120, totalKb: 600 }
 };
 
 async function measure(page: Page, url: string) {
@@ -36,6 +43,7 @@ async function measure(page: Page, url: string) {
 
 test.beforeAll(async ({ request }) => {
 	await applyViaApi(request, e2eCaddyfile());
+	await fake.reset();
 });
 
 for (const [name, b] of Object.entries(BUDGETS)) {
@@ -81,4 +89,20 @@ test("the editor is usable on David's Caddyfile within 2 s, and a form edit show
 	const keystroke = Date.now() - t0;
 	expect(keystroke, 'keystroke to outline').toBeLessThanOrEqual(300);
 	test.info().annotations.push({ type: 'measured', description: JSON.stringify({ ready, keystroke }) });
+});
+
+// docs/porkbun-plan.md §5.1 P1: the list renders 1,000 domains within the budget.
+test('the Domains list with 1,000 domains loads within budget', async ({ page }, info) => {
+	await fake.manyDomains(997);
+	try {
+		const m = await measure(page, '/domains');
+		info.annotations.push({ type: 'measured', description: JSON.stringify(m) });
+		await expect(page.getByRole('checkbox', { name: 'Select all 1,000 domains shown' })).toBeVisible();
+		expect.soft(m.ttfbMs, 'time to first byte').toBeLessThanOrEqual(1000);
+		expect.soft(m.loadMs, 'load event').toBeLessThanOrEqual(2000);
+		expect.soft(m.jsKb, 'JavaScript (KB over the wire)').toBeLessThanOrEqual(120);
+		expect.soft(m.totalKb, 'everything (KB over the wire)').toBeLessThanOrEqual(800);
+	} finally {
+		await fake.reset();
+	}
 });

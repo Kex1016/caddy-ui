@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { applyViaApi, e2eCaddyfile, expectAccessible, watchConsole } from '../support/helpers';
+import { fake } from '../support/porkbun';
 
 // Every page renders without console errors and passes axe (WCAG 2.1 A/AA) with no serious or critical
 // violations, in light and dark themes (PLAN.md §5.1 W11).
@@ -13,11 +14,23 @@ const PAGES: { name: string; url: string; ready: string | RegExp }[] = [
 	{ name: 'Globals', url: '/globals', ready: 'Globals' },
 	{ name: 'History', url: '/history', ready: 'History' },
 	{ name: 'Settings', url: '/settings', ready: 'Settings' },
-	{ name: 'About', url: '/about', ready: 'About' }
+	{ name: 'About', url: '/about', ready: 'About' },
+	// The Domains area (Porkbun, P7), against the fake Porkbun the stack starts.
+	{ name: 'Domains', url: '/domains', ready: 'Domains' },
+	{ name: 'Domains activity', url: '/domains/activity', ready: 'Activity' },
+	{ name: 'Domain overview', url: '/domains/example.com', ready: 'example.com' },
+	{ name: 'Domain DNS', url: '/domains/example.com/dns', ready: 'example.com' },
+	{ name: 'Domain history', url: '/domains/example.com/history', ready: 'example.com' },
+	{ name: 'Domain registry', url: '/domains/example.net/registry', ready: 'example.net' },
+	{ name: 'Domain forwarding', url: '/domains/example.com/forwarding', ready: 'example.com' },
+	{ name: 'Domain SSL', url: '/domains/example.com/ssl', ready: 'example.com' },
+	{ name: 'Domain Caddy', url: '/domains/example.com/caddy', ready: 'example.com' },
+	{ name: 'Domain with API access off', url: '/domains/example.org', ready: 'example.org' }
 ];
 
 test.beforeAll(async ({ request }) => {
 	await applyViaApi(request, e2eCaddyfile());
+	await fake.reset();
 });
 
 for (const scheme of ['light', 'dark'] as const) {
