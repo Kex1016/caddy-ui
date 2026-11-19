@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
 	formatBytes,
 	formatClock,
@@ -11,7 +11,8 @@ import {
 	formatMs,
 	formatNumber,
 	formatPercent,
-	formatTime
+	formatTime,
+	setDisplayFormat
 } from './format';
 
 describe('formatElapsed', () => {
@@ -77,5 +78,33 @@ describe('stats formatting', () => {
 		expect(formatClock(ts, 'Europe/Budapest')).toBe('17:44');
 		expect(formatDay(ts, 'UTC')).toBe('4 Nov');
 		expect(formatDayTime(ts, 'Europe/Budapest')).toBe('4 Nov, 17:44 CET');
+	});
+});
+
+describe('display preferences', () => {
+	const ts = Date.UTC(2026, 10, 4, 16, 44);
+	const reset = () => setDisplayFormat({ clock: '24h', dateFormat: 'dmy' });
+	afterEach(reset);
+
+	it('writes the clock in 12 hours when asked', () => {
+		setDisplayFormat({ clock: '12h', dateFormat: 'dmy' });
+		expect(formatTime(ts, 'Europe/Budapest')).toBe('5:44 PM CET');
+		expect(formatClock(ts, 'UTC')).toBe('4:44 PM');
+		expect(formatDateTime(ts, 'UTC')).toBe('4 Nov 2026, 4:44 PM UTC');
+	});
+
+	it('writes dates in the chosen format, with and without the year', () => {
+		setDisplayFormat({ clock: '24h', dateFormat: 'mdy' });
+		expect(formatDate(ts, 'UTC')).toBe('Nov 4, 2026');
+		expect(formatDay(ts, 'UTC')).toBe('Nov 4');
+		setDisplayFormat({ clock: '24h', dateFormat: 'iso' });
+		expect(formatDate(ts, 'UTC')).toBe('2026-11-04');
+		expect(formatDay(ts, 'UTC')).toBe('11-04');
+		expect(formatDayTime(ts, 'UTC')).toBe('11-04, 16:44 UTC');
+	});
+
+	it('keeps the defaults when nothing was set', () => {
+		expect(formatDate(ts, 'UTC')).toBe('4 Nov 2026');
+		expect(formatTime(ts, 'UTC')).toBe('16:44 UTC');
 	});
 });

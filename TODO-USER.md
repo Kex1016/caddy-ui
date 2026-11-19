@@ -204,3 +204,7 @@ Newest at the bottom. Format: date · workstream · what · why.
   your caddy-ui data folder is not `./caddy-ui`, point the line at `<that folder>/updater` instead · until you do,
   the section says the updater has not reported and nothing breaks.
 
+- [ ] 2026-11-19 · S6 · Nothing is required. After the display-preferences build is running, open Settings →
+  Preferences once and pick the clock, date format, landing page and default range you want. They are saved on the
+  server, so they apply in every browser; a browser where you used the theme button keeps its own theme until you
+  press **Use the saved default here**.

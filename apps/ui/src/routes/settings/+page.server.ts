@@ -1,7 +1,16 @@
 import { getDb } from '$lib/server/db';
 import { config } from '$lib/server/env';
 import { getRuntime } from '$lib/server/runtime';
-import { getSettings, getStorageMeter, pathChecks, storageFacts } from '$lib/server/settings';
+import { DISPLAY_KEYS, type DisplayKey } from '$lib/display';
+import {
+	PrefsRefused,
+	getPrefs,
+	getSettings,
+	getStorageMeter,
+	pathChecks,
+	storageFacts
+} from '$lib/server/settings';
+import { SIDEBAR_COOKIE, THEME_COOKIE } from '$lib/theme';
 import { checkNow, getUpdates } from '$lib/server/updater';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
@@ -13,7 +22,7 @@ import type { Actions, PageServerLoad } from './$types';
  * streamed in when it is not remembered from the last 15 minutes. Saving goes through `PATCH /api/settings`
  * from the page; the "Test" buttons call `/api/caddy/status` and `/api/porkbun/status?force`.
  */
-export const load: PageServerLoad = () => {
+export const load: PageServerLoad = ({ cookies }) => {
 	const cfg = config();
 	const db = getDb();
 	const { auth } = getRuntime();
@@ -24,9 +33,17 @@ export const load: PageServerLoad = () => {
 		storage: storageFacts(db, db.name, cfg.uiData),
 		/** A promise only while a measurement runs; SvelteKit streams it in after the page's shell. */
 		tables: getStorageMeter().current(),
+		now: Date.now(),
 		/** Two small files in the shared directory: no wait. */
 		updates: getUpdates(),
-		now: Date.now()
+		/** Display preferences (S6) and which of them this browser overrides with a cookie. */
+		prefs: {
+			saved: getPrefs().saved(),
+			overrides: {
+				theme: cookies.get(THEME_COOKIE) !== undefined,
+				sidebar: cookies.get(SIDEBAR_COOKIE) !== undefined
+			}
+		}
 	};
 };
 
@@ -47,5 +64,29 @@ export const actions: Actions = {
 	measure: async () => {
 		await getStorageMeter().measure();
 		return { measured: true };
+	},
+
+	/** Save the display preferences (S6). An empty value goes back to the default. */
+	prefs: async ({ request }) => {
+		const form = await request.formData();
+		const patch: Partial<Record<DisplayKey, string | null>> = {};
+		for (const key of DISPLAY_KEYS) {
+			const v = form.get(key);
+			if (typeof v === 'string') patch[key] = v === '' ? null : v;
+		}
+		try {
+			getPrefs().set(patch);
+		} catch (err) {
+			if (err instanceof PrefsRefused) return fail(400, { prefsError: err.message });
+			throw err;
+		}
+		return { prefsSaved: true };
+	},
+
+	/** Drop this browser's theme and sidebar cookies so the saved defaults apply here again. */
+	clearOverrides: ({ cookies }) => {
+		cookies.delete(THEME_COOKIE, { path: '/' });
+		cookies.delete(SIDEBAR_COOKIE, { path: '/' });
+		return { overridesCleared: true };
 	}
 };

@@ -10,6 +10,18 @@ export function parseTheme(value: string | undefined): Theme {
 	return value === 'dark' || value === 'light' ? value : 'system';
 }
 
+/**
+ * The theme for a request: this browser's cookie when it has one (a per-browser override), else the one saved on
+ * the server (D20). A cookie is always written when the toggle is used, "system" included, so a choice sticks.
+ */
+export function effectiveTheme(cookie: string | undefined, saved: () => Theme): Theme {
+	return cookie === 'dark' || cookie === 'light' || cookie === 'system' ? cookie : saved();
+}
+
+export function effectiveSidebar(cookie: string | undefined, saved: () => SidebarState): SidebarState {
+	return cookie === 'full' || cookie === 'rail' || cookie === 'hidden' ? cookie : saved();
+}
+
 export function nextTheme(theme: Theme): Theme {
 	return theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark';
 }

@@ -6,7 +6,7 @@ import { Collector } from './worker';
 
 export { Collector } from './worker';
 export { parseRange, RANGES, type Range } from './queries';
-export { DEFAULT_RANGE, Snapshot, type Part } from './snapshot';
+export { getDefaultRange, pageRange, setDefaultRange, Snapshot, type Part } from './snapshot';
 export {
 	joinOverview,
 	overview,
