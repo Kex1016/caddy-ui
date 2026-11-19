@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { parseDuration } from './duration';
 
 /** Runtime configuration, read once from the environment. Names and defaults are fixed in PLAN.md §3.2. */
@@ -21,6 +22,8 @@ export type Config = {
 	updateIntervalMs: number;
 	updateWebhookPort: number | undefined;
 	updateSource: 'ghcr' | 'git';
+	/** `CADDY_UI_UPDATER_DIR`: the directory shared with the updater sidecar (control.json, status.json). */
+	updaterDir: string;
 	timeZone: string;
 	porkbun: PorkbunConfig;
 	/** `CADDY_UI_SETTINGS_IGNORE`: run on the environment and defaults only, ignoring saved settings. */
@@ -73,6 +76,20 @@ function duration(env: Env, name: string, fallback: string, minMs: number): numb
 	if (ms === null) throw new ConfigError(`${name} must be a duration such as 30s, 5m or 1h, got "${raw}"`);
 	if (ms < minMs) throw new ConfigError(`${name} must be at least ${minMs / 1000}s, got "${raw}"`);
 	return ms;
+}
+
+/**
+ * `CADDY_UI_UPDATE_INTERVAL` is read by the updater's shell script too, which knows only `30s`, `5m`, `1h`, `1d` (or
+ * bare seconds) and nothing under 30s. The UI accepts exactly that, so a value saved here is one the updater takes.
+ */
+function updateInterval(env: Env): number {
+	const raw = str(env, 'CADDY_UI_UPDATE_INTERVAL', '1h');
+	if (!/^\d+[smhd]?$/.test(raw)) {
+		throw new ConfigError(
+			`CADDY_UI_UPDATE_INTERVAL must be a duration such as 30s, 5m, 1h or 1d, got "${raw}"`
+		);
+	}
+	return duration(env, 'CADDY_UI_UPDATE_INTERVAL', '1h', 30_000);
 }
 
 function oneOf<T extends string>(env: Env, name: string, fallback: T, allowed: readonly T[]): T {
@@ -153,10 +170,12 @@ export function loadConfig(env: Env): Config {
 		scrapeIntervalMs: duration(env, 'CADDY_UI_SCRAPE_INTERVAL', '15s', 1000),
 		retentionDays: int(env, 'CADDY_UI_RETENTION_DAYS', 90, 1, 36500),
 		publicUrl: url(env, 'CADDY_UI_PUBLIC_URL', undefined),
-		updateIntervalMs: duration(env, 'CADDY_UI_UPDATE_INTERVAL', '1h', 60_000),
+		updateIntervalMs: updateInterval(env),
 		updateWebhookPort:
 			updateWebhook === undefined ? undefined : int(env, 'CADDY_UI_UPDATE_WEBHOOK_PORT', 0, 1, 65535),
 		updateSource: oneOf(env, 'CADDY_UI_UPDATE_SOURCE', 'ghcr', ['ghcr', 'git'] as const),
+		updaterDir:
+			opt(env, 'CADDY_UI_UPDATER_DIR') ?? join(str(env, 'CADDY_UI_DATA', '/etc/caddy-ui'), 'updater'),
 		timeZone: timeZone(env),
 		porkbun: porkbun(env, openAccess),
 		settingsIgnore: bool(env, 'CADDY_UI_SETTINGS_IGNORE', false)
@@ -174,7 +193,8 @@ export const EDITABLE = [
 	'TZ',
 	'CADDY_UI_PUBLIC_URL',
 	'CADDY_UI_PORKBUN_READONLY',
-	'CADDY_UI_PORKBUN_CACHE_TTL'
+	'CADDY_UI_PORKBUN_CACHE_TTL',
+	'CADDY_UI_UPDATE_INTERVAL'
 ] as const;
 
 export type EditableKey = (typeof EDITABLE)[number];
@@ -192,7 +212,8 @@ export const EDITABLE_DEFAULTS: Record<EditableKey, string | undefined> = {
 	CADDY_UI_PUBLIC_URL: undefined,
 	// Depends on the sign-in; see porkbun(). Shown as `false` with a sign-in and `true` without.
 	CADDY_UI_PORKBUN_READONLY: undefined,
-	CADDY_UI_PORKBUN_CACHE_TTL: '60s'
+	CADDY_UI_PORKBUN_CACHE_TTL: '60s',
+	CADDY_UI_UPDATE_INTERVAL: '1h'
 };
 
 const CHECKS: Record<EditableKey, (env: Env) => unknown> = {
@@ -202,7 +223,8 @@ const CHECKS: Record<EditableKey, (env: Env) => unknown> = {
 	TZ: (e) => timeZone(e),
 	CADDY_UI_PUBLIC_URL: (e) => url(e, 'CADDY_UI_PUBLIC_URL', undefined),
 	CADDY_UI_PORKBUN_READONLY: (e) => bool(e, 'CADDY_UI_PORKBUN_READONLY', false),
-	CADDY_UI_PORKBUN_CACHE_TTL: (e) => duration(e, 'CADDY_UI_PORKBUN_CACHE_TTL', '60s', 0)
+	CADDY_UI_PORKBUN_CACHE_TTL: (e) => duration(e, 'CADDY_UI_PORKBUN_CACHE_TTL', '60s', 0),
+	CADDY_UI_UPDATE_INTERVAL: (e) => updateInterval(e)
 };
 
 /**

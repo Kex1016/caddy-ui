@@ -1117,3 +1117,26 @@ Format: date · workstream · decision · why · how to reverse.
   says the sidecar reads its own copy; S4 makes the interval and "check now" editable through its file channel
   (D13). Sections later workstreams add go into `SECTION_KEYS` (lib/settings/meta.ts) and the page's section list
   · confidence 80.
+- 2026-11-19 · S4 · The channel to the updater is two JSON files in one shared folder (D13): the UI writes
+  `control.json` (interval, a check-now token), the updater writes `status.json` and `last-run.json`, both replaced
+  atomically. The folder is `CADDY_UI_UPDATER_DIR` (default `<CADDY_UI_DATA>/updater`), which in the example compose
+  is the same host folder as the updater's `CADDY_UI_UPDATE_CHANNEL_DIR` (`./caddy-ui/updater`), so David's compose
+  needs no new mount, only the one environment line on the updater. No new port and no Docker socket in the UI
+  · confidence 80.
+- 2026-11-19 · S4 · The updater polls `control.json` every `CADDY_UI_UPDATE_POLL` seconds (default 5) instead of one
+  long sleep. A check runs when the interval is up, when a new check-now token appears, or (as before) on a webhook.
+  Changing the interval counts from the last check, so shortening it can make a check due at once. The token the
+  updater has handled is kept in `status.json`, so a restart never repeats an old request · confidence 82.
+- 2026-11-19 · S4 · `CADDY_UI_UPDATE_INTERVAL` becomes editable (UI wins, D16) and leaves the environment-only list.
+  Saved values must be what the shell script understands (`30s`, `5m`, `1h`, `1d` or bare seconds, at least 30s), so
+  the UI's check is stricter than its general duration parser, and its minimum drops from 1m to the updater's 30s.
+  Resetting writes `interval: null`, handing the choice back to the updater's own environment. The Updates section
+  shows the interval the updater says it uses, not the UI's copy of the environment, because the UI container does
+  not receive that variable in the example compose · confidence 78.
+- 2026-11-19 · S4 · "Newest found" is the pulled image's `org.opencontainers.image.version` label (the git commit for
+  the `git` source). The UI does not compare versions or offer a manual "install": the updater already applies new
+  versions on its own, so the page reports and lets David trigger a check. A failed pull is now recorded as
+  `failed` instead of being read as "up to date" · confidence 80.
+- 2026-11-19 · S4 · "Check now" is a form action on the Settings page (like "Measure again"), the interval saves
+  through the existing `PATCH /api/settings`; no new API route, no change to a PLAN.md §3.2 contract. The updater
+  image gains `jq` to read and write the files · confidence 85.

@@ -2,6 +2,8 @@ import { getDb } from '$lib/server/db';
 import { config } from '$lib/server/env';
 import { getRuntime } from '$lib/server/runtime';
 import { getSettings, getStorageMeter, pathChecks, storageFacts } from '$lib/server/settings';
+import { checkNow, getUpdates } from '$lib/server/updater';
+import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 /**
@@ -22,11 +24,25 @@ export const load: PageServerLoad = () => {
 		storage: storageFacts(db, db.name, cfg.uiData),
 		/** A promise only while a measurement runs; SvelteKit streams it in after the page's shell. */
 		tables: getStorageMeter().current(),
+		/** Two small files in the shared directory: no wait. */
+		updates: getUpdates(),
 		now: Date.now()
 	};
 };
 
 export const actions: Actions = {
+	/** "Check now": asks the updater through control.json (D13). It answers within one poll. */
+	checkNow: async () => {
+		try {
+			checkNow();
+			return { checkRequested: true };
+		} catch (err) {
+			return fail(500, {
+				checkError: `Could not reach the updater: ${err instanceof Error ? err.message : String(err)}`
+			});
+		}
+	},
+
 	/** "Measure again": forget the remembered table sizes and measure now. */
 	measure: async () => {
 		await getStorageMeter().measure();

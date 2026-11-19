@@ -194,3 +194,13 @@ Newest at the bottom. Format: date · workstream · what · why.
   Connections: each path has a check, and the admin API a **Test** button. A warning on the access log only means
   Caddy's JSON access log is not at `CADDY_LOG_PATH` yet (see the W4 item above) · it is the quickest way to see
   that the mounts in compose are what the UI expects.
+- [ ] 2026-11-19 · S4 · To use the Updates section on your server, give the updater the shared folder. In your
+  compose file, on the `caddy-ui-updater` service add one environment line (the path is the same folder your
+  `caddy-ui` service mounts as its data folder, plus `/updater`; with the example compose that is
+  `<compose dir>/caddy-ui/updater`):
+  `CADDY_UI_UPDATE_CHANNEL_DIR: ${CADDY_UI_COMPOSE_DIR}/caddy-ui/updater`
+  Then pull the new updater image (`docker compose pull caddy-ui-updater && docker compose up -d caddy-ui-updater`)
+  along with the new caddy-ui. Open Settings, Updates: within a few seconds it shows the updater's last check. If
+  your caddy-ui data folder is not `./caddy-ui`, point the line at `<that folder>/updater` instead · until you do,
+  the section says the updater has not reported and nothing breaks.
+

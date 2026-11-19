@@ -9,6 +9,7 @@ import { isApiPath, isPublicPath, sameOrigin } from '$lib/server/guard';
 import { reconfigurePorkbun } from '$lib/server/porkbun';
 import { getRuntime } from '$lib/server/runtime';
 import { installSettings, onSettingsChange } from '$lib/server/settings';
+import { syncUpdaterInterval, updateKeyChanged } from '$lib/server/updater';
 import { SESSION_COOKIE } from '$lib/server/session';
 import { Timing } from '$lib/server/timing';
 import { THEME_COOKIE, parseTheme, themeAttribute } from '$lib/theme';
@@ -28,6 +29,10 @@ export const init: ServerInit = async () => {
 			try {
 				installSettings();
 				onSettingsChange((next) => reconfigurePorkbun(next.porkbun));
+				syncUpdaterInterval();
+				onSettingsChange((_next, _prev, changed) => {
+					if (updateKeyChanged(changed)) syncUpdaterInterval();
+				});
 			} catch (err) {
 				if (err instanceof ConfigError) throw err;
 				// Saved settings must never stop the UI: run on the environment and say why.
