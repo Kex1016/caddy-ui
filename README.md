@@ -137,17 +137,19 @@ Details, including optional metrics and access logging, are in
 Configuration comes from environment variables, for example `CADDY_UI_PORT`, `CADDY_ADMIN_URL`
 and `CADDYFILE_PATH`. The complete table is in [docs/configuration.md](docs/configuration.md).
 
-The **Settings** page changes eleven of them while the UI runs, without a restart: the probe and
+The **Settings** page changes twelve of them while the UI runs, without a restart: the probe and
 metrics intervals, how many days of probe results to keep, the probe timeout, when a certificate
 counts as close to expiry, how many Caddyfile revisions and backups to keep, the time zone, the
-public address, and the Porkbun read-only switch and cache lifetime. A value saved there wins over the
-environment until you press "Use the environment's value". The page also shows every other
-variable with its value (secrets only as set or unset), checks the mounted paths, tests the
-admin API and the Porkbun keys, shows how large the database is per table, and lists who
-changed what. **Check everything** runs every health check at once; per-site probe options skip
-a site, probe another path or count a status as up; two Caddy helpers turn on per-host metrics
-and the JSON access log as a reviewed Caddyfile change; and the storage tools prune, compact and
-download a backup. See [docs/configuration.md](docs/configuration.md#the-settings-page).
+public address, the Porkbun read-only switch and cache lifetime, and how often the updater checks
+for a new version. A value saved there wins over the environment until you press "Use the
+environment's value". The page also shows every other variable with its value (secrets only as set
+or unset), checks the mounted paths, tests the admin API and the Porkbun keys, shows how large the
+database is per table, and lists who changed what. **Check everything** runs every health check at
+once; per-site probe options skip a site, probe another path or count a status as up; two Caddy
+helpers turn on per-host metrics and the JSON access log as a reviewed Caddyfile change; the storage
+tools prune, compact and download a backup; and the Updates section shows the updater's last check
+and newest version, with a "Check now" button. See
+[docs/configuration.md](docs/configuration.md#the-settings-page).
 
 ## Development
 

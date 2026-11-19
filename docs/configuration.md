@@ -29,7 +29,8 @@ Seven of the variables can also be changed while the UI runs, from Settings (or
 | `CADDY_UI_CERT_WARN_DAYS` | `14` | A certificate with fewer days left is flagged on Overview and Sites (1 to 365) | Editable, applies at once |
 | `CADDY_UI_REVISIONS_KEEP` | `200` | Caddyfile revisions kept in History (10 to 10000) | Editable, applies at once |
 | `CADDY_UI_BACKUPS_KEEP` | `50` | Caddyfile backup files kept in `CADDY_UI_DATA/backups` (1 to 10000) | Editable, applies at once |
-| `CADDY_UI_UPDATE_INTERVAL` | `1h` | Updater poll period (minimum 1m in the UI; 30s in the sidecar) | Shown, environment only |
+| `CADDY_UI_UPDATE_INTERVAL` | `1h` | How often the updater looks for a new version: `30s`, `5m`, `1h`, `1d`, at least 30s. The updater takes a changed value within a few seconds | Editable (needs the updater's shared folder, below) |
+| `CADDY_UI_UPDATER_DIR` | `<CADDY_UI_DATA>/updater` | The folder this UI shares with the updater sidecar (`control.json`, `status.json`) | Shown, environment only |
 | `CADDY_UI_UPDATE_WEBHOOK_PORT` | unset | Updater listens for a push webhook when set | Shown, environment only |
 | `CADDY_UI_UPDATE_SOURCE` | `ghcr` | `ghcr` (pull image) or `git` (clone and build) | Shown, environment only |
 | `PORKBUN_API_KEY`, `PORKBUN_API_SECRET_KEY` | unset | Porkbun key pair for the Domains area; same names as the Caddy plugin uses. See [porkbun.md](porkbun.md) | Shown, environment only |
@@ -100,8 +101,11 @@ Settings (in the sidebar under System) has these sections, each saved on its own
   warning, since logging is optional), Caddy's data directory readable, and `CADDY_UI_DATA`
   writable. Also the port and listener variables.
 - **Sign-in**: the mode in use and whether the user, password and session secret are set.
-- **Updates**: the updater's variables as this container sees them. The updater sidecar reads
-  its own copy from compose.
+- **Updates**: the running version, the newest version the updater found, the result and time
+  of its last check, the next check, and the interval it uses (and whether that came from here
+  or from its own environment). **Check now** asks the updater to check at once, and the
+  interval is a field like the others. The source, the webhook port and the shared folder are
+  shown for reference; they are set in compose. See [Updates and the updater](#updates-and-the-updater).
 - **Recent changes**: the last 50 values saved or reset, and per-site probe options changed,
   with who and when.
 
@@ -112,12 +116,33 @@ environment's value next to **Use the environment's value**.
 With `CADDY_UI_SETTINGS_IGNORE=true`, every page shows a banner, the fields show the values in
 force, and saving is off; **Use the environment's value** still removes a saved value.
 
+## Updates and the updater
+
+The UI never touches Docker. The updater sidecar does, and the two talk through two small
+files in one folder that both containers can reach:
+
+- `control.json`, written by the UI: the interval saved in Settings (or `null` when nothing is
+  saved, so the updater's own `CADDY_UI_UPDATE_INTERVAL` applies) and a "check now" token.
+- `status.json` (and `last-run.json`), written by the updater: its version of what is in
+  force, the newest version it found, the last check and its result, and the next check.
+
+The updater looks at `control.json` every `CADDY_UI_UPDATE_POLL` seconds (default 5), so a new
+interval or a **Check now** is picked up within one poll. Nothing opens a port.
+
+The folder is `CADDY_UI_UPDATER_DIR` for the UI (default `<CADDY_UI_DATA>/updater`) and
+`CADDY_UI_UPDATE_CHANNEL_DIR` for the updater (default `./caddy-ui/updater` inside the compose
+directory). With the example compose file both are the same folder on the host, because the
+UI's data folder is `./caddy-ui` there. If your data folder is somewhere else, set
+`CADDY_UI_UPDATE_CHANNEL_DIR` on the updater to the host path of `<your data folder>/updater`.
+Without a shared folder the Updates section says so, the interval is saved but the updater
+keeps its own, and **Check now** does nothing.
+
 ## Settings and the environment
 
 The editable variables are `CADDY_UI_PROBE_INTERVAL`, `CADDY_UI_SCRAPE_INTERVAL`,
 `CADDY_UI_RETENTION_DAYS`, `CADDY_UI_PROBE_TIMEOUT`, `CADDY_UI_CERT_WARN_DAYS`,
 `CADDY_UI_REVISIONS_KEEP`, `CADDY_UI_BACKUPS_KEEP`, `TZ`, `CADDY_UI_PUBLIC_URL`,
-`CADDY_UI_PORKBUN_READONLY` and `CADDY_UI_PORKBUN_CACHE_TTL`. For each of them the value in force is:
+`CADDY_UI_PORKBUN_READONLY`, `CADDY_UI_PORKBUN_CACHE_TTL` and `CADDY_UI_UPDATE_INTERVAL`. For each of them the value in force is:
 
 1. the value saved in Settings, if there is one;
 2. otherwise the environment variable, if it is set;

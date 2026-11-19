@@ -25,6 +25,7 @@ describe('loadConfig', () => {
 			updateIntervalMs: 3_600_000,
 			updateWebhookPort: undefined,
 			updateSource: 'ghcr',
+			updaterDir: '/etc/caddy-ui/updater',
 			timeZone: 'UTC',
 			porkbun: {
 				apiKey: undefined,
@@ -83,6 +84,8 @@ describe('loadConfig', () => {
 		['CADDY_UI_PROBE_INTERVAL', 'soon'],
 		['CADDY_UI_PROBE_INTERVAL', '100ms'],
 		['CADDY_UI_UPDATE_INTERVAL', '10s'],
+		['CADDY_UI_UPDATE_INTERVAL', '1h30m'],
+		['CADDY_UI_UPDATE_INTERVAL', 'hourly'],
 		['CADDY_ADMIN_URL', 'caddy:2019'],
 		['CADDY_UI_UPDATE_SOURCE', 'dockerhub'],
 		['PORKBUN_API_URL', 'api.porkbun.com'],

@@ -79,9 +79,9 @@ const ENV_ONLY: EnvOnlyDef[] = [
 		default: 'false',
 		fromConfig: (c) => String(c.porkbun.sslKeyDownload)
 	},
-	{ key: 'CADDY_UI_UPDATE_INTERVAL', default: '1h' },
 	{ key: 'CADDY_UI_UPDATE_SOURCE', default: 'ghcr', fromConfig: (c) => c.updateSource },
 	{ key: 'CADDY_UI_UPDATE_WEBHOOK_PORT', default: null },
+	{ key: 'CADDY_UI_UPDATER_DIR', default: null, fromConfig: (c) => c.updaterDir },
 	{ key: 'CADDY_UI_SETTINGS_IGNORE', default: 'false', fromConfig: (c) => String(c.settingsIgnore) }
 ];
 
@@ -393,7 +393,8 @@ function pickEditable(c: Config) {
 		revisionsKeep: c.revisionsKeep,
 		backupsKeep: c.backupsKeep,
 		timeZone: c.timeZone,
-		publicUrl: c.publicUrl
+		publicUrl: c.publicUrl,
+		updateIntervalMs: c.updateIntervalMs
 	};
 }
 
@@ -426,5 +427,7 @@ export function effectiveOf(c: Config, key: EditableKey): string {
 			return String(c.revisionsKeep);
 		case 'CADDY_UI_BACKUPS_KEEP':
 			return String(c.backupsKeep);
+		case 'CADDY_UI_UPDATE_INTERVAL':
+			return String(c.updateIntervalMs);
 	}
 }

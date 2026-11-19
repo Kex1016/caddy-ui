@@ -25,6 +25,7 @@ import {
 import type { HelperId } from '$lib/settings/types';
 import { DISPLAY_KEYS, type DisplayKey } from '$lib/display';
 import { SIDEBAR_COOKIE, THEME_COOKIE } from '$lib/theme';
+import { checkNow, getUpdates } from '$lib/server/updater';
 import type { Actions, PageServerLoad } from './$types';
 
 /**
@@ -73,6 +74,8 @@ export const load: PageServerLoad = async ({ depends, cookies }) => {
 			}
 		},
 		now: Date.now(),
+		/** Two small files in the shared directory: no wait. */
+		updates: getUpdates(),
 		/** Display preferences (S6) and which of them this browser overrides with a cookie. */
 		prefs: {
 			saved: getPrefs().saved(),
@@ -87,6 +90,18 @@ export const load: PageServerLoad = async ({ depends, cookies }) => {
 const HELPERS: readonly HelperId[] = ['metrics', 'access-log'];
 
 export const actions: Actions = {
+	/** "Check now": asks the updater through control.json (D13). It answers within one poll. */
+	checkNow: async () => {
+		try {
+			checkNow();
+			return { checkRequested: true };
+		} catch (err) {
+			return fail(500, {
+				checkError: `Could not reach the updater: ${err instanceof Error ? err.message : String(err)}`
+			});
+		}
+	},
+
 	/** "Measure again": forget the remembered table sizes and measure now. */
 	measure: async () => {
 		await getStorageMeter().measure();

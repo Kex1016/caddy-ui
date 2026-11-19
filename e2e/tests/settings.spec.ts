@@ -1,5 +1,8 @@
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { watchConsole } from '../support/helpers';
+import { paths } from '../support/paths.mjs';
 import { fake } from '../support/porkbun';
 
 // The Settings page (docs/settings-and-perf-plan.md §2.3, S2): a section saves on its own, the value in force says
@@ -17,7 +20,8 @@ const EDITABLE = [
 	'CADDY_UI_CERT_WARN_DAYS',
 	'CADDY_UI_PROBE_TIMEOUT',
 	'CADDY_UI_REVISIONS_KEEP',
-	'CADDY_UI_BACKUPS_KEEP'
+	'CADDY_UI_BACKUPS_KEEP',
+	'CADDY_UI_UPDATE_INTERVAL'
 ];
 
 /** Every spec shares one stack, so nothing saved here may outlive this file. */
@@ -151,4 +155,111 @@ test('About keeps the version and points to Settings', async ({ page }) => {
 		'/settings'
 	);
 	await expect(page.locator('table')).toHaveCount(0);
+});
+
+// Updates (S4): the UI and the updater talk through two files in the shared folder. The spec plays the updater:
+// it writes status.json, and reads control.json to see what the page asked for. (The real script is covered by
+// deploy/updater/test/run.sh.)
+const channel = join(paths.uiData, 'updater');
+const control = () => JSON.parse(readFileSync(join(channel, 'control.json'), 'utf8'));
+const iso = (ms: number) => new Date(ms).toISOString();
+function updaterStatus(over: Record<string, unknown> = {}) {
+	const now = Date.now();
+	writeFileSync(
+		join(channel, 'status.json'),
+		JSON.stringify({
+			version: 1,
+			updatedAt: iso(now),
+			source: 'ghcr',
+			pollSeconds: 5,
+			checking: false,
+			intervalSeconds: 3600,
+			intervalFrom: 'env',
+			nextCheckAt: iso(now + 1_800_000),
+			checkNowHandled: null,
+			warning: null,
+			latest: { version: '1.1.0', id: 'sha256:abc' },
+			lastRun: {
+				startedAt: iso(now - 60_000),
+				finishedAt: iso(now - 56_000),
+				trigger: 'timer',
+				result: 'up-to-date',
+				message: 'ghcr.io/example/caddy-ui:latest is the newest image'
+			},
+			...over
+		})
+	);
+}
+
+test.describe('Updates', () => {
+	test.beforeEach(() => {
+		rmSync(channel, { recursive: true, force: true });
+		mkdirSync(channel, { recursive: true });
+	});
+	test.afterAll(() => rmSync(channel, { recursive: true, force: true }));
+
+	test('shows what the updater reports, and says so when it has not reported', async ({ page }) => {
+		await page.goto('/settings');
+		const updates = section(page, 'Updates');
+		await expect(updates.getByText('The updater has not reported yet')).toBeVisible();
+
+		updaterStatus();
+		await page.reload();
+		await expect(updates.getByTestId('update-latest')).toHaveText('1.1.0');
+		await expect(updates.getByTestId('update-last')).toContainText('Up to date');
+		await expect(updates.getByTestId('update-last')).toContainText('on the timer');
+		await expect(updates.getByTestId('update-using')).toContainText('Every 1h');
+		await expect(updates.getByText('The updater has not reported yet')).toHaveCount(0);
+
+		updaterStatus({ updatedAt: iso(Date.now() - 600_000) });
+		await page.reload();
+		await expect(updates.getByText('has not reported for a while')).toBeVisible();
+	});
+
+	test('a saved interval reaches control.json, and the reset takes it back', async ({ page }) => {
+		updaterStatus();
+		await page.goto('/settings');
+		const updates = section(page, 'Updates');
+		await updates.getByLabel('Check for updates every').fill('5m');
+		await updates.getByRole('button', { name: 'Save', exact: true }).click();
+		await expect(updates.getByText('Saved. It applies now.')).toBeVisible();
+		await expect.poll(() => control().interval).toBe('5m');
+
+		await updates.getByRole('button', { name: /Use the default/ }).click();
+		await expect.poll(() => control().interval).toBeNull();
+		await expect(updates.getByText('uses the default again.')).toBeVisible();
+		await expect(updates.getByLabel('Check for updates every')).toHaveValue('1h');
+
+		await updates.getByLabel('Check for updates every').fill('10s');
+		await updates.getByRole('button', { name: 'Save', exact: true }).click();
+		await expect(updates.locator('#set-caddy_ui_update_interval-err')).toContainText('at least 30s');
+	});
+
+	test('check now asks once, and the page follows the updater until it has answered', async ({ page }) => {
+		updaterStatus();
+		await page.goto('/settings');
+		const updates = section(page, 'Updates');
+		await updates.getByRole('button', { name: 'Check now' }).click();
+		await expect(updates.getByText(/Asked\. The updater picks it up/)).toBeVisible();
+		await expect.poll(() => control().checkNow).toMatch(/^[0-9a-f]{16}$/);
+		const token = control().checkNow as string;
+
+		// The updater picks it up, runs, and reports.
+		updaterStatus({ checking: true, checkNowHandled: token, nextCheckAt: null });
+		await expect(updates.getByRole('button', { name: 'Checking…' })).toBeDisabled();
+		updaterStatus({
+			checkNowHandled: token,
+			lastRun: {
+				startedAt: iso(Date.now() - 4000),
+				finishedAt: iso(Date.now()),
+				trigger: 'check-now',
+				result: 'updated',
+				message: 'caddy-ui is healthy on 1.2.0'
+			},
+			latest: { version: '1.2.0', id: 'sha256:def' }
+		});
+		await expect(updates.getByTestId('update-last')).toContainText('Updated', { timeout: 15_000 });
+		await expect(updates.getByTestId('update-last')).toContainText('by “Check now”');
+		await expect(updates.getByRole('button', { name: 'Check now' })).toBeEnabled();
+	});
 });

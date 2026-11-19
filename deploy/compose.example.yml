@@ -77,6 +77,9 @@ services:
       CADDY_UI_UPDATE_WEBHOOK_PORT: ${CADDY_UI_UPDATE_WEBHOOK_PORT:-}
       CADDY_UI_UPDATE_WEBHOOK_SECRET: ${CADDY_UI_UPDATE_WEBHOOK_SECRET:-}
       COMPOSE_PROJECT_NAME: caddy
+      # Shared with the UI (its data folder is ./caddy-ui): the Settings page writes the interval and "check now"
+      # here, and reads the status back. Keep it the same folder as <UI data>/updater.
+      CADDY_UI_UPDATE_CHANNEL_DIR: ${CADDY_UI_COMPOSE_DIR}/caddy-ui/updater
     # The compose directory must be mounted at the SAME absolute path as on the host,
     # because relative bind mounts (./Caddyfile) are resolved by the host Docker daemon.
     working_dir: ${CADDY_UI_COMPOSE_DIR:?set CADDY_UI_COMPOSE_DIR}

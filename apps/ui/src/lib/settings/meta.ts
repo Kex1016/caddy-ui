@@ -87,6 +87,12 @@ export const FIELDS: Record<string, FieldMeta> = {
 		kind: 'count',
 		placeholder: '50',
 		unit: 'files'
+	},
+	CADDY_UI_UPDATE_INTERVAL: {
+		label: 'Check for updates every',
+		hint: 'How often the updater looks for a new version. 30s, 5m, 1h or 1d; at least 30s. The updater takes a change within a few seconds.',
+		kind: 'duration',
+		placeholder: '1h'
 	}
 };
 
@@ -101,7 +107,8 @@ export const SECTION_KEYS = {
 	],
 	storage: ['CADDY_UI_REVISIONS_KEEP', 'CADDY_UI_BACKUPS_KEEP'],
 	display: ['TZ', 'CADDY_UI_PUBLIC_URL'],
-	domains: ['CADDY_UI_PORKBUN_READONLY', 'CADDY_UI_PORKBUN_CACHE_TTL']
+	domains: ['CADDY_UI_PORKBUN_READONLY', 'CADDY_UI_PORKBUN_CACHE_TTL'],
+	updates: ['CADDY_UI_UPDATE_INTERVAL']
 } as const;
 
 export type SectionId = keyof typeof SECTION_KEYS;
@@ -125,7 +132,7 @@ export const ENV_LABELS: Record<string, string> = {
 	PORKBUN_API_SECRET_KEY: 'Secret key',
 	PORKBUN_API_URL: 'API address',
 	CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD: 'Private key download',
-	CADDY_UI_UPDATE_INTERVAL: 'Check for updates every',
+	CADDY_UI_UPDATER_DIR: 'Updater channel directory',
 	CADDY_UI_UPDATE_SOURCE: 'Update from',
 	CADDY_UI_UPDATE_WEBHOOK_PORT: 'Push webhook port',
 	CADDY_UI_SETTINGS_IGNORE: 'Ignore saved settings'
