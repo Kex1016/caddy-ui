@@ -33,34 +33,49 @@ const timings: Record<string, number | string> = {};
 
 const hosts = Array.from({ length: SITES }, (_, i) => `site${i}.example.com`);
 
-function seed(d: Db) {
+/** Lets the test worker answer Vitest between seeding statements; one long statement makes its RPC time out. */
+const breathe = () => new Promise((r) => setImmediate(r));
+const SEED_DAYS = 3;
+
+async function seed(d: Db) {
 	const probes = Math.floor((DAYS * DAY) / PROBE_MS);
 	const minutes = DAYS * 1440;
-	// Rows in time order, as the collector writes them.
-	d.exec(`
-		WITH RECURSIVE c(i) AS (SELECT 0 UNION ALL SELECT i + 1 FROM c WHERE i < ${probes - 1}),
-		  s(j, id) AS (SELECT key, value FROM json_each('${JSON.stringify(hosts.map((h) => siteId([h])))}')),
-		  k(k) AS (SELECT 0 UNION ALL SELECT 1)
-		INSERT INTO probes (site_id, target, kind, ts, ok, latency_ms, status, error)
-		SELECT s.id, CASE k WHEN 0 THEN 'https://127.0.0.1/' ELSE '10.0.0.' || (s.j + 20) || ':80' END,
-		  CASE k WHEN 0 THEN 'site' ELSE 'upstream' END, ${NOW} - (${probes} - i) * ${PROBE_MS},
-		  (i + s.j) % 997 != 0, 10 + (i % 40), 200, NULL
-		FROM c, s, k;
+	const ids = JSON.stringify(hosts.map((h) => siteId([h])));
+	const allIds = JSON.stringify(['*', ...hosts.map((h) => siteId([h]))]);
+	// Rows in time order, as the collector writes them, a few days per statement.
+	const perProbes = Math.floor((SEED_DAYS * DAY) / PROBE_MS);
+	for (let a = 0; a < probes; a += perProbes) {
+		const b = Math.min(probes, a + perProbes);
+		d.exec(`
+			WITH RECURSIVE c(i) AS (SELECT ${a} UNION ALL SELECT i + 1 FROM c WHERE i < ${b - 1}),
+			  s(j, id) AS (SELECT key, value FROM json_each('${ids}')),
+			  k(k) AS (SELECT 0 UNION ALL SELECT 1)
+			INSERT INTO probes (site_id, target, kind, ts, ok, latency_ms, status, error)
+			SELECT s.id, CASE k WHEN 0 THEN 'https://127.0.0.1/' ELSE '10.0.0.' || (s.j + 20) || ':80' END,
+			  CASE k WHEN 0 THEN 'site' ELSE 'upstream' END, ${NOW} - (${probes} - i) * ${PROBE_MS},
+			  (i + s.j) % 997 != 0, 10 + (i % 40), 200, NULL
+			FROM c, s, k;`);
+		await breathe();
+	}
+	const perMinutes = SEED_DAYS * 1440;
+	for (let a = 0; a < minutes; a += perMinutes) {
+		const b = Math.min(minutes, a + perMinutes);
+		d.exec(`
+			WITH RECURSIVE m(i) AS (SELECT ${a} UNION ALL SELECT i + 1 FROM m WHERE i < ${b - 1}),
+			  ids(id) AS (SELECT value FROM json_each('${allIds}'))
+			INSERT INTO log_minutes
+			SELECT ids.id, ${NOW} - (${minutes} - i) * 60000, 20 + (i % 17), i % 3, (i % 50 = 0), 40000 + i % 1000,
+			  12.5, 48, '[["/",9],["/api/status",5],["/assets/app.js",3],["/favicon.ico",2],["/login",1]]',
+			  '[["198.51.100.4",8],["198.51.100.9",6],["203.0.113.7",4],["192.0.2.1",2]]'
+			FROM m, ids;
 
-		WITH RECURSIVE m(i) AS (SELECT 0 UNION ALL SELECT i + 1 FROM m WHERE i < ${minutes - 1}),
-		  ids(id) AS (SELECT value FROM json_each('${JSON.stringify(['*', ...hosts.map((h) => siteId([h]))])}'))
-		INSERT INTO log_minutes
-		SELECT ids.id, ${NOW} - (${minutes} - i) * 60000, 20 + (i % 17), i % 3, (i % 50 = 0), 40000 + i % 1000, 12.5, 48,
-		  '[["/",9],["/api/status",5],["/assets/app.js",3],["/favicon.ico",2],["/login",1]]',
-		  '[["198.51.100.4",8],["198.51.100.9",6],["203.0.113.7",4],["192.0.2.1",2]]'
-		FROM m, ids;
-
-		WITH RECURSIVE m(i) AS (SELECT 0 UNION ALL SELECT i + 1 FROM m WHERE i < ${minutes - 1}),
-		  n(name) AS (VALUES ('requests'), ('errors_4xx'), ('errors_5xx'), ('bytes_out'), ('latency_p50_ms'),
-		    ('latency_p95_ms'), ('in_flight'), ('process_resident_memory_bytes'), ('go_goroutines'))
-		INSERT INTO metric_samples (ts, name, labels_json, value)
-		SELECT ${NOW} - (${minutes} - i) * 60000, name, '{"site":"*"}', i % 100 FROM m, n;
-	`);
+			WITH RECURSIVE m(i) AS (SELECT ${a} UNION ALL SELECT i + 1 FROM m WHERE i < ${b - 1}),
+			  n(name) AS (VALUES ('requests'), ('errors_4xx'), ('errors_5xx'), ('bytes_out'), ('latency_p50_ms'),
+			    ('latency_p95_ms'), ('in_flight'), ('process_resident_memory_bytes'), ('go_goroutines'))
+			INSERT INTO metric_samples (ts, name, labels_json, value)
+			SELECT ${NOW} - (${minutes} - i) * 60000, name, '{"site":"*"}', i % 100 FROM m, n;`);
+		await breathe();
+	}
 	// A few flips per site over the 90 days, so the uptime query has history to read.
 	const flip = d.prepare(
 		`INSERT INTO state_changes (site_id, ts, "from", "to", target) VALUES (?, ?, ?, ?, ?)`
@@ -90,7 +105,7 @@ function time<T>(name: string, fn: () => T, runs = 5): { value: T; worst: number
 	return { value, worst };
 }
 
-beforeAll(() => {
+beforeAll(async () => {
 	// PERF_DB=/some/path.db keeps the seeded database there and reuses it on the next run (local tuning only).
 	const keep = process.env.PERF_DB;
 	dir = mkdtempSync(join(tmpdir(), 'caddy-ui-perf-'));
@@ -106,7 +121,7 @@ beforeAll(() => {
 		// The database as 1.1 left it (schema 3), seeded, then upgraded the way a new image would on boot.
 		migrate(db, migrations.slice(0, 3));
 		let t = performance.now();
-		seed(db);
+		await seed(db);
 		timings.seedS = Math.round(performance.now() - t) / 1000;
 		t = performance.now();
 		migrate(db);
