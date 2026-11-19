@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { openDb, type Db } from '../db';
 import type { ProbeOptions } from '../collector/probe-options';
+import { defaultConfig, defaultTemplate } from '$lib/notify/templates';
+import type { NotifyConfig, NotifyPatch } from '$lib/notify/types';
 import { Prefs } from './prefs';
 import { SettingsService } from './service';
 import {
@@ -23,6 +25,8 @@ const SITES = [
 function instance(env: Record<string, string> = { CADDY_UI_AUTH_MODE: 'forward' }) {
 	const db: Db = openDb(':memory:');
 	const options = new Map<string, ProbeOptions>();
+	let notifyConfig: NotifyConfig = defaultConfig();
+	const notifyCalls: NotifyPatch[] = [];
 	const deps: TransferDeps = {
 		settings: new SettingsService(db, env),
 		prefs: new Prefs(db),
@@ -38,10 +42,21 @@ function instance(env: Record<string, string> = { CADDY_UI_AUTH_MODE: 'forward' 
 				?.value ?? null,
 		writeSecret: (key, value) =>
 			void db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, value),
+		notify: {
+			config: () => notifyConfig,
+			update: (patch) => {
+				notifyCalls.push(patch);
+				notifyConfig = {
+					downCycles: patch.downCycles ?? notifyConfig.downCycles,
+					flapMinutes: patch.flapMinutes ?? notifyConfig.flapMinutes,
+					events: { ...notifyConfig.events, ...(patch.events as NotifyConfig['events']) }
+				};
+			}
+		},
 		uiVersion: 'v-test',
 		now: () => Date.UTC(2026, 10, 19)
 	};
-	return { db, deps, options };
+	return { db, deps, options, notifyCalls };
 }
 
 const text = (f: unknown) => JSON.stringify(f);
@@ -217,7 +232,7 @@ describe('secrets', () => {
 		SECRET_ROWS.push({ key: 'test.secret', label: 'Test secret' });
 		try {
 			const a = instance();
-			a.deps.writeSecret('test.secret', 'https://hooks.example/abc');
+			a.deps.writeSecret('test.secret', 'https://hooks.example/abc', 'me');
 			expect(buildExport(a.deps, { includeSecrets: false }).secrets).toBeUndefined();
 			const withSecret = buildExport(a.deps, { includeSecrets: true });
 			expect(withSecret.secrets).toEqual({ 'test.secret': 'https://hooks.example/abc' });
@@ -237,5 +252,67 @@ describe('secrets', () => {
 		} finally {
 			SECRET_ROWS.pop();
 		}
+	});
+});
+
+describe('Discord notifications (S5)', () => {
+	const edited = { ...defaultTemplate('site_down'), heading: 'Down: {site}', enabled: false };
+
+	it('exports the thresholds and the messages that differ, and nothing when all is default', () => {
+		const a = instance();
+		expect(buildExport(a.deps, { includeSecrets: false }).notifications).toBeUndefined();
+		a.deps.notify.update({ downCycles: 4, events: { site_down: edited } }, 'me');
+		const out = buildExport(a.deps, { includeSecrets: false }).notifications as Record<string, unknown>;
+		expect(out).toMatchObject({
+			version: 1,
+			downCycles: 4,
+			events: { site_down: { heading: 'Down: {site}' } }
+		});
+	});
+
+	it('imports them into a fresh instance through the notifier, once', () => {
+		const a = instance();
+		a.deps.notify.update({ downCycles: 4, events: { site_down: edited } }, 'me');
+		const file = text(buildExport(a.deps, { includeSecrets: false }));
+
+		const b = instance();
+		const plan = planImport(b.deps, file);
+		expect(plan.errors).toEqual([]);
+		expect(plan.changes.map((c) => c.label)).toEqual([
+			'Notifications · failed cycles before "down"',
+			'Notifications · Site down message'
+		]);
+		applyImport(b.deps, file, 'import');
+		expect(b.notifyCalls).toHaveLength(1);
+		expect(b.deps.notify.config().downCycles).toBe(4);
+		expect(b.deps.notify.config().events.site_down.heading).toBe('Down: {site}');
+		expect(planImport(b.deps, file).changes).toEqual([]);
+	});
+
+	it('refuses a template that does not pass its checks', () => {
+		const { deps } = instance();
+		const bad = { ...edited, accent: 'red' };
+		const plan = planImport(
+			deps,
+			text({
+				format: 'caddy-ui-settings',
+				formatVersion: 1,
+				notifications: { version: 1, downCycles: 99, events: { site_down: bad, nope: {} } }
+			})
+		);
+		expect(plan.errors.length).toBe(3);
+	});
+
+	it('carries the webhook only as a secret, and shows it as "set"', () => {
+		const a = instance();
+		a.deps.writeSecret('notify.webhook', 'https://discord.com/api/webhooks/1/abc', 'me');
+		expect(JSON.stringify(buildExport(a.deps, { includeSecrets: false }))).not.toContain('webhooks');
+		const withSecret = buildExport(a.deps, { includeSecrets: true });
+		expect(withSecret.secrets).toEqual({ 'notify.webhook': 'https://discord.com/api/webhooks/1/abc' });
+		const plan = planImport(instance().deps, text(withSecret));
+		expect(plan.changes).toEqual([
+			{ kind: 'secret', key: 'notify.webhook', label: 'Discord webhook URL', from: null, to: 'set' }
+		]);
+		expect(JSON.stringify(plan)).not.toContain('webhooks');
 	});
 });

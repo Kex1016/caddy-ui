@@ -109,12 +109,14 @@ export type TransferFile = {
 	/** Saved display preferences. */
 	preferences: Record<string, string>;
 	probeOptions: { siteId: string; label: string; skip: boolean; path: string | null; upStatuses: number[] }[];
+	/** Discord notification thresholds and the messages that differ from the default (S5); absent when all default. */
+	notifications?: Record<string, unknown>;
 	secrets?: Record<string, string>;
 };
 
 /** One line of the import review. A secret's value is never in it: `from` and `to` are "set" or null. */
 export type TransferChange = {
-	kind: 'setting' | 'preference' | 'probe' | 'secret';
+	kind: 'setting' | 'preference' | 'probe' | 'notification' | 'secret';
 	key: string;
 	label: string;
 	from: string | null;

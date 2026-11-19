@@ -8,7 +8,8 @@
 import { spawn } from 'node:child_process';
 import { mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
-import { baseCaddyfile, paths, PORKBUN_URL, UI_PORT } from './paths.mjs';
+import { startDiscordFake } from './discord-fake.mjs';
+import { baseCaddyfile, DISCORD_URL, paths, PORKBUN_URL, UI_PORT } from './paths.mjs';
 import { fakeCredentials, startPorkbunFake } from './porkbun-fake.mjs';
 
 const children = [];
@@ -109,6 +110,10 @@ if (process.env.E2E_PORKBUN === 'sandbox') {
 	};
 }
 
+// Notifications go to a fake Discord (S5); no test ever posts to the real one.
+const discordFake = await startDiscordFake();
+process.on('exit', () => discordFake.close());
+
 const ui = spawn(process.execPath, ['server.js'], {
 	cwd: paths.uiDir,
 	stdio: ['ignore', 'inherit', 'inherit'],
@@ -128,6 +133,7 @@ const ui = spawn(process.execPath, ['server.js'], {
 		CADDY_UI_SCRAPE_INTERVAL: '5s',
 		ORIGIN: `http://127.0.0.1:${UI_PORT}`,
 		TZ: 'Europe/Budapest',
+		CADDY_UI_DISCORD_API_URL: `${DISCORD_URL}/api/v10`,
 		...porkbunEnv
 	}
 });

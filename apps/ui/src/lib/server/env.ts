@@ -36,6 +36,8 @@ export type Config = {
 	porkbun: PorkbunConfig;
 	/** `CADDY_UI_SETTINGS_IGNORE`: run on the environment and defaults only, ignoring saved settings. */
 	settingsIgnore: boolean;
+	/** `CADDY_UI_DISCORD_API_URL`: Discord's API base for notifications. Only tests change it (a fake server). */
+	discordApiUrl: string;
 };
 
 /** Porkbun settings (docs/porkbun-plan.md §3.2). Both keys unset means the Domains area is off. */
@@ -202,7 +204,8 @@ export function loadConfig(env: Env): Config {
 			opt(env, 'CADDY_UI_UPDATER_DIR') ?? join(str(env, 'CADDY_UI_DATA', '/etc/caddy-ui'), 'updater'),
 		timeZone: timeZone(env),
 		porkbun: porkbun(env, openAccess),
-		settingsIgnore: bool(env, 'CADDY_UI_SETTINGS_IGNORE', false)
+		settingsIgnore: bool(env, 'CADDY_UI_SETTINGS_IGNORE', false),
+		discordApiUrl: url(env, 'CADDY_UI_DISCORD_API_URL', 'https://discord.com/api/v10') as string
 	};
 }
 

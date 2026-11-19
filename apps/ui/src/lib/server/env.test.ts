@@ -35,7 +35,8 @@ describe('loadConfig', () => {
 				cacheTtlMs: 60_000,
 				sslKeyDownload: false
 			},
-			settingsIgnore: false
+			settingsIgnore: false,
+			discordApiUrl: 'https://discord.com/api/v10'
 		});
 	});
 

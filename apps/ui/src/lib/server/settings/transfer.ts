@@ -1,5 +1,14 @@
 import type { EditableSetting } from '$lib/api/settings';
 import { DISPLAY_KEYS, DISPLAY_LABELS, DISPLAY_NAMES, isDisplayChoice, type DisplayKey } from '$lib/display';
+import {
+	EVENTS,
+	isEventKind,
+	type EventTemplate,
+	type NotifyConfig,
+	type NotifyPatch
+} from '$lib/notify/types';
+import { EVENT_LABELS, checkTemplate, coerceTemplate, sameTemplate } from '$lib/notify/templates';
+import { DOWN_CYCLES, FLAP_MINUTES, K, toStored } from '../notify/store';
 import type { TransferChange, TransferFile, TransferPlan } from '$lib/settings/types';
 import { NO_OPTIONS, parsePath, parseStatuses, type ProbeOptions } from '../collector/probe-options';
 import { ConfigError, checkSetting, isEditable } from '../env';
@@ -23,7 +32,9 @@ export const MAX_TRANSFER_BYTES = 1_000_000;
  * left out of an export unless asked for, never shown, and imported only when the file carries them. Notification
  * workstreams add theirs here.
  */
-export const SECRET_ROWS: { key: string; label: string }[] = [];
+export const SECRET_ROWS: { key: string; label: string }[] = [
+	{ key: K.webhook, label: 'Discord webhook URL' }
+];
 
 /** Whether this build stores any secret an export could carry. */
 export const hasSecrets = () => SECRET_ROWS.length > 0;
@@ -39,7 +50,9 @@ export type TransferDeps = {
 	probeOptions: () => Map<string, ProbeOptions>;
 	saveProbeOptions: (siteId: string, options: ProbeOptions, author: string) => boolean;
 	readSecret: (key: string) => string | null;
-	writeSecret: (key: string, value: string) => void;
+	writeSecret: (key: string, value: string, author: string) => void;
+	/** Discord notification settings (S5): the thresholds and the edited messages. */
+	notify: { config: () => NotifyConfig; update: (patch: NotifyPatch, author: string) => void };
 	uiVersion: string;
 	now?: () => number;
 };
@@ -75,6 +88,7 @@ export function buildExport(deps: TransferDeps, opts: { includeSecrets: boolean 
 		});
 	}
 	probeOptions.sort((a, b) => a.label.localeCompare(b.label));
+	const stored = toStored(deps.notify.config());
 	const file: TransferFile = {
 		format: TRANSFER_FORMAT,
 		formatVersion: TRANSFER_VERSION,
@@ -82,7 +96,8 @@ export function buildExport(deps: TransferDeps, opts: { includeSecrets: boolean 
 		exportedAt: new Date((deps.now ?? Date.now)()).toISOString(),
 		settings,
 		preferences,
-		probeOptions
+		probeOptions,
+		...(Object.keys(stored).length > 1 ? { notifications: stored } : {})
 	};
 	if (opts.includeSecrets) {
 		const secrets: Record<string, string> = {};
@@ -138,6 +153,80 @@ const describe = (o: ProbeOptions): string => {
 	if (o.upStatuses.length) parts.push(`also up: ${o.upStatuses.join(', ')}`);
 	return parts.join(' · ');
 };
+
+type Notifications = {
+	downCycles?: number;
+	flapMinutes?: number;
+	events: Partial<Record<(typeof EVENTS)[number], EventTemplate>>;
+};
+
+/** Check the file's notification block and say what differs from now. Pushes any problem onto `errors`. */
+function planNotifications(
+	deps: TransferDeps,
+	raw: unknown,
+	errors: string[]
+): { changes: TransferChange[]; same: number; parsed: Notifications | null } {
+	const none = { changes: [], same: 0, parsed: null };
+	if (raw === undefined) return none;
+	if (!isObject(raw)) {
+		errors.push('"notifications" must be an object.');
+		return none;
+	}
+	if (raw.version !== 1) {
+		errors.push('Notifications: this block has a version this UI does not read.');
+		return none;
+	}
+	const now = deps.notify.config();
+	const parsed: Notifications = { events: {} };
+	const changes: TransferChange[] = [];
+	let same = 0;
+	const num = (key: 'downCycles' | 'flapMinutes', range: { min: number; max: number }, label: string) => {
+		const v = raw[key];
+		if (v === undefined) return;
+		if (typeof v !== 'number' || !Number.isInteger(v) || v < range.min || v > range.max) {
+			errors.push(`Notifications · ${label}: a whole number from ${range.min} to ${range.max}.`);
+			return;
+		}
+		parsed[key] = v;
+		if (now[key] === v) same++;
+		else
+			changes.push({
+				kind: 'notification',
+				key,
+				label: `Notifications · ${label}`,
+				from: String(now[key]),
+				to: String(v)
+			});
+	};
+	num('downCycles', DOWN_CYCLES, 'failed cycles before "down"');
+	num('flapMinutes', FLAP_MINUTES, 'minutes between repeat messages');
+	if (raw.events !== undefined && !isObject(raw.events))
+		errors.push('Notifications: "events" must be an object.');
+	for (const [k, v] of Object.entries(isObject(raw.events) ? raw.events : {})) {
+		if (!isEventKind(k)) {
+			errors.push(`Notifications: ${k} is not an event this UI knows.`);
+			continue;
+		}
+		const t = coerceTemplate(k, v);
+		const problems = checkTemplate(t);
+		const first = Object.values(problems)[0];
+		if (first) {
+			errors.push(`Notifications · ${EVENT_LABELS[k]}: ${first}`);
+			continue;
+		}
+		parsed.events[k] = t;
+		if (sameTemplate(now.events[k], t)) same++;
+		else
+			changes.push({
+				kind: 'notification',
+				key: `events.${k}`,
+				label: `Notifications · ${EVENT_LABELS[k]} message`,
+				from: now.events[k].enabled ? 'on' : 'off',
+				to: t.enabled ? 'on' : 'off'
+			});
+	}
+	return { changes, same, parsed };
+}
 
 /** What importing `text` would change here. Nothing is written. `errors` non-empty means it cannot be applied. */
 export function planImport(deps: TransferDeps, text: string): TransferPlan {
@@ -246,6 +335,11 @@ export function planImport(deps: TransferDeps, text: string): TransferPlan {
 			});
 	}
 
+	// Discord notifications: thresholds and the messages that differ from the default.
+	const note = planNotifications(deps, doc.notifications, errors);
+	changes.push(...note.changes);
+	same += note.same;
+
 	// Secrets: shown by name only, never by value.
 	const secrets = isObject(doc.secrets) ? doc.secrets : {};
 	for (const [key, raw] of Object.entries(secrets)) {
@@ -308,8 +402,12 @@ export function applyImport(deps: TransferDeps, text: string, author: string): T
 			author
 		);
 	}
+	if (plan.changes.some((c) => c.kind === 'notification')) {
+		const parsed = planNotifications(deps, doc.notifications, []).parsed;
+		if (parsed) deps.notify.update(parsed, author);
+	}
 	for (const c of plan.changes.filter((c) => c.kind === 'secret')) {
-		deps.writeSecret(c.key, (doc.secrets as Record<string, string>)[c.key] as string);
+		deps.writeSecret(c.key, (doc.secrets as Record<string, string>)[c.key] as string, author);
 	}
 	return plan;
 }

@@ -52,6 +52,15 @@ export type LiveUpstreams = { at: number; data: Map<string, LiveUpstream> | null
 /** What changed, for whoever keeps a snapshot of the read side (snapshot.ts). */
 export type CollectorEvent = 'probes' | 'sites' | 'upstreams' | 'certs';
 
+/** One target's result in the latest probe cycle; `target` '' is the site itself (notifications, S5). */
+export type CycleResult = {
+	siteId: string;
+	target: string;
+	state: State;
+	status: number | null;
+	error: string | null;
+};
+
 const TAIL_KEY = 'collector.log_position';
 const LOG_EVERY_MS = 5_000;
 /** The log tail is read and parsed this much at a time, yielding between slices so requests get through. */
@@ -99,6 +108,8 @@ export class Collector {
 	sitesVersion = 0;
 	/** The last `/reverse_proxy/upstreams` answer, polled on the scrape timer and never from a page load. */
 	live: LiveUpstreams = { at: 0, data: null };
+	/** Every result of the latest probe cycle, read on the 'probes' event (the notifier, S5). */
+	lastCycle: { ts: number; results: CycleResult[] } = { ts: 0, results: [] };
 	private states: Map<string, { state: State; since: number }>;
 	private listeners: ((e: CollectorEvent) => void)[] = [];
 	private metrics: MetricsRollup;
@@ -247,6 +258,7 @@ export class Collector {
 
 		const ts = this.now();
 		const rows: ProbeRow[] = [];
+		const results: CycleResult[] = [];
 		this.db.transaction(() => {
 			for (const s of this.sites) {
 				if (opts(s.id).skip) {
@@ -270,6 +282,13 @@ export class Collector {
 					if (!r) continue;
 					ups.push(r);
 					rows.push({ siteId: s.id, target: u.address, kind: 'upstream', ts, ...r });
+					results.push({
+						siteId: s.id,
+						target: u.address,
+						state: r.ok ? 'up' : 'down',
+						status: r.status,
+						error: r.error
+					});
 					recordState(this.db, this.states, s.id, u.address, r.ok ? 'up' : 'down', ts);
 				}
 				// The site is judged by its own probe; without one, by its upstreams (down only if all are down).
@@ -283,9 +302,17 @@ export class Collector {
 							: 'down'
 						: 'unknown';
 				recordState(this.db, this.states, s.id, '', state, ts);
+				results.push({
+					siteId: s.id,
+					target: '',
+					state,
+					status: own?.status ?? null,
+					error: own?.error ?? (state === 'down' ? 'every upstream is down' : null)
+				});
 			}
 			insertProbes(this.db, rows);
 		})();
+		this.lastCycle = { ts, results };
 		st.lastOk = ts;
 		st.error = null;
 		this.emit('probes');

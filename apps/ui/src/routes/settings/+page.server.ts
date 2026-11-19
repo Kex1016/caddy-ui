@@ -36,6 +36,7 @@ import {
 	planImport,
 	type TransferDeps
 } from '$lib/server/settings/transfer';
+import { getNotifier } from '$lib/server/notify';
 import { UI_VERSION } from '$lib/server/version';
 import { loadProbeOptions } from '$lib/server/collector/probe-options';
 import type { Actions, PageServerLoad } from './$types';
@@ -63,7 +64,15 @@ function transferDeps(): TransferDeps {
 		readSecret: (key) =>
 			(db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as { value: string } | undefined)
 				?.value ?? null,
-		writeSecret: (key, value) => {
+		notify: {
+			config: () => getNotifier().config,
+			update: (patch, author) => void getNotifier().update(patch, author)
+		},
+		writeSecret: (key, value, author) => {
+			if (key === 'notify.webhook') {
+				getNotifier().update({ webhook: value }, author);
+				return;
+			}
 			db.prepare(
 				'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value'
 			).run(key, value);
@@ -108,6 +117,8 @@ export const load: PageServerLoad = async ({ depends, cookies }) => {
 				lastEntry: c.status.logs.lastEntry
 			}
 		},
+		/** Discord notifications (S5): never the webhook URL, only whether one is saved. */
+		notifications: getNotifier().view(),
 		now: Date.now(),
 		/** Two small files in the shared directory: no wait. */
 		updates: getUpdates(),

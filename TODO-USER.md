@@ -217,3 +217,12 @@ Newest at the bottom. Format: date · workstream · what · why.
 - [ ] 2026-11-19 · S6 · Optional, after the v1.2.0 build is running: open Settings → Export and import and download a
   settings file once. Keep it somewhere safe; it is the quickest way to restore your settings on a new install
   (Import → Review changes → Apply). Tick the box for secrets only if you want the Discord webhook URL in it.
+- [ ] 2026-11-19 · S5 · When the S5 build is running (`edge` after the merge, or v1.2.0), set up Discord notifications;
+  nothing changes in compose:
+  1. In Discord, open the channel's settings, **Integrations → Webhooks → New Webhook**, and press **Copy Webhook
+     URL**. Treat it like a password: do not paste it into the chat, a commit or the compose file.
+  2. In the UI, **Settings → Notifications**, paste it into **Discord webhook** and press **Save webhook**.
+  3. Open **Site down → Edit message** and press **Send test**; the message lands in the channel marked as a test.
+  4. Optional: set **Public address** (Settings → Display) to the address you open the UI at, so messages get an
+     "Open site" button; and put a role in **Mention** (for example `<@&role id>`) if you want to be pinged.
+  · the webhook can only be entered in the UI (D19); docs/notifications.md has the details.

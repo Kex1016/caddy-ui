@@ -82,7 +82,12 @@ const ENV_ONLY: EnvOnlyDef[] = [
 	{ key: 'CADDY_UI_UPDATE_SOURCE', default: 'ghcr', fromConfig: (c) => c.updateSource },
 	{ key: 'CADDY_UI_UPDATE_WEBHOOK_PORT', default: null },
 	{ key: 'CADDY_UI_UPDATER_DIR', default: null, fromConfig: (c) => c.updaterDir },
-	{ key: 'CADDY_UI_SETTINGS_IGNORE', default: 'false', fromConfig: (c) => String(c.settingsIgnore) }
+	{ key: 'CADDY_UI_SETTINGS_IGNORE', default: 'false', fromConfig: (c) => String(c.settingsIgnore) },
+	{
+		key: 'CADDY_UI_DISCORD_API_URL',
+		default: 'https://discord.com/api/v10',
+		fromConfig: (c) => c.discordApiUrl
+	}
 ];
 
 const LOG_LIMIT = 50;
