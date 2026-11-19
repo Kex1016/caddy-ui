@@ -269,3 +269,38 @@ describe('the Porkbun DNS plugin (github.com/caddy-dns/porkbun)', () => {
 		expect(fmt(globals('acme_dns duckdns {\n\tapi_token {env.DUCKDNS_TOKEN}\n}'))).toBe('');
 	});
 });
+
+describe('values and blocks Caddy accepts that a plain reading of the docs would not', () => {
+	const site = (src: string) => validateSiteBody(schema, parseDirectives(src));
+
+	it('takes -1 where Caddy special-cases it', () => {
+		for (const sub of ['flush_interval', 'stream_timeout', 'stream_close_delay'])
+			expect(fmt(site(`reverse_proxy app:80 {\n\t${sub} -1\n}`)), sub).toBe('');
+		expect(fmt(site('php_fastcgi app:9000 {\n\tflush_interval -1\n}'))).toBe('');
+		expect(fmt(site('tls {\n\tdns cloudflare {env.CF}\n\tpropagation_timeout -1\n}'))).toBe('');
+		expect(fmt(site('tls {\n\tissuer acme {\n\t\tpropagation_timeout -1\n\t}\n}'))).toBe('');
+	});
+
+	it('still refuses -1 where Caddy does', () => {
+		expect(site('reverse_proxy app:80 {\n\tfail_duration -1\n}').map((d) => d.code)).toEqual(['bad-value']);
+		expect(site('tls {\n\tpropagation_delay -1\n}').map((d) => d.code)).toEqual(['bad-value']);
+	});
+
+	it('leaves the block of a module the schema does not know (a plugin) alone', () => {
+		expect(fmt(site('reverse_proxy app:80 {\n\tlb_policy myplugin {\n\t\tweight 2\n\t}\n}'))).toBe('');
+		expect(fmt(site('tls {\n\tissuer myca {\n\t\tendpoint https://ca.example\n\t}\n}'))).toBe('');
+		expect(fmt(site('tls {\n\tget_certificate vault {\n\t\taddr https://vault.example\n\t}\n}'))).toBe('');
+	});
+
+	it('still checks the block of a module it knows', () => {
+		expect(
+			site('reverse_proxy app:80 {\n\tlb_policy first {\n\t\tweight 2\n\t}\n}').map((d) => d.code)
+		).toEqual(['no-block']);
+	});
+
+	it('accepts David’s Porkbun tls block as written (tabs, {env.*})', () => {
+		const src =
+			'tls {\n\t\tdns porkbun {\n\t\t\tapi_key {env.PORKBUN_API_KEY}\n\t\t\tapi_secret_key {env.PORKBUN_API_SECRET_KEY}\n\t\t}\n\t}';
+		expect(fmt(site(src))).toBe('');
+	});
+});
