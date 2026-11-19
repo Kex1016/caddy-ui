@@ -7,7 +7,7 @@ import { isEventKind } from '$lib/notify/types';
  * The server is the judge of a value; these only label and explain.
  */
 
-export type FieldKind = 'duration' | 'days' | 'count' | 'timezone' | 'url' | 'readonly';
+export type FieldKind = 'duration' | 'days' | 'count' | 'timezone' | 'url' | 'readonly' | 'networks';
 
 export type FieldMeta = {
 	label: string;
@@ -90,6 +90,12 @@ export const FIELDS: Record<string, FieldMeta> = {
 		placeholder: '50',
 		unit: 'files'
 	},
+	CADDY_UI_LOG_EXCLUDE_NETWORKS: {
+		label: 'Leave out requests from',
+		hint: 'Access-log requests from these client addresses are not counted in traffic, errors, latency or top IPs: Docker’s own networks, health checks, the UI talking to its sites. IP addresses or ranges such as 172.16.0.0/12, separated by commas; none counts everything. The Docker gateway (the host, IPv6 visitors) is always counted. Applies to new log lines only.',
+		kind: 'networks',
+		placeholder: '127.0.0.0/8, ::1, 172.16.0.0/12'
+	},
 	CADDY_UI_UPDATE_INTERVAL: {
 		label: 'Check for updates every',
 		hint: 'How often the updater looks for a new version. 30s, 5m, 1h or 1d; at least 30s. The updater takes a change within a few seconds.',
@@ -105,7 +111,8 @@ export const SECTION_KEYS = {
 		'CADDY_UI_SCRAPE_INTERVAL',
 		'CADDY_UI_RETENTION_DAYS',
 		'CADDY_UI_PROBE_TIMEOUT',
-		'CADDY_UI_CERT_WARN_DAYS'
+		'CADDY_UI_CERT_WARN_DAYS',
+		'CADDY_UI_LOG_EXCLUDE_NETWORKS'
 	],
 	storage: ['CADDY_UI_REVISIONS_KEEP', 'CADDY_UI_BACKUPS_KEEP'],
 	display: ['TZ', 'CADDY_UI_PUBLIC_URL'],

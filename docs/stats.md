@@ -57,6 +57,9 @@ top paths and top client IPs, certificate expiry.
   handler with the most requests.
 - Top paths and client IPs exist only with an access log. Client IPs are the real address only
   behind `trusted_proxies`.
+- Access-log requests from loopback and Docker's private networks (`172.16.0.0/12`) are left out
+  by default; `CADDY_UI_LOG_EXCLUDE_NETWORKS` changes the list (see
+  [configuration.md](configuration.md#requests-from-docker-and-loopback)).
 
 ## Staleness and gaps
 

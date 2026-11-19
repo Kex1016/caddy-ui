@@ -70,6 +70,16 @@ type Bucket = {
 	ips: Map<string, number>;
 };
 
+const emptyBucket = (): Bucket => ({
+	requests: 0,
+	e4: 0,
+	e5: 0,
+	bytes: 0,
+	durations: [],
+	paths: new Map(),
+	ips: new Map()
+});
+
 const MINUTE = 60_000;
 const TOP_N = 10;
 /** Caps per-minute memory on a flood: past this many distinct keys, new ones are counted as "(other)". */
@@ -102,6 +112,15 @@ export class LogRollup {
 		private graceMs = 15_000
 	) {}
 
+	/**
+	 * Marks the server-wide minute of `ts` as read without counting a request, for an entry that is skipped
+	 * (an excluded network). Charts then show that minute as zero traffic instead of a gap.
+	 */
+	touch(ts: number) {
+		const key = `*|${Math.floor(ts / MINUTE) * MINUTE}`;
+		if (!this.buckets.has(key)) this.buckets.set(key, emptyBucket());
+	}
+
 	add(e: AccessEntry) {
 		const minute = Math.floor(e.ts / MINUTE) * MINUTE;
 		const site = this.siteFor(e.host) ?? '';
@@ -109,7 +128,7 @@ export class LogRollup {
 			const key = `${id}|${minute}`;
 			let b = this.buckets.get(key);
 			if (!b) {
-				b = { requests: 0, e4: 0, e5: 0, bytes: 0, durations: [], paths: new Map(), ips: new Map() };
+				b = emptyBucket();
 				this.buckets.set(key, b);
 			}
 			b.requests++;

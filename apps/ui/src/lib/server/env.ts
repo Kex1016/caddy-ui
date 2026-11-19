@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { parseDuration } from './duration';
+import { parseNetworks, type Network } from './netlist';
 
 /** Runtime configuration, read once from the environment. Names and defaults are fixed in PLAN.md §3.2. */
 export type AuthMode = 'local' | 'forward' | 'none';
@@ -38,7 +39,15 @@ export type Config = {
 	settingsIgnore: boolean;
 	/** `CADDY_UI_DISCORD_API_URL`: Discord's API base for notifications. Only tests change it (a fake server). */
 	discordApiUrl: string;
+	/**
+	 * `CADDY_UI_LOG_EXCLUDE_NETWORKS`: access-log entries from these client addresses are not counted (loopback
+	 * and Docker's private ranges by default). `none` gives an empty list.
+	 */
+	logExcludeNetworks: Network[];
 };
+
+/** Loopback and Docker's default address pool for bridge and compose networks (172.16.0.0/12). */
+export const DEFAULT_LOG_EXCLUDE = '127.0.0.0/8, ::1, 172.16.0.0/12';
 
 /** Porkbun settings (docs/porkbun-plan.md §3.2). Both keys unset means the Domains area is off. */
 export type PorkbunConfig = {
@@ -142,6 +151,19 @@ function optDuration(env: Env, name: string, minMs: number, maxMs: number): numb
 	return ms;
 }
 
+/** A list of networks; `none` is the empty list, an unset or empty variable the default. */
+function networks(env: Env, name: string, fallback: string): Network[] {
+	const raw = str(env, name, fallback);
+	if (raw.toLowerCase() === 'none') return [];
+	try {
+		return parseNetworks(raw);
+	} catch (err) {
+		throw new ConfigError(
+			`${name} must be IP addresses or ranges separated by commas, or none: ${(err as Error).message}`
+		);
+	}
+}
+
 function timeZone(env: Env): string {
 	const tz = str(env, 'TZ', 'UTC');
 	try {
@@ -205,7 +227,8 @@ export function loadConfig(env: Env): Config {
 		timeZone: timeZone(env),
 		porkbun: porkbun(env, openAccess),
 		settingsIgnore: bool(env, 'CADDY_UI_SETTINGS_IGNORE', false),
-		discordApiUrl: url(env, 'CADDY_UI_DISCORD_API_URL', 'https://discord.com/api/v10') as string
+		discordApiUrl: url(env, 'CADDY_UI_DISCORD_API_URL', 'https://discord.com/api/v10') as string,
+		logExcludeNetworks: networks(env, 'CADDY_UI_LOG_EXCLUDE_NETWORKS', DEFAULT_LOG_EXCLUDE)
 	};
 }
 
@@ -226,7 +249,8 @@ export const EDITABLE = [
 	'CADDY_UI_PROBE_TIMEOUT',
 	'CADDY_UI_REVISIONS_KEEP',
 	'CADDY_UI_BACKUPS_KEEP',
-	'CADDY_UI_UPDATE_INTERVAL'
+	'CADDY_UI_UPDATE_INTERVAL',
+	'CADDY_UI_LOG_EXCLUDE_NETWORKS'
 ] as const;
 
 export type EditableKey = (typeof EDITABLE)[number];
@@ -250,7 +274,8 @@ export const EDITABLE_DEFAULTS: Record<EditableKey, string | undefined> = {
 	CADDY_UI_PROBE_TIMEOUT: undefined,
 	CADDY_UI_REVISIONS_KEEP: '200',
 	CADDY_UI_BACKUPS_KEEP: '50',
-	CADDY_UI_UPDATE_INTERVAL: '1h'
+	CADDY_UI_UPDATE_INTERVAL: '1h',
+	CADDY_UI_LOG_EXCLUDE_NETWORKS: DEFAULT_LOG_EXCLUDE
 };
 
 const CHECKS: Record<EditableKey, (env: Env) => unknown> = {
@@ -265,7 +290,8 @@ const CHECKS: Record<EditableKey, (env: Env) => unknown> = {
 	CADDY_UI_PROBE_TIMEOUT: (e) => optDuration(e, 'CADDY_UI_PROBE_TIMEOUT', 1000, 60_000),
 	CADDY_UI_REVISIONS_KEEP: (e) => int(e, 'CADDY_UI_REVISIONS_KEEP', 200, 10, 10000),
 	CADDY_UI_BACKUPS_KEEP: (e) => int(e, 'CADDY_UI_BACKUPS_KEEP', 50, 1, 10000),
-	CADDY_UI_UPDATE_INTERVAL: (e) => updateInterval(e)
+	CADDY_UI_UPDATE_INTERVAL: (e) => updateInterval(e),
+	CADDY_UI_LOG_EXCLUDE_NETWORKS: (e) => networks(e, 'CADDY_UI_LOG_EXCLUDE_NETWORKS', DEFAULT_LOG_EXCLUDE)
 };
 
 /** Keys where an empty value means "unset": no public URL, or the automatic probe timeout. */
