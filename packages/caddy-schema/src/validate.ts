@@ -192,7 +192,10 @@ function validateNode(ctx: Ctx, schema: DirectiveSchema, node: DirectiveLike, pa
 			line: node.line,
 			argIndex: i.argIndex === undefined ? undefined : i.argIndex + offset
 		});
-	if (node.body) validateBody(ctx, schema, variant, node.body, path);
+	// A module name the schema does not list (lb_policy, issuer, get_certificate, trust_pool, …) is most
+	// likely a plugin's; Caddy hands the block to that plugin, so its contents are not ours to judge.
+	const pluginModule = !!schema.variants && moduleName !== undefined && !variant;
+	if (node.body) validateBody(ctx, schema, variant, node.body, path, pluginModule);
 	const owner = variant ?? schema;
 	for (const name of owner.requires ?? []) {
 		if (node.body?.some((c) => c.name === name)) continue;
@@ -214,8 +217,10 @@ function validateBody(
 	schema: DirectiveSchema,
 	variant: DirectiveSchema | undefined,
 	body: DirectiveLike[],
-	path: string[]
+	path: string[],
+	pluginModule = false
 ) {
+	if (pluginModule) return;
 	const subs = { ...(schema.subdirectives ?? {}), ...(variant?.subdirectives ?? {}) };
 	// A chosen module variant defines the block; the host's free-form `{ ... }` only stands for "module options".
 	const freeform = variant ? variant.freeformBody : schema.freeformBody;

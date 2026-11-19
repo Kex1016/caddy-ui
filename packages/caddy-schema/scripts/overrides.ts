@@ -552,9 +552,24 @@ export function applyOverrides(b: SchemaBundle): void {
 	});
 	patchArg(b, 'd:reverse_proxy/dynamic/~a/versions', 'value', { name: 'versions', variadic: true });
 	patchArg(b, 'd:reverse_proxy/dynamic/~srv/proto', 'proto', { type: 'enum', enum: ['tcp', 'udp'] });
+	// Caddy reads these three with strconv.Atoi first (reverseproxy/caddyfile.go), so a bare number of
+	// nanoseconds is accepted; -1 is the documented "off" value. Go's ParseDuration alone would refuse it.
 	patchArg(b, 'd:reverse_proxy/flush_interval', 'duration', {
-		doc: 'A duration; -1 disables buffering (low-latency mode).'
+		doc: 'A duration; -1 disables buffering (low-latency mode).',
+		literals: ['-1']
 	});
+	patchArg(b, 'd:reverse_proxy/stream_timeout', 'duration', { literals: ['-1'] });
+	patchArg(b, 'd:reverse_proxy/stream_close_delay', 'duration', { literals: ['-1'] });
+	// `propagation_timeout -1` turns propagation checks off (caddytls acmeissuer.go, zerosslissuer.go, httpcaddyfile builtins.go).
+	for (const path of [
+		'd:tls/propagation_timeout',
+		'd:tls/issuer/~acme/propagation_timeout',
+		'd:tls/issuer/~zerossl/propagation_timeout'
+	]) {
+		const [arg] = resolve(b, path).args;
+		if (arg?.type !== 'duration') throw new Error(`overrides: ${path} has no duration argument`);
+		arg.literals = ['-1'];
+	}
 
 	// --- php_fastcgi and forward_auth are reverse_proxy with presets: they accept every reverse_proxy subdirective
 	for (const name of ['php_fastcgi', 'forward_auth']) {

@@ -952,3 +952,16 @@ Format: date · workstream · decision · why · how to reverse.
   pushed tag still publishes the same way as before. The run refuses to tag unless CI passed on the commit
   (`skip_ci_check` overrides it). Notes come from the input, else `docs/releases/vX.Y.Z.md`, else GitHub's
   generated notes · confidence 85.
+- 2026-11-19 · Fix · David's false errors. (1) `tls { dns porkbun { … } }` ("dns does not take a block") is his
+  1.0.0 image: on main, P5 (#30) already gives every DNS provider host a free-form block, and a test now pins
+  his exact text. (2) `-1` is accepted where Caddy special-cases it, read from Caddy v2.11.9: `flush_interval`,
+  `stream_timeout`, `stream_close_delay` (reverse_proxy parses them with `strconv.Atoi` first) and
+  `propagation_timeout` (tls, acme and zerossl issuers). They get `literals: ['-1']`, not "any integer": Caddy
+  would take `stream_timeout 5000000000` as nanoseconds, but nobody writes that and the duration error is
+  more useful than silence · confidence 82.
+- 2026-11-19 · Fix · A module name a host's `variants` do not list (`lb_policy`, `tls issuer`,
+  `get_certificate`, `trust_pool`, …) is treated as a plugin's and its block is not checked, the same rule P5
+  set for DNS providers. A known module keeps its checks (`lb_policy first { … }` is still "no block") ·
+  confidence 80.
+- 2026-11-19 · Fix · The duration grammar now follows Go's `time.ParseDuration`: a leading `+`, a signed
+  unitless zero, `1.s` and the Greek micro sign (μs) are accepted; a bare `30` is still an error · confidence 88.
