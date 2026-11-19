@@ -208,14 +208,15 @@ Newest at the bottom. Format: date · workstream · what · why.
   Preferences once and pick the clock, date format, landing page and default range you want. They are saved on the
   server, so they apply in every browser; a browser where you used the theme button keeps its own theme until you
   press **Use the saved default here**.
-<<<<<<< HEAD
 - [ ] 2026-11-19 · S3 · Nothing is required. After deploying, open Settings and press **Check everything** once:
   anything marked Problem or Check links to its fix. If it says metrics are not per host or the access log is not
   found, **Caddy helpers** turns each on as a reviewed Caddyfile change. The access log helper writes Caddy's log to
   `CADDY_LOG_PATH`, so the `caddy` and `caddy-ui` services must mount the same log directory at that path (the
   example compose file does: `/var/log/caddy`) and Caddy must be able to write there · otherwise the status-code
   and top-path charts stay empty.
-=======
+- [ ] 2026-11-19 · S6 · Optional, after the v1.2.0 build is running: open Settings → Export and import and download a
+  settings file once. Keep it somewhere safe; it is the quickest way to restore your settings on a new install
+  (Import → Review changes → Apply). Tick the box for secrets only if you want the Discord webhook URL in it.
 - [ ] 2026-11-19 · S5 · When the S5 build is running (`edge` after the merge, or v1.2.0), set up Discord notifications;
   nothing changes in compose:
   1. In Discord, open the channel's settings, **Integrations → Webhooks → New Webhook**, and press **Copy Webhook
@@ -225,4 +226,7 @@ Newest at the bottom. Format: date · workstream · what · why.
   4. Optional: set **Public address** (Settings → Display) to the address you open the UI at, so messages get an
      "Open site" button; and put a role in **Mention** (for example `<@&role id>`) if you want to be pinged.
   · the webhook can only be entered in the UI (D19); docs/notifications.md has the details.
->>>>>>> d30ab65 (S5: Discord notifications with editable Components v2 templates)
+- [ ] 2026-11-19 · Release · Last item: release v1.2.0. On GitHub open **Actions → release → Run workflow**, enter
+  `1.2.0` as the version and run it (the notes come from `docs/releases/v1.2.0.md`). Do it after the S5 and S4 items
+  above are read (the updater mount in compose is the only compose change) and CI on `main` is green. Then pull the
+  new images on your server; the settings migrations run by themselves and are instant.

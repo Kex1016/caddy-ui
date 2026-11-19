@@ -1159,7 +1159,6 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-19 · S6 · The collector's prepared Overview range follows the saved default range (`setDefaultRange`), so the
   default page stays instant whichever range is chosen. `RangeSwitch` leaves `?range=` off only for that default ·
   confidence 82.
-<<<<<<< HEAD
 - 2026-11-19 · S3 · New API route `GET /api/settings/backup` (a file download cannot be a form action). It answers a
   `.tar.gz` with `caddy-ui.db` (a `VACUUM INTO` copy made in a worker thread on a read-only connection, which in WAL
   mode is a read, so probes keep being written) and the `Caddyfile`; the copy is written next to the database and
@@ -1202,7 +1201,19 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-19 · S3 · The database size view moved from Monitoring to the new "Data and storage" section with the
   storage tools; the retention field and its "what will be deleted" notice stay in Monitoring. Section order:
   Diagnostics, Monitoring, Data and storage, Caddy helpers, then S2's sections · confidence 78.
-=======
+- 2026-11-19 · S6 · Export and import are form actions on `/settings` (`?/export`, `?/importPreview`,
+  `?/importApply`), not API routes: the export's answer is the file text, which the page offers as a download. No
+  migration. The file format is `caddy-ui-settings` version 1 (settings, preferences, probeOptions, optional secrets);
+  a higher version is refused as "from a newer Caddy UI" · confidence 78.
+- 2026-11-19 · S6 · Import is a merge, not a replace: it sets what the file holds and leaves everything else alone, so
+  an import into a fresh instance matches the source and an import into a used one never silently deletes a setting.
+  The review is planned again on apply, and any value that fails its check (the same `checkSetting` the editor uses)
+  refuses the whole file. Probe options for a site id this instance does not have are skipped with a note ·
+  confidence 74.
+- 2026-11-19 · S6 · Secrets the UI stores itself are listed in `SECRET_ROWS` (lib/server/settings/transfer.ts), left out
+  of an export unless the box is ticked, shown in the review only as "set", and imported only when the file carries
+  them. The checkbox shows only when the build has such a secret. The Porkbun keys, the password and every other
+  environment-only value are never exported · confidence 82.
 - 2026-11-19 · S5 · Discord's documentation (docs.discord.com, read 19 Nov) confirms the plan's premise: Execute
   Webhook ignores `components` unless `?with_components=true`, and then lets a webhook no app owns send
   non-interactive components; `flags: 32768` (IS_COMPONENTS_V2) may be set on a webhook message and makes it
@@ -1265,4 +1276,9 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-19 · S5 · The section is its own component (`lib/notify/components/NotificationsSection.svelte`), so the
   shared Settings page gains one NAV entry, one line of markup and one `load` field; it needs no `SECTION_KEYS`
   entry because it saves through its own route, not `PATCH /api/settings` · confidence 85.
->>>>>>> d30ab65 (S5: Discord notifications with editable Components v2 templates)
+- 2026-11-19 · S6 · The export covers S5's notifications as a `notifications` block (`notify.config` in its stored form:
+  thresholds and the messages that differ from the default; left out when all is default) and, only with the box
+  ticked, the webhook URL under `secrets` (`notify.webhook`). Runtime state (`notify.embed_since`,
+  `notify.last_version`, `notify.certs`) and the `notify_log` table are never exported. Import applies the block and
+  the webhook through the notifier's own `update`, so they are validated, logged in Recent changes (webhook by id
+  only) and live at once · confidence 82.
