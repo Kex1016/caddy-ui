@@ -143,7 +143,7 @@ Newest at the bottom. Format: date · workstream · what · why.
   no purchases" preset), and if the key has an IP allowlist it must include the server's
   public IP. Each domain you want to manage needs "API access" switched on · the UI can only
   do what the key may do, and it shows which of these is missing.
-- [ ] 2026-11-18 · Porkbun plan · P6 draft · When the Domains pages are in the image you run
+- [ ] 2026-11-18 · Porkbun plan · P6 · When the Domains pages are in the image you run
   (v1.1.0, or a `main` build), give the UI the Porkbun keys. In the compose file that holds
   your `caddy-ui` service:
   1. Keep `PORKBUN_API_KEY` and `PORKBUN_API_SECRET_KEY` in `.env` next to it (they already
@@ -152,10 +152,12 @@ Newest at the bottom. Format: date · workstream · what · why.
      `PORKBUN_API_KEY: ${PORKBUN_API_KEY:?set PORKBUN_API_KEY}` and
      `PORKBUN_API_SECRET_KEY: ${PORKBUN_API_SECRET_KEY:?set PORKBUN_API_SECRET_KEY}`.
   3. `docker compose config` to check, then `docker compose up -d caddy-ui`.
-  4. Open Domains in the UI. The header shows the connection and the key's scopes.
+  4. Open Domains in the UI. The header shows the connection and the key's scopes. If it
+     says changes are disabled (read-only), see the `CADDY_UI_PORKBUN_READONLY` item below.
   [docs/porkbun.md](docs/porkbun.md) has the details and a troubleshooting table · the UI is a
-  separate container and does not see Caddy's environment. The final steps are confirmed
-  after P1-P5 merge.
+  separate container and does not see Caddy's environment, and the Domains area and the
+  Caddy tab's DNS checks both need the keys there. Steps confirmed against the merged code
+  on 19 Nov.
 - [ ] 2026-11-18 · Porkbun plan · Optional: create a sandbox key pair at Porkbun (public key
   starts with `pk1_sb_`) and add both halves as GitHub Actions secrets
   `PORKBUN_SANDBOX_API_KEY` and `PORKBUN_SANDBOX_API_SECRET_KEY` · lets CI run the

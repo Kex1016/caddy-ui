@@ -1,18 +1,14 @@
 # Porkbun domains
 
-> **Draft.** Written from [porkbun-plan.md](porkbun-plan.md) before the Domains pages
-> exist. Sections marked *(to verify)* describe the planned behaviour and are checked
-> against the finished UI in the final docs pass. Set-up, key scopes, sandbox and
-> troubleshooting are already accurate.
-
 Caddy UI can manage the domains you own at [Porkbun](https://porkbun.com): list them, edit
 DNS records, undo DNS changes, change nameservers, glue and DNSSEC, set up URL forwarding,
 read the SSL bundle, and keep the DNS records your Caddy sites need in step with the
 Caddyfile. It uses the [Porkbun API v3](https://porkbun.com/api/json/v3/spec).
 
-It manages **existing** domains. It does not register, transfer or renew domains and it does
-not touch hosting, mailboxes or other Porkbun products, because those spend money or belong
-to another product. Everything is optional: without keys the rest of the UI behaves exactly
+It manages **existing** domains. It does not register, transfer or renew domains, it does not
+edit WHOIS contacts or email forwarding, it does not keep records on your changing public IP
+(dynamic DNS), and it does not touch hosting, mailboxes or other Porkbun products. Those
+spend money, hold personal data or belong to another product, and were left out on purpose. Everything is optional: without keys the rest of the UI behaves exactly
 as before.
 
 ## Set-up
@@ -68,9 +64,11 @@ with the reason, not hidden.
 | --- | --- | --- |
 | `PORKBUN_API_KEY`, `PORKBUN_API_SECRET_KEY` | unset | Porkbun key pair. Both unset (or empty): the Domains area is off. |
 | `PORKBUN_API_URL` | `https://api.porkbun.com/api/json/v3` | Base URL. Use `https://api-ipv4.porkbun.com/api/json/v3` to force IPv4 (useful with an IPv4-only allowlist). |
-| `CADDY_UI_PORKBUN_READONLY` | `false`; `true` when `CADDY_UI_AUTH_MODE=none` | Disables every write. With auth off you must set it to `false` yourself. |
+| `CADDY_UI_PORKBUN_READONLY` | `false`; `true` when the UI has no sign-in of its own | Disables every write. "No sign-in of its own" means `CADDY_UI_AUTH_MODE=none`, or `local` with no `CADDY_UI_USER` and `CADDY_UI_PASSWORD` (for example because an auth proxy in front does the sign-in). With `forward` auth or a local user, writes are on. Set it to `false` yourself to allow changes on an open UI. |
 | `CADDY_UI_PORKBUN_CACHE_TTL` | `60s` | How long reads are cached. |
 | `CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD` | `false` | Allows downloading the private key of the Porkbun-issued certificate. |
+
+The About page shows both keys only as set or unset, and the value of the read-only switch in use.
 
 The keys stay on the server. The browser never receives them, they are never written to the
 database, a Caddyfile revision, a log line or an error message.
@@ -83,27 +81,41 @@ simulated against an isolated datastore and nothing is charged. The Domains head
 **Sandbox** tag. Use it to try the pages before pointing them at real domains. Forwarding
 and other email or hosting features answer `SANDBOX_UNSUPPORTED` there.
 
-## What the pages do *(to verify)*
+## What the pages do
 
 Domains lists your domains with expiry, auto-renew, lock, privacy and API access. Each
 domain has these tabs:
 
 | Tab | What you can do |
 | --- | --- |
-| Overview | Status, dates, lock, WHOIS privacy, renewal price, nameserver summary, auto-renew (one domain or many) |
-| DNS | All 14 record types (A, AAAA, MX, CNAME, ALIAS, TXT, NS, SRV, TLSA, CAA, SSHFP, HTTPS, SVCB, DS), notes, TTL and priority; add, edit, delete, batch review, import from a BIND zone file or JSON, export as a zone file |
-| History | Porkbun's DNS restore points, diff against the live zone, restore with or without pruning, preflight check |
-| Registry | Nameservers (with "back to Porkbun defaults"), glue records, DNSSEC |
-| Forwarding | URL forwards: 301, 302, 307 and masked, with path and wildcard options |
-| SSL | Certificate subject, issuer and expiry; chain download; private key download only if enabled |
-| Caddy | Which of your Caddy sites live under this domain, whether their DNS records exist and point at this server |
+| Overview | Status, dates, lock, WHOIS privacy, renewal price, nameserver summary, counts that link to the other tabs, auto-renew for one domain. The Domains list also switches auto-renew for many domains at once and shows your account credit. Renewing itself is not offered. |
+| DNS | The records of the zone, grouped by host and filterable by type. A form per type for A, AAAA, MX, CNAME, ALIAS, TXT, NS, SRV, TLSA, CAA, SSHFP, HTTPS, SVCB and DS, with notes, TTL and priority. Changes are **staged** in a pending tray, reviewed together and applied in order. Import from a BIND zone file or JSON, export as a zone file or JSON. |
+| History | Porkbun's DNS restore points, a diff against the live zone, restore with or without pruning, and the preflight safety check on demand. |
+| Registry | Nameservers (with "back to Porkbun defaults"), glue records and DNSSEC. |
+| Forwarding | URL forwards: 301, 302, 307 and masked, with path and wildcard options. A second forward for the same name is refused. |
+| SSL | Porkbun-issued certificate subject, issuer and expiry, and a chain download. The private key download exists only with `CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD=true`. These responses are never cached. |
+| Caddy | The Caddy sites under this domain, whether each one has a DNS record and whether it points at this server. See below. |
 
 An **Activity** page lists every change the UI made, with the state before it.
 
-Dates show in your timezone (`TZ`), the data on each page is cached for the TTL above, and a
-"refreshed 40 s ago · Refresh" control shows its age.
+Dates show in your timezone (`TZ`). Reads are cached for the TTL above, and every page shows
+how old its data is with a Refresh control.
 
-## Safety rules *(to verify)*
+### Details worth knowing
+
+- **DNS tray.** Staged changes are kept per domain in your browser's session storage, so a
+  reload keeps them and closing the tab drops them. One batch holds at most 100 changes.
+- **Editing a record** cannot change its type; delete it and add a new one. Record types
+  outside the 14 above are shown read-only instead of being dropped.
+- **Import** accepts a source of up to 1 MiB and 2000 records. Records already in the zone
+  are skipped and anything unusable is left out with the reason. Porkbun takes at most 500
+  new records per import, so if more would be created the UI refuses and asks you to split
+  the source and import it in parts.
+- **Deleting several records at once** needs the domain name typed; the server checks it too.
+- **Domains moved to Cloudflare** through Porkbun are listed, and Porkbun's warning is shown
+  as written; their DNS is not managed here.
+
+## Safety rules
 
 DNS mistakes take sites and email down, so every write is deliberately slow:
 
@@ -129,6 +141,11 @@ DNS mistakes take sites and email down, so every write is deliberately slow:
 8. **Read-only.** `CADDY_UI_PORKBUN_READONLY=true` disables every write.
 
 ## Caddy and the Porkbun plugin
+
+Two separate things use the same keys. The **plugin** lets Caddy itself answer ACME DNS-01
+challenges. The **Domains pages** manage DNS through the API. Either works without the other,
+but the Caddy tab and the checks below need both: the plugin in Caddy, and the keys on the
+`caddy-ui` container (Caddy's own environment is not visible to it).
 
 The `caddy` container in this project's compose example is built with
 [`caddy-dns/porkbun`](https://github.com/caddy-dns/porkbun) (see
@@ -168,13 +185,32 @@ globally, with the keys from the environment so they never land in the file:
 }
 ```
 
-> The syntax above is taken from the plugin's documented usage and is re-checked against its
-> README in the final docs pass.
+CI builds the plugin image and adapts exactly this syntax on every change, so it is known to
+work with the version of Caddy in `deploy/caddy/Dockerfile`.
 
 Never paste the key values into the Caddyfile: the file is also stored in History. The
-editors warn about literal values. The UI detects whether the running Caddy has the plugin
-and says so when it does not (`module not registered: dns.providers.porkbun` is Caddy's own
-message for that).
+editors warn about a literal `api_key` or `api_secret_key`.
+
+What the UI adds:
+
+- **Plugin detection.** The UI asks Caddy to adapt a three-line Caddyfile that uses
+  `acme_dns porkbun`; nothing is loaded. If Caddy answers `module not registered:
+  dns.providers.porkbun`, the UI says the running Caddy lacks the plugin. This works even
+  with the Porkbun keys unset.
+- **Guided forms.** The `tls` form's DNS provider is a picker (Porkbun, or other with free
+  text). Choosing Porkbun writes the block above with the `{env.…}` placeholders. The
+  Globals page offers the same for `acme_dns`.
+- **Site to DNS cross-check.** For every site address under one of your Porkbun domains, the
+  Caddy tab shows whether a record answers for it and whether it points at this server's
+  public IP (the address Porkbun sees in `/ping`). If it is missing or wrong, one action
+  creates or fixes it through the review step. A site under a domain that is not at Porkbun,
+  or whose nameservers are not Porkbun's, is flagged.
+- **Wildcards.** A `*.example.com` site without the DNS challenge gets a hint that offers to
+  add the `tls` block. A DNS-challenge site on a domain that is not served by Porkbun gets a
+  warning.
+- **Challenge records.** `_acme-challenge` TXT records are labelled "managed by Caddy", and
+  stale ones can be cleaned up in one action. Records a site depends on show which sites an
+  edit would affect, and the DNS tab marks them "used by site".
 
 ## Troubleshooting
 

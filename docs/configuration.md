@@ -26,7 +26,7 @@ secrets only as set or unset.
 | `CADDY_UI_UPDATE_SOURCE` | `ghcr` | `ghcr` (pull image) or `git` (clone and build) |
 | `PORKBUN_API_KEY`, `PORKBUN_API_SECRET_KEY` | unset | Porkbun key pair for the Domains area; same names as the Caddy plugin uses. See [porkbun.md](porkbun.md) |
 | `PORKBUN_API_URL` | `https://api.porkbun.com/api/json/v3` | Porkbun API base URL (`api-ipv4.porkbun.com` forces IPv4) |
-| `CADDY_UI_PORKBUN_READONLY` | `false` (`true` with auth mode `none`) | Disables every write to Porkbun |
+| `CADDY_UI_PORKBUN_READONLY` | `false` (`true` when the UI has no sign-in: auth mode `none`, or `local` with no user and password) | Disables every write to Porkbun |
 | `CADDY_UI_PORKBUN_CACHE_TTL` | `60s` | How long Porkbun reads are cached |
 | `CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD` | `false` | Allows downloading the private key of the Porkbun-issued certificate |
 | `TZ` | `UTC` | Display timezone (an IANA name such as `Europe/Budapest`) |

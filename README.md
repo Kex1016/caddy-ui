@@ -24,7 +24,7 @@ It replaces `zackwag/caddy-ui-frontend` and `zackwag/caddy-ui-backend` with a si
   certificate files and the UI's own probes. Each chart has a table view and names its
   source. See [docs/stats.md](docs/stats.md).
 - **Updater**: an optional sidecar that redeploys the UI when a new image is published.
-- **Porkbun domains (optional, in development for v1.1):** manage DNS records, restore points, nameservers, DNSSEC,
+- **Porkbun domains (optional):** manage DNS records, restore points, nameservers, DNSSEC,
   forwarding and the SSL bundle for your Porkbun domains, with review-before-apply on every
   change. See [docs/porkbun.md](docs/porkbun.md).
 - Built on the Fishnet design system, with a teal-green accent.
