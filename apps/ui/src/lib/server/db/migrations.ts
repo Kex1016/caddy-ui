@@ -5,7 +5,8 @@ import type { Database } from 'better-sqlite3';
  * Append only: never edit or reorder an entry that has shipped. Each runs inside a transaction.
  * W3 owns migration 1 (revisions, settings); W4 appends the collector tables as migration 2; P0 appends the
  * Porkbun tables as migration 3. Later Porkbun tables are appended by the workstream that needs them, one
- * migration each (docs/porkbun-plan.md §3.2).
+ * migration each (docs/porkbun-plan.md §3.2). S0 appends migration 4 (docs/settings-and-perf-plan.md §1.3).
+ * A migration must be instant on a database with millions of probe rows: never rewrite or backfill `probes`.
  */
 export type Migration = string | ((db: Database) => void);
 
@@ -119,5 +120,23 @@ export const migrations: Migration[] = [
 		request_id TEXT
 	);
 	CREATE INDEX porkbun_audit_domain ON porkbun_audit (domain, id);
+	`,
+	// 4 · S0 · The newest probe per target, so pages never scan `probes` (docs/settings-and-perf-plan.md §1.3 B),
+	// and an index for per-site traffic over a window (E). No backfill: probe_latest fills on the first probe
+	// cycle after the upgrade. The index is built once over `log_minutes`, which is far smaller than `probes`.
+	`
+	-- One row per (site, target): the latest probe, upserted in the same transaction as the probes rows.
+	CREATE TABLE probe_latest (
+		site_id TEXT NOT NULL,
+		target TEXT NOT NULL,
+		kind TEXT NOT NULL,
+		ts INTEGER NOT NULL,
+		ok INTEGER NOT NULL,
+		latency_ms REAL,
+		status INTEGER,
+		error TEXT,
+		PRIMARY KEY (site_id, target)
+	) WITHOUT ROWID;
+	CREATE INDEX log_minutes_minute ON log_minutes (minute);
 	`
 ];

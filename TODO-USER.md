@@ -177,3 +177,16 @@ Newest at the bottom. Format: date · workstream · what · why.
   [COORDINATOR.md](COORDINATOR.md); every question in the plan is answered. For Discord notifications later: create a webhook in the
   channel that should get them (Channel settings, Integrations, Webhooks) and paste its URL
   into Settings once S5 is merged · nothing is built until then.
+- [ ] 2026-11-19 · S0 · When the S0 pull request is merged, run the new build and check the page times on your
+  server. `main` publishes `ghcr.io/kex1016/caddy-ui:edge` within a few minutes of the merge:
+  1. Set `CADDY_UI_TAG=edge` for the `caddy-ui` service (or change its `image:` tag to `edge`) and run
+     `docker compose pull caddy-ui && docker compose up -d caddy-ui`. The database upgrades itself on start
+     (a second or two at most); nothing else in compose changes.
+  2. Wait one minute, so the first probe cycle has run, then open Overview and Sites with the browser's
+     developer tools on the Network tab. Click the document request and open its Timing: the `Server-Timing`
+     entries list each step and `total`. Expected: `total` well under 100 ms, and the page complete in under a
+     second.
+  3. If either page is still slow, send the Timing entries and the output of
+     `docker compose logs caddy-ui | grep "slow load"` in the project chat · this is how we confirm the fix on
+     your disk and CPU before any Settings work starts (docs/settings-and-perf-plan.md §1.3). Go back to your
+     usual tag at the v1.2.0 release.

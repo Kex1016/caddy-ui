@@ -8,6 +8,7 @@ import { ConfigError, config } from '$lib/server/env';
 import { isApiPath, isPublicPath, sameOrigin } from '$lib/server/guard';
 import { getRuntime } from '$lib/server/runtime';
 import { SESSION_COOKIE } from '$lib/server/session';
+import { Timing } from '$lib/server/timing';
 import { THEME_COOKIE, parseTheme, themeAttribute } from '$lib/theme';
 
 function seeOther(location: string): Response {
@@ -45,6 +46,7 @@ export const init: ServerInit = async () => {
 export const handle: Handle = async ({ event, resolve }) => {
 	const { url, request, cookies } = event;
 	const api = isApiPath(url.pathname);
+	event.locals.timing = new Timing();
 
 	if (!sameOrigin(request.method, request.headers)) {
 		const message = 'Cross-site request refused';
@@ -67,6 +69,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event, {
 		transformPageChunk: ({ html }) => html.replace('%caddy-ui.theme%', themeAttribute(event.locals.theme))
 	});
+	// Step timings (docs/settings-and-perf-plan.md §1.3 A). Streamed parts finish later: the log line counts them.
+	const timing = event.locals.timing;
+	if (timing.instrumented) {
+		response.headers.set('server-timing', timing.header());
+		void timing.report(url.pathname + url.search);
+	}
 	response.headers.set('x-content-type-options', 'nosniff');
 	response.headers.set('referrer-policy', 'same-origin');
 	response.headers.set('x-frame-options', 'DENY');

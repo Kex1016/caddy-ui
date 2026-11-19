@@ -6,13 +6,23 @@
 	import type { DnsHint, SiteDnsCheck } from '$lib/api/porkbun-caddy';
 	import { Dialog, EmptyState, Notice, PageHero, Tag } from '$lib/design/components';
 	import { formatElapsed, formatNumber } from '$lib/format';
+	import { autoRefresh } from '$lib/stats/view';
+	import { Streamed } from '$lib/stats/streamed.svelte';
 	import { Dns01Dialog, DnsStatusTag, RecordFixDialog, TieInState, worst } from '$lib/porkbun/caddy';
 	import { PorkbunNotice, ScopeGate } from '$lib/porkbun/components';
 	import RecipePicker from '$lib/visual/components/RecipePicker.svelte';
+	import SitesSkeleton from '$lib/stats/SitesSkeleton.svelte';
 	import { recipeDefaults, type Recipe } from '$lib/visual/recipes';
-	import type { SiteRow } from './+page.server';
+	import type { SiteList, SiteRow } from './+page.server';
 
 	let { data, form } = $props();
+
+	// The list arrives with the page, or streams in right after it on a cold start (placeholders until then).
+	// Statuses refresh every 30 s while the tab is visible, in place.
+	const list = new Streamed<SiteList>(() => data.list);
+	const rows = $derived(list.current?.rows ?? []);
+	const asOf = $derived(list.current?.asOf ?? 0);
+	onMount(() => autoRefresh());
 
 	type Filter = 'all' | 'up' | 'down' | 'unknown' | 'disabled';
 	let query = $state('');
@@ -26,12 +36,11 @@
 		{ id: 'unknown', label: 'Unknown' },
 		{ id: 'disabled', label: 'Disabled' }
 	];
-	const count = (f: Filter) =>
-		f === 'all' ? data.rows.length : data.rows.filter((r) => r.status === f).length;
+	const count = (f: Filter) => (f === 'all' ? rows.length : rows.filter((r) => r.status === f).length);
 	const filtering = $derived(query.trim() !== '' || filter !== 'all');
 	const shown = $derived.by(() => {
 		const q = query.trim().toLowerCase();
-		return data.rows.filter(
+		return rows.filter(
 			(r: SiteRow) =>
 				(filter === 'all' || r.status === filter) &&
 				(q === '' || r.addresses.some((a) => a.toLowerCase().includes(q)))
@@ -44,7 +53,7 @@
 	function since(r: SiteRow): string {
 		if (r.status === 'disabled') return 'Commented out';
 		if (r.since === null || r.status === 'unknown') return '—';
-		return `${r.status === 'up' ? 'Up' : 'Down'} for ${formatElapsed(data.asOf - r.since)}`;
+		return `${r.status === 'up' ? 'Up' : 'Down'} for ${formatElapsed(asOf - r.since)}`;
 	}
 
 	// Dialogs: one open at a time.
@@ -84,7 +93,7 @@
 	};
 	const dnsCells = $derived.by(() => {
 		const cells: Record<string, DnsCell> = {};
-		for (const r of data.rows) {
+		for (const r of rows) {
 			const checks = dns.of(r.id);
 			const hints = checks.flatMap((c) => c.hints);
 			const top = worst(checks);
@@ -177,9 +186,16 @@
 		<PorkbunNotice error={dns.error} />
 	</section>
 {/if}
-{#if data.caddyfileError}
-	<section class="fp-section"><Notice kind="warning">{data.caddyfileError}</Notice></section>
-{:else if !data.probing && data.rows.length > 0}
+{#if list.error}
+	<section class="fp-section">
+		<Notice kind="error"
+			><b>The site list did not load.</b> {list.error} It is tried again in 30 seconds.</Notice
+		>
+	</section>
+{/if}
+{#if list.current?.caddyfileError}
+	<section class="fp-section"><Notice kind="warning">{list.current.caddyfileError}</Notice></section>
+{:else if list.current && !list.current.probing && rows.length > 0}
 	<section class="fp-section">
 		<Notice>The first checks have not finished, so statuses show as unknown for a moment.</Notice>
 	</section>
@@ -208,7 +224,9 @@
 		</button>
 	</div>
 
-	{#if data.rows.length === 0}
+	{#if !list.current}
+		<SitesSkeleton rows={data.siteCount} dns={data.porkbunOn} />
+	{:else if rows.length === 0}
 		<EmptyState
 			title="No sites in the Caddyfile"
 			line={data.fileExists
@@ -411,9 +429,9 @@
 			</table>
 		</div>
 		<p class="fp-pager__info">
-			{shown.length === data.rows.length
-				? `${formatNumber(data.rows.length)} sites`
-				: `${formatNumber(shown.length)} of ${formatNumber(data.rows.length)} sites`}
+			{shown.length === rows.length
+				? `${formatNumber(rows.length)} sites`
+				: `${formatNumber(shown.length)} of ${formatNumber(rows.length)} sites`}
 		</p>
 	{/if}
 </section>

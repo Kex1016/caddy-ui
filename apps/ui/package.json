@@ -13,6 +13,7 @@
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
     "test": "vitest run",
     "test:caddy": "vitest run --config vitest.caddy.config.ts",
+    "test:perf": "vitest run --config vitest.perf.config.ts",
     "gen:theme": "node scripts/gen-theme-system.mjs"
   },
   "devDependencies": {

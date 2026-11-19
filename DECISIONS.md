@@ -988,3 +988,61 @@ Format: date · workstream · decision · why · how to reverse.
   way back from a bad saved value, and the Discord webhook URL as the one secret kept in SQLite · David's words
   on 19 Nov; "the UI should be able to override any of that" is read as every editable setting, not sign-in,
   paths or the port · confidence 75.
+- 2026-11-19 · S0 · `probe_latest` (migration 4) is a `WITHOUT ROWID` table keyed by (site, target), upserted
+  in the same transaction as the probe rows, and only moved forward (`WHERE excluded.ts >= probe_latest.ts`).
+  No backfill: on a database at schema 3 with 200,000 probes the migration takes under 100 ms and does not read
+  `probes`; the table fills on the first probe cycle. Pruning deletes a row only when its target has not been
+  probed for the whole retention · plan D1, D2 · confidence 85.
+- 2026-11-19 · S0 · The `log_minutes (minute)` index goes into the same migration 4. It is not instant on a
+  large `log_minutes` (about 1.5 s once on 90 days of minute rows for 35 busy sites, 0.4 s on 30 days; David's
+  table is far smaller since quiet sites write no rows), but it never touches `probes`, which is what the
+  "instant on millions of probe rows" rule protects, and it cuts per-site traffic for a day from 150 ms to
+  16 ms on 30 days of rows. A covering index (minute, site, requests) was measured too: 25% faster for the
+  30-day sum but 60% slower to build, so not taken · confidence 75.
+- 2026-11-19 · S0 · The read model is a `Snapshot` object beside the collector (`collector/snapshot.ts`), fed by
+  `Collector.onChange` events: after each probe cycle it rebuilds the sites payload and the 24 h Overview, and the
+  sites payload again after each upstream poll (every scrape interval), certificate scan and site list change.
+  Rebuilding the sites payload costs about 1.5 ms on 90 days of data, so rebuilding eagerly is cheaper than
+  tracking staleness per field. `/api/sites`, `/api/overview` and the Site page read it too · plan D3 ·
+  confidence 82.
+- 2026-11-19 · S0 · Other Overview ranges (1h, 7d, 30d) are remembered for one step of the range but never more
+  than five minutes, so the 7-day view's last hour and the 30-day view's last six hours do not freeze. The 24 h
+  range has the same five-minute cap as a fallback for when the probe timer is not running · confidence 78.
+- 2026-11-19 · S0 · Added beyond the plan: `topLists` and `requestsBySite` sum each calendar day (UTC) of the
+  window separately and remember the sums of days that are over, per database; a write into a remembered day
+  (late log minute, metrics) or any prune forgets it. Without it the 30-day Overview took 1.0–1.3 s on the
+  seeded 90-day database and held the server for 775 ms in one query; with it 235 ms warm, and the first time
+  is split into parts that yield. It changes no result: the merged sums equal the single query (unit tests
+  compare them) · confidence 80.
+- 2026-11-19 · S0 · `/reverse_proxy/upstreams` is polled by the collector with `adminFetch` on the scrape timer
+  (2 s timeout); pages read `Collector.live`. A failed poll sets `live.data` to null at once, which pages already
+  show as "admin API not answering", rather than keeping old numbers · plan D4 · confidence 85.
+- 2026-11-19 · S0 · `Server-Timing` is set in `hooks.server.ts` from a `Timing` object every request gets in
+  `locals.timing`; only requests that recorded a step get the header and the slow-load log line, so static
+  files and Porkbun pages stay as they were. Steps read from the snapshot carry `desc="snapshot"` with the
+  build-time duration, streamed ones `desc="streamed"`; `snapshot` gives the snapshot's age and `tail` the
+  access log lag in bytes. The last 20 slow loads are kept in memory (`recentSlowLoads()`) for S3's
+  Diagnostics. No new API route and no §3.2 response shape changes: `/api/sites` and `/api/overview` return
+  exactly what they did (unit tests compare the snapshot with the direct computation) · confidence 85.
+- 2026-11-19 · S0 · Streaming (fix F): a part the snapshot already has is returned as a plain value, so the page
+  renders it on the server with no placeholder; only a part the server must still compute is returned as a
+  promise, computed after the shell went out (`Timing.defer`, `setImmediate`). Overview streams its traffic
+  tiles and charts, then its top lists; what is up, the upstream table and certificates always come with the
+  shell. Sites streams its whole list only before the first snapshot exists. Placeholders use Fishnet's
+  `fp-skel` in the real card and tile frames (no shimmer, nothing to switch off for reduced motion). The
+  30-second refresh keeps the shown values until the new ones land (`Streamed` in `lib/stats`); a range change
+  shows placeholders instead of the old range's numbers · plan D6 · confidence 85.
+- 2026-11-19 · S0 · Sites now refreshes every 30 s while visible, like Overview (`autoRefresh`); the plan
+  assumed it already did. It reloads statuses and the file hash, so an edit started before a refresh still
+  gets the usual conflict check · confidence 78.
+- 2026-11-19 · S0 · Streaming checked through a real Caddy 2.10.2 (built from source) in front of the UI with
+  `forward_auth` and with and without `encode gzip zstd`: the shell arrived at 20–50 ms and the streamed parts
+  followed in the same response (30-day range, cold: charts at 376 ms, top lists at 983 ms on the 90-day
+  database). Caddy flushes chunked responses at once, so no `flush_interval` change is needed in David's
+  Caddyfile · confidence 85.
+- 2026-11-19 · S0 · The 90-day performance test (`pnpm test:perf`, fix G) runs in its own CI job, not in
+  `pnpm test`: seeding 18 million probe rows and 4.7 million log minutes takes about 45 s and 3.5 GB. It fails
+  over 200 ms for either payload's build and over 5 ms for reading them from the snapshot · confidence 82.
+- 2026-11-19 · S0 · The access log is read in 1 MB slices, at most 8 per 5 s tick as before, with a
+  `setImmediate` between slices; `tailLogs` became async. Prune deletes 5,000 rows per statement with a pause
+  between batches · plan §1.3 E · confidence 85.

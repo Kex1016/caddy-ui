@@ -155,10 +155,19 @@ export type TailPosition = { ino: number; offset: number };
  * new file from the top. A missing file is not an error: logging may simply be off.
  */
 export class FileTailer {
+	/** The file's size at the last `read`, or null when it was missing. With `position`, how far behind it is. */
+	lastSize: number | null = null;
+
 	constructor(
 		private path: string,
 		public position: TailPosition | undefined
 	) {}
+
+	/** Bytes written to the file that have not been read yet (0 when the file is missing). */
+	get lagBytes(): number {
+		if (this.lastSize === null || !this.position) return 0;
+		return Math.max(0, this.lastSize - this.position.offset);
+	}
 
 	/**
 	 * Returns complete lines appended since the last call. A file that already exists the first time it is seen
@@ -171,8 +180,10 @@ export class FileTailer {
 		} catch {
 			// Missing: when it appears it is a new file, so it is read from the top.
 			this.position ??= { ino: -1, offset: 0 };
+			this.lastSize = null;
 			return [];
 		}
+		this.lastSize = st.size;
 		if (!this.position) {
 			this.position = { ino: st.ino, offset: st.size };
 			return [];

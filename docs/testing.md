@@ -103,6 +103,22 @@ outline with its directive docs within 2 s, and one keystroke in a form must rea
 outline within 300 ms. Measured locally at the time of writing: first byte about 20 ms, load
 about 0.1 s, 55 KB of JavaScript on the stats pages and 226 KB on the editor.
 
+### Overview and Sites on 90 days of data
+
+`pnpm --filter @caddy-ui/ui test:perf` seeds a database the way 90 days of running leaves it
+with 35 sites behind one upstream each: 18 million probe rows, the access log rolled up per
+site and minute (4.7 million rows), and the server-wide metrics. It fails when building the
+sites payload or the 24-hour Overview takes over 200 ms, or when serving either from the
+collector's snapshot takes over 5 ms. CI runs it in its own job, because seeding takes about a
+minute and 3.5 GB of disk. Set `PERF_DB=/some/file.db` to keep the seeded database and reuse
+it on the next run while tuning.
+
+Measured on a cloud VM on 19 Nov 2026: sites payload 1.4 ms, 24-hour Overview 31 ms, both
+read from the snapshot in under 0.2 ms. The 7- and 30-day Overviews are not budgeted (they
+stream in); they take about 50 ms and 240 ms once the days that are over have been summed
+once, and up to about a second the first time. The query this replaced for the latest probe
+per target took 24 s on the same data.
+
 ## Formatter differential
 
 `format()` must produce exactly what `caddy fmt` produces, because every save is written
