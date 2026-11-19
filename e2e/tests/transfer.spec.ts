@@ -75,7 +75,7 @@ test('a file from a newer format, a value that fails and a foreign file are refu
 	request
 }) => {
 	let t = await review(page, { format: 'caddy-ui-settings', formatVersion: 99 });
-	await expect(t.getByText(/newer Caddy UI/)).toBeVisible();
+	await expect(t.getByText(/comes from a newer Caddy UI/)).toBeVisible();
 
 	t = await review(page, { format: 'something-else' });
 	await expect(t.getByText(/not a Caddy UI settings export/)).toBeVisible();
