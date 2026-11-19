@@ -39,7 +39,8 @@ describe('/api/settings', () => {
 			'TZ',
 			'CADDY_UI_PUBLIC_URL',
 			'CADDY_UI_PORKBUN_READONLY',
-			'CADDY_UI_PORKBUN_CACHE_TTL'
+			'CADDY_UI_PORKBUN_CACHE_TTL',
+			'CADDY_UI_UPDATE_INTERVAL'
 		]);
 		expect(JSON.stringify(body)).not.toContain('pk1_x');
 	});

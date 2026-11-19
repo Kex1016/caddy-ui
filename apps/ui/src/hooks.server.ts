@@ -10,6 +10,7 @@ import { reconfigurePorkbun } from '$lib/server/porkbun';
 import { getRuntime } from '$lib/server/runtime';
 import { getPrefs, installSettings, onSettingsChange } from '$lib/server/settings';
 import { setDefaultRange } from '$lib/server/collector';
+import { syncUpdaterInterval, updateKeyChanged } from '$lib/server/updater';
 import { SESSION_COOKIE } from '$lib/server/session';
 import { Timing } from '$lib/server/timing';
 import { THEME_COOKIE, effectiveTheme, themeAttribute } from '$lib/theme';
@@ -32,6 +33,10 @@ export const init: ServerInit = async () => {
 				// Display preferences (S6): the collector keeps the saved default range ready.
 				setDefaultRange(getPrefs().get().range);
 				getPrefs().subscribe((next) => setDefaultRange(next.range));
+				syncUpdaterInterval();
+				onSettingsChange((_next, _prev, changed) => {
+					if (updateKeyChanged(changed)) syncUpdaterInterval();
+				});
 			} catch (err) {
 				if (err instanceof ConfigError) throw err;
 				// Saved settings must never stop the UI: run on the environment and say why.

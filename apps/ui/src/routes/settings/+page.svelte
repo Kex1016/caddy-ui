@@ -22,6 +22,7 @@
 		type SectionId
 	} from '$lib/settings/meta';
 	import type { StorageMeasure } from '$lib/settings/types';
+	import { RESULT_TAG, TRIGGER_TEXT, channelNotice, intervalText } from '$lib/settings/updates';
 
 	let { data, form } = $props();
 
@@ -224,6 +225,22 @@
 	});
 
 	const dbTotal = $derived(data.storage.fileBytes + data.storage.walBytes);
+
+	// Updates: while a check is asked for or running, look at the updater's files every two seconds.
+	const updates = $derived(data.updates);
+	const notice = $derived(channelNotice(updates));
+	const busyChecking = $derived(updates.checkPending || updates.status?.checking === true);
+	let checkSent = $state(false);
+	let checkError = $state<string | null>(null);
+	$effect(() => {
+		if (!busyChecking && !checkSent) return;
+		const timer = setInterval(() => void invalidateAll(), 2000);
+		return () => clearInterval(timer);
+	});
+	$effect(() => {
+		// The request has been seen by the updater: stop polling at the fast pace once it is done.
+		if (checkSent && updates.status && !busyChecking) checkSent = false;
+	});
 
 	// "Test" buttons.
 	let adminTest = $state<{ busy: boolean; result: CaddyStatus | null; error: string | null }>({
@@ -695,14 +712,142 @@
 <section class="fp-section" id="updates" aria-labelledby="updates-h">
 	<div class="fp-section__head"><h2 class="t-title-2" id="updates-h">Updates</h2></div>
 	<p class="t-body t-muted">
-		The updater container reads these from its own environment; the values here are this container's copy.
+		The updater is a separate container that keeps this one current. This page talks to it through two small
+		files in a shared folder: it never touches Docker itself.
 	</p>
+
+	{#if notice}
+		<Notice kind={notice.kind === 'warning' ? 'warning' : undefined}>{notice.text}</Notice>
+	{/if}
+
+	<div class="fp-panel fp-table__wrap">
+		<table class="fp-table">
+			<caption class="visually-hidden">The running version and the updater's last check</caption>
+			<tbody>
+				<tr>
+					<th scope="row" class="t-ui">Running version</th>
+					<td class="t-mono" data-testid="update-current">{updates.version}</td>
+				</tr>
+				<tr>
+					<th scope="row" class="t-ui">Newest found</th>
+					<td class="t-mono" data-testid="update-latest">
+						{updates.status?.latest?.version || (updates.status ? 'not reported yet' : 'unknown')}
+					</td>
+				</tr>
+				<tr>
+					<th scope="row" class="t-ui">Last check</th>
+					<td data-testid="update-last">
+						{#if updates.status?.lastRun}
+							{@const run = updates.status.lastRun}
+							<div class="check__in">
+								<Tag kind={RESULT_TAG[run.result].kind}>{RESULT_TAG[run.result].text}</Tag>
+								<span class="t-ui">
+									{formatDateTime(Date.parse(run.finishedAt), data.timeZone)}, {TRIGGER_TEXT[run.trigger]}
+								</span>
+							</div>
+							{#if run.message}<p class="t-caption">{run.message}</p>{/if}
+						{:else if updates.status?.checking}
+							<span class="t-ui">Checking now…</span>
+						{:else}
+							<span class="t-ui t-muted">No check yet.</span>
+						{/if}
+					</td>
+				</tr>
+				<tr>
+					<th scope="row" class="t-ui">Next check</th>
+					<td class="t-ui" data-testid="update-next">
+						{#if updates.status?.checking}
+							Running now
+						{:else if updates.status?.nextCheckAt}
+							{formatDateTime(Date.parse(updates.status.nextCheckAt), data.timeZone)}
+						{:else}
+							<span class="t-muted">Unknown</span>
+						{/if}
+					</td>
+				</tr>
+				<tr>
+					<th scope="row" class="t-ui">Updater uses</th>
+					<td class="t-ui" data-testid="update-using">
+						{#if updates.status}
+							Every {intervalText(updates.status.intervalSeconds)}
+							<span class="t-muted">
+								({updates.status.intervalFrom === 'control' ? 'set here' : 'from its own environment'}), from {updates
+									.status.source === 'git'
+									? 'a git build'
+									: 'the container registry'}
+							</span>
+						{:else}
+							<span class="t-muted">Unknown</span>
+						{/if}
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	{#if updates.status?.warning}
+		<Notice kind="warning">The updater says: {updates.status.warning}.</Notice>
+	{/if}
+
+	<div class="test">
+		<form
+			method="POST"
+			action="?/checkNow"
+			use:enhance={() => {
+				checkError = null;
+				checkSent = true;
+				return async ({ result, update }) => {
+					if (result.type === 'failure') {
+						checkError = String(result.data?.checkError ?? 'The request could not be sent.');
+						checkSent = false;
+					}
+					await update({ reset: false });
+				};
+			}}
+		>
+			<button type="submit" class="fp-btn" disabled={updates.state === 'no-channel' || busyChecking}>
+				{busyChecking ? 'Checking…' : 'Check now'}
+			</button>
+		</form>
+		<div class="test__out t-ui" aria-live="polite">
+			{#if checkError}
+				<Tag kind="error">Failed</Tag> {checkError}
+			{:else if updates.checkPending}
+				Asked. The updater picks it up within {updates.status?.pollSeconds ?? 5} seconds.
+			{/if}
+		</div>
+	</div>
+
+	<form
+		class="fp-panel fields"
+		onsubmit={(e) => {
+			e.preventDefault();
+			save('updates');
+		}}
+	>
+		{#each SECTION_KEYS.updates as key (key)}
+			<SettingField
+				row={rowOf(key)}
+				bind:value={() => valueOf(key), (v) => (drafts = { ...drafts, [key]: v })}
+				error={errors[key]}
+				{locked}
+				signIn={view.signIn}
+				busy={busy !== null}
+				onreset={() => reset(key)}
+			/>
+		{/each}
+		<div class="full">{@render saveBar('updates')}</div>
+	</form>
+
 	{@render envTable('Updater settings, set in the environment', [
-		'CADDY_UI_UPDATE_INTERVAL',
 		'CADDY_UI_UPDATE_SOURCE',
 		'CADDY_UI_UPDATE_WEBHOOK_PORT',
+		'CADDY_UI_UPDATER_DIR',
 		'CADDY_UI_SETTINGS_IGNORE'
 	])}
+	<p class="t-caption">
+		The source, the webhook and the shared folder are set in compose, where the updater reads them too. The
+		folder is <span class="t-mono">{updates.dir}</span>.
+	</p>
 </section>
 
 <!-- Recent changes -->

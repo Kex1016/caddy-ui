@@ -40,5 +40,5 @@ if [ -n "$SECRET" ]; then
   fi
 fi
 
-( "$SELF_DIR/updater.sh" once >/proc/1/fd/1 2>&1 & ) 
+( CADDY_UI_UPDATE_TRIGGER=webhook "$SELF_DIR/updater.sh" once >/proc/1/fd/1 2>&1 & ) 
 reply "202 Accepted" "update check started"

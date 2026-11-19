@@ -94,6 +94,8 @@ The updater sidecar is optional. It checks for a new image every `CADDY_UI_UPDAT
 redeploys only `caddy-ui`, and rolls back if the new container is not healthy. It needs the
 Docker socket and your compose directory mounted at the same absolute path
 (`CADDY_UI_COMPOSE_DIR`). Settings are in [`deploy/updater/README.md`](../deploy/updater/README.md).
+With the example compose file, Settings → Updates shows its last check and lets you change the
+interval and check now (see [configuration.md](configuration.md#updates-and-the-updater)).
 
 To update by hand:
 
