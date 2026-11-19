@@ -127,6 +127,8 @@ export type DnsZone = {
 	records: DnsRecord[];
 	/** Porkbun's own Cloudflare proxy toggle for the domain. */
 	cloudflare: boolean;
+	/** What Porkbun had to say along with the records, as written. Absent when it said nothing. */
+	warnings?: string[];
 };
 
 /** A cached read. `stale` means Porkbun could not be asked and this is the last good answer. */

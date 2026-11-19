@@ -876,3 +876,11 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-18 · P2 · Known gap, not decided here: `porkbun().dns.list` drops the `warnings` Porkbun sends with
   `/dns/retrieve`, so a warning that only comes with a read is not shown on the DNS tab. Warnings on dry runs
   and writes are shown as written. Needs `warnings` on `DnsZone` in P0's client; told the coordinator.
+- 2026-11-19 · P2 · The gap above is closed: `DnsZone` has an optional `warnings` (the strings Porkbun
+  sends with `/dns/retrieve`, left out when it sends none), `porkbun().dns.list` fills it, and the DNS tab
+  shows each one as written above the table; a warning of a batch that the zone already shows is not shown
+  twice · additive: no caller that builds or compares a zone changes, and the cached copy carries the
+  warnings until the zone is read again. Porkbun's spec (v3.107) lists `warnings` on writes only, so the
+  fake Porkbun still sends none with a read and the tests queue an answer that has them. Done on the
+  coordinator's request, outside P2's own files (`lib/api/porkbun.ts`, `lib/server/porkbun/client.ts`) ·
+  confidence 85.

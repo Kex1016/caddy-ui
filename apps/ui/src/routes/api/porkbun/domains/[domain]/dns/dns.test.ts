@@ -126,6 +126,20 @@ describe('GET …/dns', () => {
 		expect(ctx.fake.requests.some((r) => r.path.includes('nope.example'))).toBe(false);
 	});
 
+	it('passes on what Porkbun says along with the zone, as written', async () => {
+		// The first read also fetches the domain list, so the answer queued below is the next zone read.
+		expect((await call(GET, 'GET', BASE)).body).not.toHaveProperty('data.warnings');
+		const said = `${D} is served through Cloudflare, so the records here are not what resolves.`;
+		ctx.fake.respondNext({
+			status: 200,
+			body: { status: 'SUCCESS', cloudflare: 'enabled', records: [], warnings: [said] }
+		});
+		const forced = await call(GET, 'GET', `${BASE}?force`);
+		expect(forced.body).toMatchObject({ data: { records: [], cloudflare: true, warnings: [said] } });
+		// They stay with the cached copy until the zone is read again.
+		expect((await call(GET, 'GET', BASE)).body).toMatchObject({ data: { warnings: [said] } });
+	});
+
 	it('passes on why a zone can not be read', async () => {
 		const res = await call(GET, 'GET', '/api/porkbun/domains/example.org/dns', undefined, {
 			domain: 'example.org'
