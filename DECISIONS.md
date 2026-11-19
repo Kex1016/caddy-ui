@@ -899,3 +899,7 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-18 · P2 · Known gap, not decided here: `porkbun().dns.list` drops the `warnings` Porkbun sends with
   `/dns/retrieve`, so a warning that only comes with a read is not shown on the DNS tab. Warnings on dry runs
   and writes are shown as written. Needs `warnings` on `DnsZone` in P0's client; told the coordinator.
+- 2026-11-19 · P6 final · `docs/porkbun.md` now documents what P1-P5 shipped, including that an import creating
+  more than 500 records is refused (not split) and that read-only defaults on whenever the UI has no sign-in of
+  its own (auth `none`, or `local` without user and password) · written from the merged code, not the plan ·
+  none · confidence 90.
