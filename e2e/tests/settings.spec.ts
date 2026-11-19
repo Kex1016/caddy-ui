@@ -229,7 +229,7 @@ test.describe('Updates', () => {
 
 		await updates.getByLabel('Check for updates every').fill('10s');
 		await updates.getByRole('button', { name: 'Save', exact: true }).click();
-		await expect(updates.getByText(/at least 30s/)).toBeVisible();
+		await expect(updates.locator('#set-caddy_ui_update_interval-err')).toContainText('at least 30s');
 		clean();
 	});
 
