@@ -331,6 +331,18 @@ describe('domains', () => {
 });
 
 describe('dns records', () => {
+	it('keeps what Porkbun says along with a zone, and adds nothing when it says nothing', async () => {
+		expect(await pb.dns.list('example.com')).not.toHaveProperty('warnings');
+		const said = 'example.com is served through Cloudflare, so the records here are not what resolves.';
+		fake.respondNext({
+			status: 200,
+			body: { status: 'SUCCESS', cloudflare: 'enabled', records: [], warnings: [said, 7, null] }
+		});
+		expect(await pb.dns.list('example.com')).toEqual({ records: [], cloudflare: true, warnings: [said] });
+		fake.respondNext({ status: 200, body: { status: 'SUCCESS', records: [], warnings: [] } });
+		expect(await pb.dns.list('example.com')).toEqual({ records: [], cloudflare: false });
+	});
+
 	it('lists a zone with numbers as numbers and the host split from the name', async () => {
 		const zone = await pb.dns.list('example.com');
 		expect(zone.cloudflare).toBe(false);

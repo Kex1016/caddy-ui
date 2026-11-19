@@ -310,6 +310,8 @@
 	let importing = $state(false);
 
 	const offPorkbun = $derived(data.nameservers !== null && !isAtPorkbun(data.nameservers));
+	/** What Porkbun said when the zone was read, shown as written (docs/porkbun-plan.md §3.1 rule 5). */
+	const zoneWarnings = $derived(data.zone?.data.warnings ?? []);
 </script>
 
 <section class="fp-section" aria-labelledby="dns-title">
@@ -341,6 +343,7 @@
 				until it can be read again.
 			</Notice>
 		{/if}
+		<PorkbunNotice warnings={zoneWarnings} />
 
 		{#if report}
 			<Notice kind={report.ok ? 'success' : 'warning'}>
@@ -363,7 +366,11 @@
 					</ul>
 				{/if}
 			</Notice>
-			<PorkbunNotice warnings={report.warnings.filter((w) => !w.startsWith('A record with this name'))} />
+			<PorkbunNotice
+				warnings={report.warnings.filter(
+					(w) => !w.startsWith('A record with this name') && !zoneWarnings.includes(w)
+				)}
+			/>
 		{/if}
 
 		<div class="fp-filters bar">

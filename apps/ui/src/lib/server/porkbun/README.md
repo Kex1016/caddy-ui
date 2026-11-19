@@ -39,6 +39,9 @@ key of that domain; `invalidate('example.com:dns')` drops one. `stale: true` mea
 and the answer is the last good one: show `AsOf` with it. The SSL bundle is never cached (the cache refuses
 keys with an `ssl` part).
 
+A zone read keeps what Porkbun said along with the records: `DnsZone.warnings`, present only when it said
+something. Show it as written (`PorkbunNotice` takes the list).
+
 `toResponse(err)` turns this module's errors into the JSON every `/api/porkbun/*` route answers with
 (`PorkbunFailure`). It throws SvelteKit's own errors and anything unknown on, so call it in the `catch` of a
 `+server.ts` and return its result.
