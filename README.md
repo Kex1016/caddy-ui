@@ -23,6 +23,10 @@ It replaces `zackwag/caddy-ui-frontend` and `zackwag/caddy-ui-backend` with a si
 - **Stats**: charts for the server and each site, from Caddy's metrics, its JSON access log,
   certificate files and the UI's own probes. Each chart has a table view and names its
   source. See [docs/stats.md](docs/stats.md).
+- **Discord notifications**: a message when a site goes down or comes back, a certificate nears
+  its end, the Caddyfile changes outside the UI, or an update is applied. Each message is an
+  editable Components v2 template with a live preview. See
+  [docs/notifications.md](docs/notifications.md).
 - **Updater**: an optional sidecar that redeploys the UI when a new image is published.
 - **Porkbun domains (optional):** manage DNS records, restore points, nameservers, DNSSEC,
   forwarding and the SSL bundle for your Porkbun domains, with review-before-apply on every
@@ -151,6 +155,10 @@ tools prune, compact and download a backup; and the Updates section shows the up
 and newest version, with a "Check now" button. See
 [docs/configuration.md](docs/configuration.md#the-settings-page).
 
+Settings is also where Discord notifications are set up: paste a channel's webhook URL (it is
+never shown again), pick the events, and edit each message with a live preview and **Send test**.
+See [docs/notifications.md](docs/notifications.md).
+
 ## Development
 
 Needs Node 22 and pnpm 10 (`corepack enable`).
@@ -176,6 +184,7 @@ the Caddyfile parser and the directive schema. See [docs/architecture.md](docs/a
 | [docs/editor.md](docs/editor.md) | The visual and text editors |
 | [docs/porkbun.md](docs/porkbun.md) | Managing Porkbun domains and the Caddy DNS plugin: keys, sandbox, safety rules, errors |
 | [docs/stats.md](docs/stats.md) | Where each number comes from and what to enable |
+| [docs/notifications.md](docs/notifications.md) | Discord notifications: setup, events, editing messages, delivery |
 | [docs/migration-from-caddy-ui.md](docs/migration-from-caddy-ui.md) | Swapping the zackwag images for this one |
 | [docs/faq.md](docs/faq.md) | Common questions and fixes |
 | [docs/caddy-coverage.md](docs/caddy-coverage.md) | Every directive and matcher the editor supports |

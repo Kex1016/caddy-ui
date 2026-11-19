@@ -6,6 +6,7 @@ import { installCaddyfileParser } from '$lib/server/config/caddyfile-parser';
 import { startCollector } from '$lib/server/collector';
 import { ConfigError, config } from '$lib/server/env';
 import { isApiPath, isPublicPath, sameOrigin } from '$lib/server/guard';
+import { startNotifier } from '$lib/server/notify';
 import { reconfigurePorkbun } from '$lib/server/porkbun';
 import { getRuntime } from '$lib/server/runtime';
 import { getPrefs, installSettings, onSettingsChange } from '$lib/server/settings';
@@ -58,7 +59,10 @@ export const init: ServerInit = async () => {
 				`caddy-ui: ${missing} is unset, so the Domains area is off until both Porkbun keys are set.`
 			);
 		}
-		if (!building && process.env.VITEST === undefined) startCollector();
+		if (!building && process.env.VITEST === undefined) {
+			startCollector();
+			startNotifier();
+		}
 	} catch (err) {
 		if (err instanceof ConfigError) {
 			console.error(`caddy-ui: invalid configuration: ${err.message}`);

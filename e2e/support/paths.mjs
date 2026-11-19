@@ -9,6 +9,9 @@ export const UI_PORT = Number(process.env.E2E_UI_PORT ?? 3101);
 /** The fake Porkbun API (support/porkbun-fake.mjs). */
 export const PORKBUN_PORT = Number(process.env.E2E_PORKBUN_PORT ?? 3102);
 export const PORKBUN_URL = `http://127.0.0.1:${PORKBUN_PORT}`;
+/** The fake Discord webhook endpoint (support/discord-fake.mjs). */
+export const DISCORD_PORT = Number(process.env.E2E_DISCORD_PORT ?? 3103);
+export const DISCORD_URL = `http://127.0.0.1:${DISCORD_PORT}`;
 const dir = resolve(process.env.E2E_DIR ?? join(here, '..', '.run'));
 
 export const paths = {

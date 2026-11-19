@@ -5,6 +5,7 @@ import { getConfigService } from '$lib/server/config';
 import { authorOf } from '$lib/server/config/http';
 import { getDb } from '$lib/server/db';
 import { config } from '$lib/server/env';
+import { getNotifier } from '$lib/server/notify';
 import { getRuntime } from '$lib/server/runtime';
 import {
 	PrefsRefused,
@@ -73,6 +74,8 @@ export const load: PageServerLoad = async ({ depends, cookies }) => {
 				lastEntry: c.status.logs.lastEntry
 			}
 		},
+		/** Discord notifications (S5): never the webhook URL, only whether one is saved. */
+		notifications: getNotifier().view(),
 		now: Date.now(),
 		/** Two small files in the shared directory: no wait. */
 		updates: getUpdates(),

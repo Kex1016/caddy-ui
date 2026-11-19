@@ -6,7 +6,8 @@ import type { Database } from 'better-sqlite3';
  * W3 owns migration 1 (revisions, settings); W4 appends the collector tables as migration 2; P0 appends the
  * Porkbun tables as migration 3. Later Porkbun tables are appended by the workstream that needs them, one
  * migration each (docs/porkbun-plan.md §3.2). S0 appends migration 4 (docs/settings-and-perf-plan.md §1.3), S1
- * migration 5 (the settings log, §2.2).
+ * migration 5 (the settings log, §2.2), S3 migration 6 (per-site probe options), S5 migration 7 (the notification log,
+ * §3.1).
  * A migration must be instant on a database with millions of probe rows: never rewrite or backfill `probes`.
  */
 export type Migration = string | ((db: Database) => void);
@@ -165,5 +166,22 @@ export const migrations: Migration[] = [
 		updated_at INTEGER NOT NULL,
 		author TEXT NOT NULL
 	) WITHOUT ROWID;
+	`,
+	// 7 · S5 · Discord notifications sent, or given up on (docs/settings-and-perf-plan.md §3.1), for the Settings page
+	// and Diagnostics. A new, empty table, so the migration is instant on any database; the notifier keeps the
+	// newest 200 rows. The webhook URL is never stored here (it lives in `settings` under `notify.webhook`, D19).
+	`
+	CREATE TABLE notify_log (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		ts INTEGER NOT NULL,
+		event TEXT NOT NULL,
+		subject TEXT NOT NULL,
+		ok INTEGER NOT NULL,
+		status INTEGER,
+		format TEXT NOT NULL,
+		attempts INTEGER NOT NULL,
+		error TEXT,
+		test INTEGER NOT NULL DEFAULT 0
+	);
 	`
 ];
