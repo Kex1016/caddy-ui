@@ -224,6 +224,8 @@ test.describe('Updates', () => {
 
 		await updates.getByRole('button', { name: /Use the default/ }).click();
 		await expect.poll(() => control().interval).toBeNull();
+		await expect(updates.getByText('uses the default again.')).toBeVisible();
+		await expect(updates.getByLabel('Check for updates every')).toHaveValue('1h');
 
 		await updates.getByLabel('Check for updates every').fill('10s');
 		await updates.getByRole('button', { name: 'Save', exact: true }).click();
