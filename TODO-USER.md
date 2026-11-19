@@ -194,3 +194,7 @@ Newest at the bottom. Format: date · workstream · what · why.
   Connections: each path has a check, and the admin API a **Test** button. A warning on the access log only means
   Caddy's JSON access log is not at `CADDY_LOG_PATH` yet (see the W4 item above) · it is the quickest way to see
   that the mounts in compose are what the UI expects.
+- [ ] 2026-11-19 · S6 · Nothing is required. After the display-preferences build is running, open Settings →
+  Preferences once and pick the clock, date format, landing page and default range you want. They are saved on the
+  server, so they apply in every browser; a browser where you used the theme button keeps its own theme until you
+  press **Use the saved default here**.
