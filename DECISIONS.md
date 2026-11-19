@@ -962,3 +962,9 @@ Format: date · workstream · decision · why · how to reverse.
   the Porkbun keys can be typed into the UI (recommended: no, 60), whether raw probe rows are kept 7 days with an
   hourly summary for the full retention (recommended: yes, 62), and which extras the page gets (55). S0 does not
   need them, except the probe summary · confidence 60.
+- 2026-11-19 · Settings and speed plan · David answered Q3: raw probe results stay for the full retention (he
+  has about 5 GB for site data), so there is no hourly summary table and the per-table storage view moves into
+  S2. He also asked for the pages to appear at once and fill in as data arrives, so streaming with skeletons
+  (fix F) is now always built instead of "only if still slow". The access log tail was checked as a cause at his
+  request: it reads at most 8 MB per 5 s and the pages only read minute rollups, so it is ranked low, and fix A
+  reports its lag · David's words on 19 Nov · confidence 90.

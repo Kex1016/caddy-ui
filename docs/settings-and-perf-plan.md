@@ -81,7 +81,17 @@ up to 2 seconds, and a failed answer is cached for only 5 seconds.
 parses two JSON columns per minute of the range: 86,000 small JSON documents for the 30-day
 view. Raw probes alone reach about 2.6 GB at 90 days.
 
-**6. Ruled out.** Porkbun (not in either `load`), the Caddyfile read (one small file), chart
+**6. The access log tail falling behind (likelihood: low; David asked on 19 Nov).**
+The collector reads at most 8 MB of new log every 5 seconds (`FileTailer.read`), parses it
+on the main thread and stores one row per site per minute. The pages never read the log
+itself, only those minute rows, so a large or busy log does not make the page queries
+slower. Two things can still hurt: the tail keeps up only to about 1.6 MB of log per second
+(a few thousand requests per second, far above a home server), and while it catches up
+after downtime or a truncated file each tick blocks the server for roughly 0.1 s. Neither
+explains 15 seconds, but fix A reports how far behind the tail is so this is measured, not
+assumed.
+
+**7. Ruled out.** Porkbun (not in either `load`), the Caddyfile read (one small file), chart
 rendering (the wait is before the first byte), and tinyauth's `forward_auth` hop (one fast
 request per page).
 
@@ -95,7 +105,7 @@ been running.
 
 - **A. Measure first.** Add a `Server-Timing` header and a log line for any `load` over
   500 ms, with one entry per step (`states`, `latestProbes`, `live`, `spans`, `traffic`,
-  `top`). Confirms the ranking on David's box before and after, and stays in as a diagnostic.
+  `top`), plus how many bytes the access log tail is behind. Confirms the ranking on David's box before and after, and stays in as a diagnostic.
 - **B. Latest probe per target without a scan.** New small table `probe_latest`
   (`site_id, target` primary key), upserted in the same transaction that inserts the probe
   rows. `latestProbes` reads about 70 rows. No backfill: the table fills on the first probe
@@ -108,12 +118,20 @@ been running.
 - **D. Take the admin API out of the request path.** The collector refreshes
   `/reverse_proxy/upstreams` on the scrape timer with `adminFetch`; pages read the last
   answer and its age.
-- **E. Stop the growth.** Add `log_minutes (minute)` index. Keep raw probe rows for a short
-  window and an hourly summary for the full retention (question Q3). Prune in batches so the
-  hourly delete never holds the server for long.
-- **F. Show the page before the numbers, if still needed.** If a load can still exceed
-  300 ms after A–E (first request after a restart, 30-day range), return the slow parts as
-  streamed promises with skeletons so navigation is instant. Decided by the numbers from A.
+- **E. Make size not matter.** Raw probe rows are kept for the full retention (David, 19
+  Nov: he has about 5 GB for site data and wants the data). Add the `log_minutes (minute)`
+  index, prune in batches so the hourly delete never holds the server for long, and parse
+  the log tail in slices that yield between chunks. Settings shows the database size per
+  table so growth is visible against the quota.
+- **F. Show the page at once, fill in the data as it arrives** (David asked for this on 19
+  Nov). Overview and Sites return their shell immediately and stream the data in parts:
+  status tiles and the site list first (from the snapshot, so effectively instant), then
+  charts, then top lists. Each part shows a skeleton until it lands. The 30-second refresh
+  swaps values in place without skeletons. Streaming alone would not have fixed the 15
+  seconds: while the old scan ran, the server could not send even the shell of the next
+  page. It needs B–D underneath it. Caddy's `reverse_proxy` passes streamed responses
+  through; the build checks it behind `forward_auth` and turns off proxy buffering for
+  these responses if needed.
 - **G. Keep it fixed.** A unit-level performance test seeds 90 days of probes for 35 sites
   and fails if `sitesPayload` or `overview('24h')` takes more than 200 ms. The e2e budget
   stays as is.
@@ -234,7 +252,7 @@ Out of scope as before: renewals, WHOIS contacts, email forwarding, dynamic DNS.
 
 ## 4. Questions for David
 
-Decisions under about 70. Work can start on S0 without any of them.
+Decisions under about 70. Work can start on S0 without any of them. Q3 is answered.
 
 - **Q1 · Environment or UI, which wins?** (confidence 65) Recommended: the environment wins
   and locks the field. Compose stays the source of truth, and a broken saved value can
@@ -247,7 +265,10 @@ Decisions under about 70. Work can start on S0 without any of them.
   own environment for the DNS challenge, so a key typed into the UI would only half-apply,
   and it would put a secret in the SQLite file. The alternative is to accept that and allow
   it for the UI's own calls.
-- **Q3 · Keep raw probe results for 7 days instead of 90?** (confidence 62) Recommended:
+- **Q3 · Answered 19 Nov: no.** David keeps raw probe results for the full retention; he
+  has about 5 GB for site data. Fix B makes page speed independent of the table's size. The
+  original question, kept for the record: keep raw probe results for 7 days instead of 90?
+  (confidence 62) Recommended:
   yes, with an hourly summary (checks, failures, average and slowest latency) kept for the
   full `CADDY_UI_RETENTION_DAYS`. Up, down and uptime history are unaffected because they
   come from state changes, which are kept forever. What is lost: per-probe latency points
@@ -266,7 +287,8 @@ Decisions under about 70. Work can start on S0 without any of them.
 | D3 | Page loads read a snapshot the collector builds after each probe cycle; they do not query per request. | 82 |
 | D4 | The admin API is polled by the collector with `adminFetch`, never from a page `load`. | 85 |
 | D5 | SQLite stays on the main thread. With D1–D4 no request-path query is slow enough to justify a worker thread. | 78 |
-| D6 | Streaming with skeletons (fix F) is built only if the timings from fix A still show loads over 300 ms after B–E. | 72 |
+| D6 | Streaming with skeletons (fix F) is built for Overview and Sites, on top of B–D. David asked for it on 19 Nov; it replaces the earlier "only if still slow". | 90 |
+| D15 | Raw probe rows stay for the full `CADDY_UI_RETENTION_DAYS`; no hourly summary table. David's call on 19 Nov. Projected size at 90 days with 35 sites: about 2.6 GB for probes alone, so the storage view in Settings ships with S2, not S3. | 90 |
 | D7 | Settings live in the existing `settings` table under `cfg.` keys, with a `settings_log` table for changes. No settings file on disk. | 85 |
 | D8 | Sign-in settings, paths, the admin URL and the port stay environment-only and are shown read-only with health checks. | 85 |
 | D9 | The Porkbun read-only switch can be loosened from the UI only when the UI has a sign-in. | 80 |
@@ -280,7 +302,7 @@ Decisions under about 70. Work can start on S0 without any of them.
 
 | # | Workstream | Depends on | Model, effort | Done when |
 | --- | --- | --- | --- | --- |
-| S0 | Fast Overview and Sites: fixes A–E and G, F if the numbers ask for it | none | Opus, high | Seeded 90-day test under 200 ms; `Server-Timing` on both pages; David's pages load in under a second |
+| S0 | Fast Overview and Sites: fixes A–G | none | Opus, high | Seeded 90-day test under 200 ms; `Server-Timing` on both pages; the page shell appears at once and data streams in; David's pages are complete in under a second |
 | S1 | Settings core: effective config, settings service, live re-configuration, `/api/settings`, settings log | none (touches `env.ts` and `Collector`, so it merges after S0) | Opus, high | Seven settings change live with unit tests; bad stored values are ignored; contracts logged |
 | S2 | Settings page: sections from §2.3, checks and test buttons, About table moved, docs | S1 | Sonnet, medium | Page passes axe and the e2e budget; `docs/configuration.md` updated |
 | S3 | Extras "Recommended next": diagnostics, Caddy helpers, storage, thresholds | S2 | Opus, medium | Each has an e2e spec |
@@ -288,8 +310,7 @@ Decisions under about 70. Work can start on S0 without any of them.
 | S5 | Notifications | S2 | Opus, high | Optional; only if David picks it in Q4 |
 
 S0 and S1 can run at the same time if S1 rebases after S0 merges; they share
-`collector/worker.ts` and `collector/index.ts`. S0 needs none of the answers in §4 except Q3
-for the probe summary, and ships without that part if Q3 is still open.
+`collector/worker.ts` and `collector/index.ts`. S0 needs none of the open answers in §4.
 
 One optional thing David can do to speed up S0: open Overview with the browser's network
 panel and note the time of the document request, and run
