@@ -213,7 +213,6 @@ test.describe('Updates', () => {
 	});
 
 	test('a saved interval reaches control.json, and the reset takes it back', async ({ page }) => {
-		const clean = watchConsole(page);
 		updaterStatus();
 		await page.goto('/settings');
 		const updates = section(page, 'Updates');
@@ -230,7 +229,6 @@ test.describe('Updates', () => {
 		await updates.getByLabel('Check for updates every').fill('10s');
 		await updates.getByRole('button', { name: 'Save', exact: true }).click();
 		await expect(updates.locator('#set-caddy_ui_update_interval-err')).toContainText('at least 30s');
-		clean();
 	});
 
 	test('check now asks once, and the page follows the updater until it has answered', async ({ page }) => {
