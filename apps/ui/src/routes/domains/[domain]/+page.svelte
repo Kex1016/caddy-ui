@@ -270,6 +270,7 @@
 			</dl>
 			<p class="t-caption">
 				The transfer lock, WHOIS privacy and API access are changed at <a
+					class="inline-link"
 					href="https://porkbun.com/account/domainsSpeedy"
 					target="_blank"
 					rel="noopener noreferrer">porkbun.com</a
@@ -352,6 +353,11 @@
 {/if}
 
 <style>
+	/* Links inside a sentence need more than colour to stand out (WCAG 1.4.1). */
+	.inline-link {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
 	.glance {
 		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 	}
