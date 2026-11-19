@@ -73,5 +73,21 @@ request and look at its Timing: the `Server-Timing` entries say which step took 
 container (`docker compose logs caddy-ui | grep "slow load"`). Include those lines when you
 report it.
 
+## I changed a setting in Settings but compose says something else.
+A value saved in Settings wins over the environment. Press "Use the environment's value" next to
+the field to go back, or start the UI with `CADDY_UI_SETTINGS_IGNORE=true` to ignore every saved
+value at once. See [configuration.md](configuration.md#settings-and-the-environment).
+
+## How do I move my settings to a new install?
+Settings → Export and import → **Download settings file**, then on the new instance choose the
+file, press **Review changes** and **Apply**. The file holds saved settings, display preferences,
+per-site probe options and notification settings. The Discord webhook URL is in it only if you
+tick the box; the Porkbun keys, the sign-in and every other environment value are set in compose
+and never travel in the file.
+
+## The bare address opens Sites (or another page), not Overview.
+That is the landing page in Settings → Preferences. Overview is one click away in the sidebar, and
+`/?home` always shows it.
+
 ## Where do I report problems?
 Open an issue on the GitHub repository.

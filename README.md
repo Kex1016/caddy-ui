@@ -27,6 +27,11 @@ It replaces `zackwag/caddy-ui-frontend` and `zackwag/caddy-ui-backend` with a si
   its end, the Caddyfile changes outside the UI, or an update is applied. Each message is an
   editable Components v2 template with a live preview. See
   [docs/notifications.md](docs/notifications.md).
+- **Fast pages**: Overview and Sites show their shell at once and stream the charts in, however
+  old the database is. See [docs/stats.md](docs/stats.md#how-the-pages-stay-fast).
+- **Settings**: change the intervals, retention, thresholds and more without a restart, run health
+  checks, keep the database in shape, set display preferences, and export or import it all. See
+  [docs/configuration.md](docs/configuration.md#the-settings-page).
 - **Updater**: an optional sidecar that redeploys the UI when a new image is published.
 - **Porkbun domains (optional):** manage DNS records, restore points, nameservers, DNSSEC,
   forwarding and the SSL bundle for your Porkbun domains, with review-before-apply on every
@@ -154,6 +159,13 @@ helpers turn on per-host metrics and the JSON access log as a reviewed Caddyfile
 tools prune, compact and download a backup; and the Updates section shows the updater's last check
 and newest version, with a "Check now" button. See
 [docs/configuration.md](docs/configuration.md#the-settings-page).
+
+**Preferences** (also in Settings) are saved on the server, so they follow you to another browser:
+the stats range Overview and each site open on, a 12 or 24 hour clock, the date format, the page
+the bare address opens, and the default theme and sidebar. **Export and import** writes every saved
+setting, your preferences, the per-site probe options and the notification settings to one JSON
+file, and imports one back after a review of what would change; the Discord webhook URL is in the
+file only if you tick a box, and the Porkbun keys never are.
 
 Settings is also where Discord notifications are set up: paste a channel's webhook URL (it is
 never shown again), pick the events, and edit each message with a live preview and **Send test**.

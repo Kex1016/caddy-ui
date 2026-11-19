@@ -226,3 +226,7 @@ Newest at the bottom. Format: date · workstream · what · why.
   4. Optional: set **Public address** (Settings → Display) to the address you open the UI at, so messages get an
      "Open site" button; and put a role in **Mention** (for example `<@&role id>`) if you want to be pinged.
   · the webhook can only be entered in the UI (D19); docs/notifications.md has the details.
+- [ ] 2026-11-19 · Release · Last item: release v1.2.0. On GitHub open **Actions → release → Run workflow**, enter
+  `1.2.0` as the version and run it (the notes come from `docs/releases/v1.2.0.md`). Do it after the S5 and S4 items
+  above are read (the updater mount in compose is the only compose change) and CI on `main` is green. Then pull the
+  new images on your server; the settings migrations run by themselves and are instant.
