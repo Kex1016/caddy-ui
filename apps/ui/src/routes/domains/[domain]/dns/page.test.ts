@@ -7,6 +7,7 @@ import type { DomainSummary, PorkbunStatus } from '$lib/api/porkbun';
 import { setConfigServiceForTests } from '$lib/server/config';
 import { FakeAdmin } from '$lib/server/config/fake-admin';
 import { ConfigService } from '$lib/server/config/service';
+import { readZone } from '$lib/porkbun/records/service.server';
 import { PluginDetector, setPluginDetectorForTests } from '$lib/server/caddy/porkbun/plugin';
 import { PluginAdmin } from '$lib/server/caddy/porkbun/testing';
 import { openDb } from '$lib/server/db';
@@ -293,6 +294,21 @@ describe('the DNS tab', () => {
 		expect(out).toContain('Porkbun did not answer.');
 		expect(out).not.toContain('<table');
 		expect(out).not.toContain('Add record');
+	});
+
+	it('shows what Porkbun says along with the zone, as written', async () => {
+		const { fake } = useFakePorkbun();
+		expect(await html('example.com')).not.toContain('fp-notice--warning');
+		const said =
+			'example.com is served through Cloudflare & friends, so the records here are not what resolves.';
+		fake.respondNext({
+			status: 200,
+			body: { status: 'SUCCESS', cloudflare: 'enabled', records: [], warnings: [said] }
+		});
+		await readZone('example.com', { force: true });
+		const out = await html('example.com');
+		expect(out).toContain(said.replace('&', '&amp;'));
+		expect(out).toContain('No records yet');
 	});
 
 	it('says that the last good copy is shown when Porkbun can not be reached', async () => {

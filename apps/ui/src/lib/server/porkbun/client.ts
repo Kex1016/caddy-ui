@@ -488,12 +488,14 @@ export class Porkbun {
 	// ── DNS records, restore points, preflight, import ──────────────────────────────────────────────────
 
 	readonly dns = {
-		/** `/dns/retrieve/{domain}`: every editable record. */
+		/** `/dns/retrieve/{domain}`: every editable record, and Porkbun's warnings when it sends any. */
 		list: async (domain: string): Promise<DnsZone> => {
 			const { body } = await this.#get(['dns', 'retrieve', domain]);
+			const warnings = strings(body.warnings);
 			return {
 				records: arr(body.records).map((r) => toRecord(r, domain)),
-				cloudflare: flag(body.cloudflare)
+				cloudflare: flag(body.cloudflare),
+				...(warnings.length > 0 ? { warnings } : {})
 			};
 		},
 
