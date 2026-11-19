@@ -946,3 +946,9 @@ Format: date · workstream · decision · why · how to reverse.
   one and the server refuses it at apply (`DUPLICATE_FORWARD`) before Porkbun is asked. The spec covers that
   path. Catching it in the form first would be nicer, but the outcome is the same and nothing is sent ·
   confidence 72.
+- 2026-11-19 · Release · Releases are cut by `.github/workflows/release.yml` (run by hand on main with a version).
+  It pushes the tag with GITHUB_TOKEN, which does not start `publish.yml`, so it calls `publish.yml` as a reusable
+  workflow (new `workflow_call` input `tag`) and creates the GitHub release only after the images are pushed. A
+  pushed tag still publishes the same way as before. The run refuses to tag unless CI passed on the commit
+  (`skip_ci_check` overrides it). Notes come from the input, else `docs/releases/vX.Y.Z.md`, else GitHub's
+  generated notes · confidence 85.
