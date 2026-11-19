@@ -1,5 +1,6 @@
 import { getDb, type Db } from '../db';
 import { envConfig, setConfigResolver, type Config } from '../env';
+import { Prefs } from './prefs';
 import { SettingsService, type SettingsListener } from './service';
 import { StorageMeter } from './storage';
 
@@ -11,6 +12,7 @@ import { StorageMeter } from './storage';
 export { SettingsRefused, SettingsService, KEY_PREFIX, type SettingsListener } from './service';
 export { pathChecks } from './checks';
 export { StorageMeter, storageFacts } from './storage';
+export { Prefs, PrefsRefused, PREF_PREFIX } from './prefs';
 
 const KEY = Symbol.for('caddy-ui.settings');
 type G = typeof globalThis & { [KEY]?: SettingsService };
@@ -67,4 +69,19 @@ export function getStorageMeter(): StorageMeter {
 	const g = globalThis as GM;
 	g[METER] ??= new StorageMeter(getDb().name);
 	return g[METER];
+}
+
+const PREFS = Symbol.for('caddy-ui.prefs');
+type GP = typeof globalThis & { [PREFS]?: Prefs };
+
+/** The process-wide display preferences (S6). */
+export function getPrefs(): Prefs {
+	const g = globalThis as GP;
+	g[PREFS] ??= new Prefs(getDb());
+	return g[PREFS];
+}
+
+/** Tests only. */
+export function resetPrefsForTests(): void {
+	delete (globalThis as GP)[PREFS];
 }

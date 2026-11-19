@@ -1,7 +1,7 @@
 import { error, fail } from '@sveltejs/kit';
 import { AdminError, AdminUnreachableError } from '$lib/server/caddy/admin';
 import { SiteEditError, addPorkbunToSite } from '$lib/server/caddy/porkbun/site-edit';
-import { getCollector, getSnapshot, parseRange, siteStats } from '$lib/server/collector';
+import { getCollector, getSnapshot, pageRange, siteStats } from '$lib/server/collector';
 import { getConfigService } from '$lib/server/config';
 import { authorOf } from '$lib/server/config/http';
 import { ApplyError } from '$lib/server/config/service';
@@ -12,7 +12,7 @@ import type { Actions, PageServerLoad } from './$types';
 /** One site: live status from `/api/sites` and its series from `/api/sites/:id/stats`, read in-process. */
 export const load: PageServerLoad = async ({ params, url, depends, locals }) => {
 	depends('app:stats');
-	const range = parseRange(url.searchParams.get('range')) ?? '24h';
+	const range = pageRange(url.searchParams.get('range'));
 	const c = getCollector();
 	const db = getDb();
 	const stats = locals.timing.measure('stats', () => siteStats(c, db, params.id, range));

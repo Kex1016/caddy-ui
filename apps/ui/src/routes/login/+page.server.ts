@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { getPrefs } from '$lib/server/settings';
 import { checkCredentials, safeRedirect } from '$lib/server/auth';
 import { config } from '$lib/server/env';
 import { isHttps } from '$lib/server/guard';
@@ -46,6 +47,7 @@ export const actions: Actions = {
 			secure: isHttps(request.headers, config().publicUrl),
 			expires: new Date(exp)
 		});
-		redirect(303, safeRedirect(url.searchParams.get('next')));
+		const next = url.searchParams.get('next');
+		redirect(303, next ? safeRedirect(next) : getPrefs().get().landing);
 	}
 };

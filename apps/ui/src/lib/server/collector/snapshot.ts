@@ -15,8 +15,18 @@ import {
 } from './views';
 import type { Collector, CollectorEvent } from './worker';
 
-/** The Overview range the collector keeps ready after every probe cycle. */
-export const DEFAULT_RANGE: Range = '24h';
+/** The Overview range the collector keeps ready after every probe cycle: the saved display preference (S6). */
+let defaultRange: Range = '24h';
+export function getDefaultRange(): Range {
+	return defaultRange;
+}
+/** The range a page opens on: `?range=` when valid, else the saved default. */
+export function pageRange(param: string | null): Range {
+	return param && param in RANGES ? (param as Range) : defaultRange;
+}
+export function setDefaultRange(range: Range): void {
+	defaultRange = range;
+}
 
 /** Other ranges are remembered for one step of the range, and never longer than this. */
 const MAX_RANGE_TTL_MS = 5 * 60_000;
@@ -62,7 +72,7 @@ export class Snapshot {
 		if (this.building) return; // a build read the Caddyfile for the first time; it picks the change up itself
 		this.sitesPayload();
 		// The probe timer is the heartbeat: the default Overview is rebuilt with it, off the request path.
-		if (e === 'probes') this.rebuildOverview(DEFAULT_RANGE);
+		if (e === 'probes') this.rebuildOverview(defaultRange);
 	}
 
 	private rebuildOverview(range: Range): void {
@@ -118,7 +128,7 @@ export class Snapshot {
 	private fresh<T>(range: Range, b: Built<T> | undefined): b is Built<T> {
 		if (!b) return false;
 		// The default range is rebuilt by the probe timer; the cap only matters when that timer is not running.
-		const ttl = range === DEFAULT_RANGE ? MAX_RANGE_TTL_MS : Math.min(RANGES[range].stepMs, MAX_RANGE_TTL_MS);
+		const ttl = range === defaultRange ? MAX_RANGE_TTL_MS : Math.min(RANGES[range].stepMs, MAX_RANGE_TTL_MS);
 		return this.now() - b.builtAt < ttl;
 	}
 

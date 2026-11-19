@@ -1117,3 +1117,22 @@ Format: date · workstream · decision · why · how to reverse.
   says the sidecar reads its own copy; S4 makes the interval and "check now" editable through its file channel
   (D13). Sections later workstreams add go into `SECTION_KEYS` (lib/settings/meta.ts) and the page's section list
   · confidence 80.
+- 2026-11-19 · S6 · Display preferences (stats range, clock, date format, landing page, theme, sidebar) are stored in
+  the existing `settings` table under `pref.` keys, beside the `cfg.` keys. No migration, no new API route: the page
+  saves through form actions (`?/prefs`, `?/clearOverrides`) on `/settings`. They are not environment variables, so
+  there is no environment value and no `EDITABLE` entry; a missing key is the default, and a value that is not one
+  of the choices is ignored · confidence 80.
+- 2026-11-19 · S6 · The clock and date format are module state in `lib/format.ts` (`setDisplayFormat`), set from the
+  layout's data. They are the same for every request, so there is no per-request leak, and the layout rebuilds the
+  page with `{#key}` when they change. This avoids threading a preferences argument through about 50 call sites ·
+  confidence 75.
+- 2026-11-19 · S6 · Theme and sidebar (D20): a cookie, when present and valid, beats the saved default. The theme
+  button now writes a `system` cookie instead of clearing it, otherwise "system" could never override a saved dark
+  default. Settings has "Use the saved default here" to drop both cookies in this browser · confidence 78.
+- 2026-11-19 · S6 · The landing page applies to `/` only when the request is not `Sec-Fetch-Site: same-origin`
+  (typed, bookmarked, external link, reload), so a click on Overview stays on Overview. A reload of Overview with
+  another landing page saved goes to the landing page, and a local sign-in without `next` goes there too.
+  `/?home` also stays on Overview · confidence 70.
+- 2026-11-19 · S6 · The collector's prepared Overview range follows the saved default range (`setDefaultRange`), so the
+  default page stays instant whichever range is chosen. `RangeSwitch` leaves `?range=` off only for that default ·
+  confidence 82.

@@ -57,6 +57,15 @@ Settings (in the sidebar under System) has these sections, each saved on its own
   sizes are measured in the background (it reads the whole database) and remembered for 15
   minutes; **Measure again** measures now.
 - **Display**: time zone and public address.
+- **Preferences**: how this UI looks and where it opens, saved on the server so they follow you
+  to another browser. They are not environment variables, so there is nothing to set in compose.
+  **Stats range** (the range Overview and each site open on; `?range=` in the address still
+  wins), **Clock** (24-hour or 12-hour), **Date format** (`4 Nov 2026`, `Nov 4, 2026` or
+  `2026-11-04`), **Landing page** (where the bare address opens when typed, bookmarked or
+  followed from another site; a click on Overview inside the UI stays on Overview), and the
+  default **Theme** and **Sidebar**. A browser that has used the theme button or resized the
+  sidebar keeps that choice in a cookie, which beats the saved default; **Use the saved default
+  here** removes it.
 - **Domains**: the Porkbun read-only switch and cache lifetime, both keys as set or not set,
   the API address, the private key download switch, and **Test connection**, which asks
   Porkbun's `/ping` with the keys.

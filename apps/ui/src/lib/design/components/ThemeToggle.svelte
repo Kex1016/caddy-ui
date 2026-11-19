@@ -16,7 +16,7 @@
 		const root = document.documentElement;
 		if (next === 'system') {
 			root.removeAttribute('data-theme');
-			document.cookie = `${THEME_COOKIE}=; path=/; max-age=0; samesite=lax`;
+			document.cookie = `${THEME_COOKIE}=system; path=/; max-age=${PREF_MAX_AGE}; samesite=lax`;
 		} else {
 			root.setAttribute('data-theme', next);
 			document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=${PREF_MAX_AGE}; samesite=lax`;

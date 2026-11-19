@@ -5,6 +5,8 @@
 	import type { CaddyStatus } from '$lib/api/config';
 	import type { PorkbunStatus } from '$lib/api/porkbun';
 	import { AsOf, EmptyState, Notice, PageHero, StatTile, Tag } from '$lib/design/components';
+	import { DISPLAY_LABELS, LANDING_PAGES, type Display, type DisplayKey } from '$lib/display';
+	import { ChevronDown } from '@lucide/svelte';
 	import { formatBytes, formatDate, formatDateTime, formatMs, formatNumber } from '$lib/format';
 	import SettingField from '$lib/settings/components/SettingField.svelte';
 	import {
@@ -21,9 +23,51 @@
 	} from '$lib/settings/meta';
 	import type { StorageMeasure } from '$lib/settings/types';
 
-	let { data } = $props();
+	let { data, form } = $props();
 
 	const view = $derived<SettingsView>(data.view);
+
+	// Display preferences (S6): saved on the server, so they follow this person to another browser.
+	const prefFields: { key: DisplayKey; label: string; hint: string; choices: [string, string][] }[] = [
+		{
+			key: 'range',
+			label: 'Stats range',
+			hint: 'The range Overview and each site open on. A range in the address still wins.',
+			choices: Object.entries(DISPLAY_LABELS.range)
+		},
+		{
+			key: 'clock',
+			label: 'Clock',
+			hint: 'How times of day are written.',
+			choices: Object.entries(DISPLAY_LABELS.clock)
+		},
+		{
+			key: 'dateFormat',
+			label: 'Date format',
+			hint: 'How dates are written. The example is 4 November 2026.',
+			choices: Object.entries(DISPLAY_LABELS.dateFormat)
+		},
+		{
+			key: 'landing',
+			label: 'Landing page',
+			hint: 'Where the bare address opens when you type it, follow a bookmark or arrive from another site.',
+			choices: LANDING_PAGES.map((p) => [p.value, p.label])
+		},
+		{
+			key: 'theme',
+			label: 'Theme',
+			hint: 'The default for every browser. A browser that has used the theme button keeps its own choice.',
+			choices: Object.entries(DISPLAY_LABELS.theme)
+		},
+		{
+			key: 'sidebar',
+			label: 'Sidebar',
+			hint: 'The default for every browser. A browser that has resized the sidebar keeps its own choice.',
+			choices: Object.entries(DISPLAY_LABELS.sidebar)
+		}
+	];
+	const shown = $derived<Display>(data.display);
+	const overridden = $derived(data.prefs.overrides.theme || data.prefs.overrides.sidebar);
 	const locked = $derived(view.ignoringSaved);
 
 	// Sections in the order of docs/settings-and-perf-plan.md §2.3. S3 to S6 add theirs (diagnostics, storage tools,
@@ -31,6 +75,7 @@
 	const NAV = [
 		{ id: 'monitoring', label: 'Monitoring' },
 		{ id: 'display', label: 'Display' },
+		{ id: 'preferences', label: 'Preferences' },
 		{ id: 'domains', label: 'Domains' },
 		{ id: 'connections', label: 'Connections' },
 		{ id: 'sign-in', label: 'Sign-in' },
@@ -454,6 +499,50 @@
 	</form>
 </section>
 
+<!-- Preferences (S6) -->
+<section class="fp-section" id="preferences" aria-labelledby="preferences-h">
+	<div class="fp-section__head"><h2 class="t-title-2" id="preferences-h">Preferences</h2></div>
+	<form class="fp-panel fields" method="POST" action="?/prefs" use:enhance>
+		{#each prefFields as f (f.key)}
+			<div class="setting">
+				<label class="t-ui" for="pref-{f.key}">{f.label}</label>
+				<span class="fp-select">
+					<select id="pref-{f.key}" name={f.key} aria-describedby="pref-{f.key}-hint">
+						{#each f.choices as [value, label] (value)}
+							<option {value} selected={shown[f.key] === value}>{label}</option>
+						{/each}
+					</select>
+					<ChevronDown class="fp-ico" strokeWidth={1.4} aria-hidden="true" />
+				</span>
+				<p class="t-caption" id="pref-{f.key}-hint">{f.hint}</p>
+			</div>
+		{/each}
+		<div class="full">
+			<div class="savebar">
+				<button type="submit" class="fp-btn fp-btn--primary">Save preferences</button>
+				<div class="savebar__msg" aria-live="polite">
+					{#if form?.prefsSaved}<span class="t-ui ok">Saved. It applies now.</span>{/if}
+				</div>
+			</div>
+			{#if form?.prefsError}<Notice kind="error">{form.prefsError}</Notice>{/if}
+		</div>
+	</form>
+	{#if overridden}
+		<form class="override" method="POST" action="?/clearOverrides" use:enhance>
+			<p class="t-caption">
+				This browser keeps its own
+				{[data.prefs.overrides.theme && 'theme', data.prefs.overrides.sidebar && 'sidebar']
+					.filter(Boolean)
+					.join(' and ')}, set with the buttons in the page. It does not follow the saved default.
+			</p>
+			<button type="submit" class="fp-btn">Use the saved default here</button>
+		</form>
+	{/if}
+	{#if form?.overridesCleared}
+		<p class="t-ui ok override" aria-live="polite">Done. This browser follows the saved defaults.</p>
+	{/if}
+</section>
+
 <!-- Domains -->
 <section class="fp-section" id="domains" aria-labelledby="domains-h">
 	<div class="fp-section__head"><h2 class="t-title-2" id="domains-h">Domains</h2></div>
@@ -653,6 +742,18 @@
 </section>
 
 <style>
+	.setting {
+		display: grid;
+		gap: var(--space-2);
+		align-content: start;
+	}
+	.override {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		flex-wrap: wrap;
+		margin-top: var(--space-4);
+	}
 	.jump {
 		margin-top: calc(var(--space-2) * -1);
 	}

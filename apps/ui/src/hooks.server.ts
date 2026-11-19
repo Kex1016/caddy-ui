@@ -8,10 +8,11 @@ import { ConfigError, config } from '$lib/server/env';
 import { isApiPath, isPublicPath, sameOrigin } from '$lib/server/guard';
 import { reconfigurePorkbun } from '$lib/server/porkbun';
 import { getRuntime } from '$lib/server/runtime';
-import { installSettings, onSettingsChange } from '$lib/server/settings';
+import { getPrefs, installSettings, onSettingsChange } from '$lib/server/settings';
+import { setDefaultRange } from '$lib/server/collector';
 import { SESSION_COOKIE } from '$lib/server/session';
 import { Timing } from '$lib/server/timing';
-import { THEME_COOKIE, parseTheme, themeAttribute } from '$lib/theme';
+import { THEME_COOKIE, effectiveTheme, themeAttribute } from '$lib/theme';
 
 function seeOther(location: string): Response {
 	return new Response(null, { status: 303, headers: { location } });
@@ -28,6 +29,9 @@ export const init: ServerInit = async () => {
 			try {
 				installSettings();
 				onSettingsChange((next) => reconfigurePorkbun(next.porkbun));
+				// Display preferences (S6): the collector keeps the saved default range ready.
+				setDefaultRange(getPrefs().get().range);
+				getPrefs().subscribe((next) => setDefaultRange(next.range));
 			} catch (err) {
 				if (err instanceof ConfigError) throw err;
 				// Saved settings must never stop the UI: run on the environment and say why.
@@ -73,7 +77,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	const { auth, secret } = getRuntime();
 	event.locals.identity = identify(auth, secret, cookies.get(SESSION_COOKIE), request.headers);
-	event.locals.theme = parseTheme(cookies.get(THEME_COOKIE));
+	event.locals.theme = effectiveTheme(cookies.get(THEME_COOKIE), () => getPrefs().get().theme);
 
 	if (!event.locals.identity && !isPublicPath(url.pathname)) {
 		if (api) return json({ message: 'Sign in required' }, { status: 401 });
