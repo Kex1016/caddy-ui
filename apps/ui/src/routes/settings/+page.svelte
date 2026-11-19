@@ -1,15 +1,733 @@
 <script lang="ts">
-	import { EmptyState, PageHero } from '$lib/design/components';
+	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
+	import type { EditableSetting, SettingsError, SettingsView } from '$lib/api/settings';
+	import type { CaddyStatus } from '$lib/api/config';
+	import type { PorkbunStatus } from '$lib/api/porkbun';
+	import { AsOf, EmptyState, Notice, PageHero, StatTile, Tag } from '$lib/design/components';
+	import { formatBytes, formatDate, formatDateTime, formatMs, formatNumber } from '$lib/format';
+	import SettingField from '$lib/settings/components/SettingField.svelte';
+	import {
+		ENV_LABELS,
+		FIELDS,
+		SECTION_KEYS,
+		editable,
+		envOnly,
+		envOnlyText,
+		rowsOlderThan,
+		startValue,
+		tableLabel,
+		type SectionId
+	} from '$lib/settings/meta';
+	import type { StorageMeasure } from '$lib/settings/types';
+
+	let { data } = $props();
+
+	const view = $derived<SettingsView>(data.view);
+	const locked = $derived(view.ignoringSaved);
+
+	// Sections in the order of docs/settings-and-perf-plan.md §2.3. S3 to S6 add theirs (diagnostics, storage tools,
+	// thresholds, notifications, updates, display preferences, export and import) to this list and the markup.
+	const NAV = [
+		{ id: 'monitoring', label: 'Monitoring' },
+		{ id: 'display', label: 'Display' },
+		{ id: 'domains', label: 'Domains' },
+		{ id: 'connections', label: 'Connections' },
+		{ id: 'sign-in', label: 'Sign-in' },
+		{ id: 'updates', label: 'Updates' },
+		{ id: 'changes', label: 'Recent changes' }
+	];
+
+	// What is typed but not saved yet, per key. Absent means "as saved".
+	let drafts = $state<Record<string, string>>({});
+	let errors = $state<Record<string, string>>({});
+	let busy = $state<string | null>(null);
+	let done = $state<{ section: SectionId; text: string } | null>(null);
+	let failed = $state<{ section: SectionId; text: string } | null>(null);
+
+	const rowOf = (key: string) => editable(view, key) as EditableSetting;
+	const valueOf = (key: string) => drafts[key] ?? startValue(rowOf(key), locked);
+	const isDirty = (key: string) =>
+		drafts[key] !== undefined && drafts[key].trim() !== startValue(rowOf(key), locked).trim();
+	const dirtyKeys = (section: SectionId) => SECTION_KEYS[section].filter((k) => isDirty(k));
+
+	function sectionOf(key: string): SectionId {
+		return (Object.keys(SECTION_KEYS) as SectionId[]).find((s) =>
+			(SECTION_KEYS[s] as readonly string[]).includes(key)
+		) as SectionId;
+	}
+
+	async function patch(body: Record<string, string | null>): Promise<SettingsError | null> {
+		try {
+			const res = await fetch('/api/settings', {
+				method: 'PATCH',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify(body)
+			});
+			if (res.ok) return null;
+			const err = (await res.json().catch(() => null)) as SettingsError | null;
+			return err ?? { message: `The UI answered ${res.status}.`, code: 'INVALID' };
+		} catch {
+			return { message: 'This UI could not be reached.', code: 'INVALID' };
+		}
+	}
+
+	function forget(keys: readonly string[]) {
+		const d = { ...drafts };
+		const e = { ...errors };
+		for (const k of keys) {
+			delete d[k];
+			delete e[k];
+		}
+		drafts = d;
+		errors = e;
+	}
+
+	async function save(section: SectionId) {
+		const keys = dirtyKeys(section);
+		done = null;
+		failed = null;
+		if (keys.length === 0) return;
+		busy = section;
+		const body: Record<string, string> = {};
+		for (const k of keys) body[k] = (drafts[k] as string).trim();
+		const err = await patch(body);
+		if (err) {
+			const e = { ...errors };
+			for (const k of SECTION_KEYS[section]) delete e[k];
+			if (err.errors) Object.assign(e, err.errors);
+			errors = e;
+			if (!err.errors) failed = { section, text: err.message };
+		} else {
+			await invalidateAll();
+			forget(keys);
+			done = { section, text: keys.length === 1 ? 'Saved. It applies now.' : 'Saved. They apply now.' };
+		}
+		busy = null;
+	}
+
+	async function reset(key: string) {
+		const section = sectionOf(key);
+		done = null;
+		failed = null;
+		busy = key;
+		const err = await patch({ [key]: null });
+		if (err) failed = { section, text: err.message };
+		else {
+			await invalidateAll();
+			forget([key]);
+			done = {
+				section,
+				text: `${FIELDS[key]?.label ?? key} uses the ${rowOf(key).source === 'env' ? 'environment’s value' : 'default'} again.`
+			};
+		}
+		busy = null;
+	}
+
+	// The zone list fills after hydration, so the server's list and the browser's never have to match.
+	let timeZones = $state<string[]>([]);
+	$effect(() => {
+		try {
+			timeZones = Intl.supportedValuesOf('timeZone');
+		} catch {
+			timeZones = [];
+		}
+	});
+
+	// Table sizes stream in when they were not measured in the last 15 minutes.
+	let measured = $state<StorageMeasure | null>(null);
+	$effect(() => {
+		const t = data.tables;
+		let live = true;
+		Promise.resolve(t).then((m) => {
+			if (live) measured = m;
+		});
+		return () => {
+			live = false;
+		};
+	});
+	let measuring = $state(false);
+
+	const DAY = 86_400_000;
+	const retention = $derived.by(() => {
+		const row = rowOf('CADDY_UI_RETENTION_DAYS');
+		const now = Number(row.value);
+		const next = Number(valueOf('CADDY_UI_RETENTION_DAYS').trim());
+		if (!Number.isInteger(next) || next < 1 || next >= now) return null;
+		const cutoff = data.now - next * DAY;
+		const oldest = data.storage.oldest.probes ?? null;
+		if (oldest === null || oldest >= cutoff) return { cutoff, rows: 0, bytes: 0, known: true };
+		let rows = 0;
+		let bytes = 0;
+		const known = !!measured && !measured.error;
+		if (known) {
+			for (const name of ['probes', 'metric_samples'] as const) {
+				const t = measured?.tables.find((x) => x.name === name);
+				const first = data.storage.oldest[name] ?? null;
+				if (!t) continue;
+				const n = rowsOlderThan(t.rows, first, next, data.now);
+				rows += n;
+				bytes += t.rows > 0 ? (t.bytes * n) / t.rows : 0;
+			}
+		}
+		return { cutoff, rows, bytes, known };
+	});
+
+	const dbTotal = $derived(data.storage.fileBytes + data.storage.walBytes);
+
+	// "Test" buttons.
+	let adminTest = $state<{ busy: boolean; result: CaddyStatus | null; error: string | null }>({
+		busy: false,
+		result: null,
+		error: null
+	});
+	async function testAdmin() {
+		adminTest = { busy: true, result: null, error: null };
+		try {
+			const res = await fetch('/api/caddy/status');
+			adminTest = { busy: false, result: (await res.json()) as CaddyStatus, error: null };
+		} catch {
+			adminTest = { busy: false, result: null, error: 'This UI could not be reached.' };
+		}
+	}
+
+	let porkbunTest = $state<{ busy: boolean; result: PorkbunStatus | null; error: string | null }>({
+		busy: false,
+		result: null,
+		error: null
+	});
+	async function testPorkbun() {
+		porkbunTest = { busy: true, result: null, error: null };
+		try {
+			const res = await fetch('/api/porkbun/status?force');
+			porkbunTest = { busy: false, result: (await res.json()) as PorkbunStatus, error: null };
+		} catch {
+			porkbunTest = { busy: false, result: null, error: 'This UI could not be reached.' };
+		}
+	}
+
+	const keysSet = $derived(
+		!!envOnly(view, 'PORKBUN_API_KEY')?.set && !!envOnly(view, 'PORKBUN_API_SECRET_KEY')?.set
+	);
+
+	let checking = $state(false);
+	async function recheck() {
+		checking = true;
+		await invalidateAll();
+		checking = false;
+	}
+
+	const AUTH_TEXT: Record<string, string> = {
+		local: 'Local user and password',
+		forward: 'Forward auth: the proxy in front signs people in',
+		none: 'None: the proxy in front is trusted to sign people in',
+		'local-disabled': 'Off: local mode with no user and password set'
+	};
+
+	const envRows = (keys: string[]) =>
+		keys.map((k) => envOnly(view, k)).filter((r): r is NonNullable<typeof r> => !!r);
+
+	const pathState = { ok: 'success', warning: 'warning', error: 'error' } as const;
+	const pathTag = { ok: 'OK', warning: 'Check', error: 'Problem' } as const;
+
+	const logText = (v: string | null) => (v === null ? 'nothing saved' : v === '' ? 'empty' : v);
 </script>
+
+{#snippet envTable(caption: string, keys: string[])}
+	<div class="fp-panel fp-table__wrap">
+		<table class="fp-table">
+			<caption class="visually-hidden">{caption}</caption>
+			<thead>
+				<tr><th scope="col">Setting</th><th scope="col">Value</th><th scope="col">From</th></tr>
+			</thead>
+			<tbody>
+				{#each envRows(keys) as row (row.key)}
+					<tr>
+						<td class="name">
+							<span class="t-ui">{ENV_LABELS[row.key] ?? row.key}</span>
+							<span class="t-mono t-caption">{row.key}</span>
+						</td>
+						<td class="t-mono value">{envOnlyText(row)}</td>
+						<td class="t-ui t-muted">{row.source === 'env' ? 'Environment' : 'Default'}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+{/snippet}
+
+{#snippet saveBar(section: SectionId)}
+	<div class="savebar">
+		<button
+			type="submit"
+			class="fp-btn fp-btn--primary"
+			disabled={locked || busy !== null || dirtyKeys(section).length === 0}
+		>
+			{busy === section
+				? 'Saving…'
+				: section === 'monitoring' && retention && retention.rows > 0
+					? 'Save and delete older data'
+					: 'Save'}
+		</button>
+		<div class="savebar__msg" aria-live="polite">
+			{#if done?.section === section}<span class="t-ui ok">{done.text}</span>{/if}
+		</div>
+	</div>
+	{#if failed?.section === section}
+		<Notice kind="error">{failed.text}</Notice>
+	{/if}
+{/snippet}
 
 <PageHero
 	kicker="System"
 	title="Settings"
-	lede="Sign-in, probe and scrape intervals, and helpers to turn on Caddy metrics and access logs."
+	lede="Change how this UI probes, keeps data and shows times, without a restart. Everything else is set in the environment and shown here with a check."
 />
-<section class="fp-section">
-	<EmptyState
-		title="No settings yet"
-		line="Settings that can change at runtime appear here. Everything else comes from environment variables."
-	/>
+
+{#if locked}
+	<Notice>
+		Saving is off while CADDY_UI_SETTINGS_IGNORE is on. “Use the environment’s value” still works and removes
+		a saved value for good, which is how a bad one is cleared.
+	</Notice>
+{/if}
+
+{#if view.warnings.length > 0 && !locked}
+	<Notice kind="warning">
+		<b>{view.warnings.length === 1 ? 'A saved setting is' : 'Some saved settings are'} not in use.</b>
+		<ul class="warnings">
+			{#each view.warnings as w (w.key)}<li><span class="t-mono">{w.key}</span>: {w.message}</li>{/each}
+		</ul>
+	</Notice>
+{/if}
+
+<nav class="fp-chips jump" aria-label="Sections">
+	{#each NAV as s (s.id)}<a class="fp-chip" href="#{s.id}">{s.label}</a>{/each}
+</nav>
+
+<!-- Monitoring -->
+<section class="fp-section" id="monitoring" aria-labelledby="monitoring-h">
+	<div class="fp-section__head"><h2 class="t-title-2" id="monitoring-h">Monitoring</h2></div>
+	<form
+		class="fp-panel fields"
+		onsubmit={(e) => {
+			e.preventDefault();
+			save('monitoring');
+		}}
+	>
+		{#each SECTION_KEYS.monitoring as key (key)}
+			<SettingField
+				row={rowOf(key)}
+				bind:value={() => valueOf(key), (v) => (drafts = { ...drafts, [key]: v })}
+				error={errors[key]}
+				{locked}
+				busy={busy !== null}
+				onreset={() => reset(key)}
+			/>
+		{/each}
+		{#if retention}
+			<div class="full">
+				<Notice kind="warning">
+					{#if retention.rows === 0 && retention.known}
+						Nothing is older than {formatDate(retention.cutoff, data.timeZone)} yet, so nothing is deleted now.
+					{:else}
+						Saving deletes probe results and metrics from before
+						<b>{formatDateTime(retention.cutoff, data.timeZone)}</b> at the next hourly clean-up{#if retention.known}:
+							about <b>{formatNumber(retention.rows)}</b> rows, {formatBytes(retention.bytes)}{/if}. The
+						database file keeps its size; the space is reused for new data.
+					{/if}
+				</Notice>
+			</div>
+		{/if}
+		<div class="full">{@render saveBar('monitoring')}</div>
+	</form>
+
+	<div class="fp-section__head">
+		<h3 class="t-title-3" id="storage-h">Database size</h3>
+	</div>
+	<div class="fp-tiles">
+		<StatTile
+			label="Database"
+			value={formatBytes(dbTotal)}
+			note={data.storage.walBytes > 0
+				? `${formatBytes(data.storage.walBytes)} of it in the write-ahead log`
+				: undefined}
+		/>
+		<StatTile
+			label="Free on the volume"
+			value={data.storage.volumeFreeBytes === null ? 'unknown' : formatBytes(data.storage.volumeFreeBytes)}
+			note={data.storage.volumeTotalBytes ? `of ${formatBytes(data.storage.volumeTotalBytes)}` : undefined}
+		/>
+		<StatTile
+			label="Oldest probe result"
+			value={data.storage.oldest.probes ? formatDate(data.storage.oldest.probes, data.timeZone) : 'none yet'}
+			note="Kept for {rowOf('CADDY_UI_RETENTION_DAYS').value} days"
+		/>
+		<StatTile
+			label="Free inside the file"
+			value={formatBytes(data.storage.freeInFileBytes)}
+			note="Reused for new rows"
+		/>
+	</div>
+
+	{#await data.tables}
+		<div class="fp-panel" aria-busy="true">
+			<p class="t-ui t-muted">Measuring each table. This reads the whole database in the background…</p>
+			<span class="fp-skel skel"></span>
+			<span class="fp-skel skel"></span>
+			<span class="fp-skel skel"></span>
+		</div>
+	{:then m}
+		{#if m.error}
+			<Notice kind="warning">Table sizes could not be measured: {m.error}</Notice>
+		{:else}
+			<div class="fp-panel fp-table__wrap">
+				<table class="fp-table">
+					<caption class="visually-hidden">Size of each table in the database, with its indexes</caption>
+					<thead>
+						<tr>
+							<th scope="col">Table</th>
+							<th scope="col" class="num">Rows</th>
+							<th scope="col" class="num">Size</th>
+							<th scope="col" class="num share">Share</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each m.tables.filter((t) => t.bytes > 0) as t (t.name)}
+							<tr>
+								<td class="name">
+									<span class="t-ui">{tableLabel(t.name)}</span>
+									<span class="t-mono t-caption">{t.name}</span>
+								</td>
+								<td class="t-mono num">{formatNumber(t.rows)}</td>
+								<td class="t-mono num">{formatBytes(t.bytes)}</td>
+								<td class="t-mono num share"
+									>{dbTotal > 0 ? `${Math.round((t.bytes / dbTotal) * 100)}%` : ''}</td
+								>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+		<form
+			method="POST"
+			action="?/measure"
+			class="measured t-ui t-muted"
+			use:enhance={() => {
+				measuring = true;
+				return async ({ update }) => {
+					await update();
+					measuring = false;
+				};
+			}}
+		>
+			<span>Measured <AsOf at={m.at} timeZone={data.timeZone} />, in {formatMs(m.tookMs)}.</span>
+			<button type="submit" class="fp-btn fp-btn--quiet" disabled={measuring}>
+				{measuring ? 'Measuring…' : 'Measure again'}
+			</button>
+		</form>
+	{/await}
 </section>
+
+<!-- Display -->
+<section class="fp-section" id="display" aria-labelledby="display-h">
+	<div class="fp-section__head"><h2 class="t-title-2" id="display-h">Display</h2></div>
+	<form
+		class="fp-panel fields"
+		onsubmit={(e) => {
+			e.preventDefault();
+			save('display');
+		}}
+	>
+		{#each SECTION_KEYS.display as key (key)}
+			<SettingField
+				row={rowOf(key)}
+				bind:value={() => valueOf(key), (v) => (drafts = { ...drafts, [key]: v })}
+				error={errors[key]}
+				{locked}
+				busy={busy !== null}
+				timeZones={key === 'TZ' ? timeZones : []}
+				onreset={() => reset(key)}
+			/>
+		{/each}
+		<div class="full">{@render saveBar('display')}</div>
+	</form>
+</section>
+
+<!-- Domains -->
+<section class="fp-section" id="domains" aria-labelledby="domains-h">
+	<div class="fp-section__head"><h2 class="t-title-2" id="domains-h">Domains</h2></div>
+	<form
+		class="fp-panel fields"
+		onsubmit={(e) => {
+			e.preventDefault();
+			save('domains');
+		}}
+	>
+		{#each SECTION_KEYS.domains as key (key)}
+			<SettingField
+				row={rowOf(key)}
+				bind:value={() => valueOf(key), (v) => (drafts = { ...drafts, [key]: v })}
+				error={errors[key]}
+				{locked}
+				signIn={view.signIn}
+				busy={busy !== null}
+				onreset={() => reset(key)}
+			/>
+		{/each}
+		<div class="full">{@render saveBar('domains')}</div>
+	</form>
+
+	{@render envTable('Porkbun settings set in the environment', [
+		'PORKBUN_API_KEY',
+		'PORKBUN_API_SECRET_KEY',
+		'PORKBUN_API_URL',
+		'CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD'
+	])}
+	<p class="t-caption">
+		The keys are set in the environment only, where Caddy reads the same pair for its DNS challenge. This page
+		never shows them.
+	</p>
+	<div class="test">
+		<button type="button" class="fp-btn" disabled={!keysSet || porkbunTest.busy} onclick={testPorkbun}>
+			{porkbunTest.busy ? 'Testing…' : 'Test connection'}
+		</button>
+		<div class="test__out t-ui" aria-live="polite">
+			{#if !keysSet}
+				<span class="t-muted">Set both keys to use the Domains area.</span>
+			{:else if porkbunTest.error}
+				<Tag kind="error">Failed</Tag> {porkbunTest.error}
+			{:else if porkbunTest.result}
+				{@const r = porkbunTest.result}
+				{#if r.state === 'ok'}
+					<Tag kind="success">Connected</Tag>
+					{r.account ? `Account ${r.account}.` : ''}
+					{r.scopes.length ? `The key may use ${r.scopes.join(', ')}.` : ''}
+					{r.sandbox ? 'Sandbox key: nothing real is changed.' : ''}
+				{:else}
+					<Tag kind="error">{r.state === 'misconfigured' ? 'Not set up' : 'Failed'}</Tag>
+					{r.error?.message ?? (r.missing ? `${r.missing} is not set.` : 'Porkbun did not accept the keys.')}
+				{/if}
+			{/if}
+		</div>
+	</div>
+</section>
+
+<!-- Connections -->
+<section class="fp-section" id="connections" aria-labelledby="connections-h">
+	<div class="fp-section__head">
+		<h2 class="t-title-2" id="connections-h">Connections</h2>
+		<button type="button" class="fp-btn fp-btn--quiet" onclick={recheck} disabled={checking}>
+			{checking ? 'Checking…' : 'Check again'}
+		</button>
+	</div>
+	<p class="t-body t-muted">
+		These name the container's wiring and mounts, so they change in compose, followed by a restart.
+	</p>
+	<div class="fp-panel fp-table__wrap">
+		<table class="fp-table">
+			<caption class="visually-hidden">Caddy admin API and paths, with checks</caption>
+			<thead>
+				<tr><th scope="col">Setting</th><th scope="col">Value</th><th scope="col">Check</th></tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td class="name">
+						<span class="t-ui">{ENV_LABELS.CADDY_ADMIN_URL}</span>
+						<span class="t-mono t-caption">CADDY_ADMIN_URL</span>
+					</td>
+					<td class="t-mono value">{envOnly(view, 'CADDY_ADMIN_URL')?.value}</td>
+					<td
+						><div class="check__in">
+							<button type="button" class="fp-btn" onclick={testAdmin} disabled={adminTest.busy}>
+								{adminTest.busy ? 'Testing…' : 'Test'}
+							</button>
+							<span class="t-ui" aria-live="polite">
+								{#if adminTest.error}
+									<Tag kind="error">Failed</Tag> {adminTest.error}
+								{:else if adminTest.result}
+									{#if adminTest.result.reachable && !adminTest.result.error}
+										<Tag kind="success">Reachable</Tag>
+										{adminTest.result.version ? `Caddy ${adminTest.result.version}.` : ''}
+									{:else}
+										<Tag kind="error">{adminTest.result.reachable ? 'Error' : 'Not reachable'}</Tag>
+										{adminTest.result.error ?? ''}
+									{/if}
+								{/if}
+							</span>
+						</div></td
+					>
+				</tr>
+				{#each data.paths as p (p.key)}
+					<tr>
+						<td class="name">
+							<span class="t-ui">{ENV_LABELS[p.key]}</span>
+							<span class="t-mono t-caption">{p.key}</span>
+						</td>
+						<td class="t-mono value">{p.path}</td>
+						<td
+							><div class="check__in">
+								<Tag kind={pathState[p.state]}>{pathTag[p.state]}</Tag>
+								<span class="t-ui">{p.message}</span>
+							</div></td
+						>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+	{@render envTable('The listener, set in the environment', ['CADDY_UI_PORT', 'PORT', 'HOST', 'ORIGIN'])}
+</section>
+
+<!-- Sign-in -->
+<section class="fp-section" id="sign-in" aria-labelledby="sign-in-h">
+	<div class="fp-section__head"><h2 class="t-title-2" id="sign-in-h">Sign-in</h2></div>
+	<p class="t-body t-muted">
+		Sign-in is set in the environment only, so nobody who reaches this page can turn it off. In use:
+		<b>{AUTH_TEXT[data.authMode] ?? data.authMode}</b>.
+	</p>
+	{@render envTable('Sign-in settings, set in the environment', [
+		'CADDY_UI_AUTH_MODE',
+		'CADDY_UI_USER',
+		'CADDY_UI_PASSWORD',
+		'CADDY_UI_SESSION_SECRET'
+	])}
+	{#if !envOnly(view, 'CADDY_UI_SESSION_SECRET')?.set && data.authMode === 'local'}
+		<p class="t-caption">
+			Without CADDY_UI_SESSION_SECRET a new one is made at each start, which signs everyone out.
+		</p>
+	{/if}
+</section>
+
+<!-- Updates -->
+<section class="fp-section" id="updates" aria-labelledby="updates-h">
+	<div class="fp-section__head"><h2 class="t-title-2" id="updates-h">Updates</h2></div>
+	<p class="t-body t-muted">
+		The updater container reads these from its own environment; the values here are this container's copy.
+	</p>
+	{@render envTable('Updater settings, set in the environment', [
+		'CADDY_UI_UPDATE_INTERVAL',
+		'CADDY_UI_UPDATE_SOURCE',
+		'CADDY_UI_UPDATE_WEBHOOK_PORT',
+		'CADDY_UI_SETTINGS_IGNORE'
+	])}
+</section>
+
+<!-- Recent changes -->
+<section class="fp-section" id="changes" aria-labelledby="changes-h">
+	<div class="fp-section__head"><h2 class="t-title-2" id="changes-h">Recent changes</h2></div>
+	{#if view.log.length === 0}
+		<EmptyState title="No changes yet" line="Every value saved or reset here is listed, with who and when." />
+	{:else}
+		<div class="fp-panel fp-table__wrap">
+			<table class="fp-table">
+				<caption class="visually-hidden"
+					>The latest {view.log.length} changes to settings, newest first</caption
+				>
+				<thead>
+					<tr>
+						<th scope="col">When</th>
+						<th scope="col">Who</th>
+						<th scope="col">Setting</th>
+						<th scope="col">Change</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each view.log as entry (entry.id)}
+						<tr>
+							<td class="t-ui when">{formatDateTime(entry.ts, data.timeZone)}</td>
+							<td class="t-ui">{entry.author}</td>
+							<td class="name">
+								<span class="t-ui">{FIELDS[entry.key]?.label ?? entry.key}</span>
+								<span class="t-mono t-caption">{entry.key}</span>
+							</td>
+							<td class="t-mono value">
+								{logText(entry.oldValue)} → {logText(entry.newValue)}
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	{/if}
+</section>
+
+<style>
+	.jump {
+		margin-top: calc(var(--space-2) * -1);
+	}
+	.fp-section {
+		scroll-margin-top: var(--space-8);
+	}
+	.fields {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+		gap: var(--space-6) var(--space-5);
+		align-items: start;
+	}
+	.full {
+		grid-column: 1 / -1;
+	}
+	.savebar {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		flex-wrap: wrap;
+	}
+	.ok {
+		color: var(--success-ink);
+	}
+	.name {
+		min-width: 10rem;
+	}
+	.name > span {
+		display: block;
+	}
+	.value {
+		overflow-wrap: anywhere;
+	}
+	.num {
+		text-align: right;
+		white-space: nowrap;
+	}
+	.when {
+		white-space: nowrap;
+	}
+	@media (max-width: 640px) {
+		.share {
+			display: none;
+		}
+	}
+	.check__in {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		flex-wrap: wrap;
+	}
+	.test {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		flex-wrap: wrap;
+	}
+	.test__out {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		flex-wrap: wrap;
+	}
+	.measured {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		flex-wrap: wrap;
+	}
+	.skel {
+		height: 20px;
+		margin-top: var(--space-3);
+	}
+	.warnings {
+		margin: var(--space-1) 0 0;
+		padding-left: var(--space-5);
+	}
+</style>

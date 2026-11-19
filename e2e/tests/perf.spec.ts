@@ -14,6 +14,8 @@ const BUDGETS: Record<string, Budget> = {
 	Site: { url: 'SITE', ttfbMs: 500, loadMs: 1500, jsKb: 120, totalKb: 600 },
 	Editor: { url: '/editor', ttfbMs: 500, loadMs: 2000, jsKb: 450, totalKb: 1400 },
 	History: { url: '/history', ttfbMs: 500, loadMs: 1500, jsKb: 120, totalKb: 600 },
+	// docs/settings-and-perf-plan.md §6 S2: the Settings page passes the same budget as the other pages.
+	Settings: { url: '/settings', ttfbMs: 500, loadMs: 1500, jsKb: 120, totalKb: 600 },
 	// The Domains area (Porkbun, P7), against the fake Porkbun. Every page asks Porkbun on the server first
 	// (the e2e stack caches nothing), so time to first byte includes those calls; the same budget holds.
 	Domains: { url: '/domains', ttfbMs: 500, loadMs: 1500, jsKb: 120, totalKb: 600 },

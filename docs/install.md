@@ -74,8 +74,9 @@ docker compose up -d caddy-ui
 Open the published port (9876 in the example) and sign in. For forward auth see
 [configuration.md](configuration.md#authentication).
 
-Check that `GET /api/health` answers `ok` (the compose healthcheck does this). The About page
-shows the version and which settings are in effect; secrets show only as set or unset.
+Check that `GET /api/health` answers `ok` (the compose healthcheck does this). Settings
+shows which values are in effect, with a check for each path and a test for the admin API;
+secrets show only as set or unset. About shows the version.
 
 ## 4. First look
 
