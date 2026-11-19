@@ -340,4 +340,4 @@ integration only reads the certificate Porkbun issues.
 Why Overview and Sites slow down as the database ages, how to fix it, and a Settings page
 that makes the runtime-safe environment variables editable in the UI are planned in
 [docs/settings-and-perf-plan.md](docs/settings-and-perf-plan.md). It adds workstreams
-S0–S5. Nothing there is built until David says so.
+S0–S6. Nothing there is built until David says so.

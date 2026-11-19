@@ -968,3 +968,10 @@ Format: date · workstream · decision · why · how to reverse.
   (fix F) is now always built instead of "only if still slow". The access log tail was checked as a cause at his
   request: it reads at most 8 MB per 5 s and the pages only read minute rollups, so it is ranked low, and fix A
   reports its lag · David's words on 19 Nov · confidence 90.
+- 2026-11-19 · Settings and speed plan · David answered the rest: the UI wins over the environment (the plan had
+  recommended the opposite), Porkbun keys are never entered or shown in the UI, and the extras are Discord
+  notifications with editable messages, display preferences, updater controls and export/import; no editor
+  preferences. The plan now has S0–S6 and decisions D16–D21, among them `CADDY_UI_SETTINGS_IGNORE=true` as the
+  way back from a bad saved value, and the Discord webhook URL as the one secret kept in SQLite · David's words
+  on 19 Nov; "the UI should be able to override any of that" is read as every editable setting, not sign-in,
+  paths or the port · confidence 75.
