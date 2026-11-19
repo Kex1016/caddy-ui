@@ -284,6 +284,19 @@ export async function write<T extends object = object>(spec: WriteSpec<T>): Prom
 }
 
 /**
+ * Apply changed Settings while running (docs/settings-and-perf-plan.md §2.2). Only the read-only switch and
+ * the cache TTL can change; the keys and the API URL are environment-only, so the client is kept. The last
+ * `/ping` answer is kept too, with its `readonly` brought up to date.
+ */
+export function reconfigurePorkbun(next: PorkbunConfig): void {
+	if (!state) return; // Not used yet: the first use reads config() and gets the new values.
+	state.settings = { ...state.settings, readonly: next.readonly, cacheTtlMs: next.cacheTtlMs };
+	if (state.cache) state.cache.ttlMs = next.cacheTtlMs;
+	if (state.status)
+		state.status = { ...state.status, value: { ...state.status.value, readonly: next.readonly } };
+}
+
+/**
  * Tests only: run the module against the given settings, `fetch` and database instead of the environment.
  * Pass `undefined` to go back to the environment. Every call starts from a clean slate (no client, cache or
  * remembered status). `testing.ts` wraps this for the common case.

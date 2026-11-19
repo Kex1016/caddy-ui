@@ -5,7 +5,7 @@ import type { Database } from 'better-sqlite3';
  * Append only: never edit or reorder an entry that has shipped. Each runs inside a transaction.
  * W3 owns migration 1 (revisions, settings); W4 appends the collector tables as migration 2; P0 appends the
  * Porkbun tables as migration 3. Later Porkbun tables are appended by the workstream that needs them, one
- * migration each (docs/porkbun-plan.md §3.2).
+ * migration each (docs/porkbun-plan.md §3.2). S1 appends the settings log (docs/settings-and-perf-plan.md §2.2).
  */
 export type Migration = string | ((db: Database) => void);
 
@@ -119,5 +119,18 @@ export const migrations: Migration[] = [
 		request_id TEXT
 	);
 	CREATE INDEX porkbun_audit_domain ON porkbun_audit (domain, id);
+	`,
+	// 4 · S1 · Who changed which setting, and when (docs/settings-and-perf-plan.md §2.2). A new, empty table, so the
+	// migration is instant however many probe rows the database holds. old_value and new_value are the saved
+	// values in the variable's own syntax; NULL means nothing was saved (the environment or default applied).
+	`
+	CREATE TABLE settings_log (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		ts INTEGER NOT NULL,
+		author TEXT NOT NULL,
+		key TEXT NOT NULL,
+		old_value TEXT,
+		new_value TEXT
+	);
 	`
 ];

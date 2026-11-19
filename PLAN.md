@@ -167,13 +167,15 @@ upstream address forms, duration/size grammars.
 | `GET /api/caddy/upstreams` | Proxy of `/reverse_proxy/upstreams` enriched with the site that owns each upstream |
 | `GET /api/schema` | The schema bundle for the editor (cached, versioned) |
 | `GET /api/health` | Unauthenticated liveness for the updater and compose healthcheck |
+| `GET /api/settings`, `PATCH /api/settings` | S1: every setting with value, source (saved, env, default), environment value and whether it is editable; `PATCH` saves `{ VAR: "value" }` or resets `{ VAR: null }` (docs/configuration.md) |
 
 **SQLite tables** (owned by W4, read by W7/W8): `probes(site_id, target, kind, ts, ok,
 latency_ms, status, error)`, `state_changes(site_id, ts, from, to)`,
 `metric_samples(ts, name, labels_json, value)`, `log_minutes(site_id, minute, requests,
 errors_4xx, errors_5xx, bytes_out, p50_ms, p95_ms, top_paths_json, top_ips_json)`,
 `certs(host, not_after, issuer, seen_at)`, `revisions(id, ts, author, text, note)`,
-`settings(key, value)`.
+`settings(key, value)` (saved settings under `cfg.<VARIABLE>`, S1),
+`settings_log(id, ts, author, key, old_value, new_value)` (S1).
 
 **Site identity**: a site block is identified by the hash of its address list, so
 reordering or editing the body keeps its history; renaming the address creates a new

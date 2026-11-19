@@ -1,35 +1,40 @@
 # Configuration
 
-All configuration is by environment variables, read once at start. A bad value stops the UI
-with a message naming the variable. The UI never logs their values; the About page shows
-secrets only as set or unset.
+Configuration comes from environment variables, read once at start. A bad value stops the UI
+with a message naming the variable. The UI never logs their values; secrets are shown only as
+set or unset.
+
+Seven of the variables can also be changed while the UI runs, from Settings (or
+`PATCH /api/settings`). A value saved there wins over the environment; see
+[Settings and the environment](#settings-and-the-environment).
 
 ## Variables
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `CADDY_UI_PORT` | `3001` | Port the UI listens on inside the container |
-| `CADDY_ADMIN_URL` | `http://caddy:2019` | Caddy admin API |
-| `CADDYFILE_PATH` | `/etc/caddy/Caddyfile` | The file to edit |
-| `CADDY_LOG_PATH` | `/var/log/caddy/access.log` | JSON access log to tail (optional) |
-| `CADDY_DATA_PATH` | `/data/caddy` | Caddy data dir, for certificate expiry (optional) |
-| `CADDY_UI_DATA` | `/etc/caddy-ui` | Where the SQLite database and backups live |
-| `CADDY_UI_USER`, `CADDY_UI_PASSWORD` | unset | Local login; both unset disables local auth |
-| `CADDY_UI_AUTH_MODE` | `local` | `local`, `forward` or `none` |
-| `CADDY_UI_SESSION_SECRET` | random at boot | Cookie signing; set it to keep sessions across restarts |
-| `CADDY_UI_PROBE_INTERVAL` | `30s` | Site and upstream probes (minimum 1s) |
-| `CADDY_UI_SCRAPE_INTERVAL` | `15s` | Caddy `/metrics` scrape (minimum 1s) |
-| `CADDY_UI_RETENTION_DAYS` | `90` | Days of probe results and metric samples kept |
-| `CADDY_UI_PUBLIC_URL` | unset | Used in links |
-| `CADDY_UI_UPDATE_INTERVAL` | `1h` | Updater poll period (minimum 1m in the UI; 30s in the sidecar) |
-| `CADDY_UI_UPDATE_WEBHOOK_PORT` | unset | Updater listens for a push webhook when set |
-| `CADDY_UI_UPDATE_SOURCE` | `ghcr` | `ghcr` (pull image) or `git` (clone and build) |
-| `PORKBUN_API_KEY`, `PORKBUN_API_SECRET_KEY` | unset | Porkbun key pair for the Domains area; same names as the Caddy plugin uses. See [porkbun.md](porkbun.md) |
-| `PORKBUN_API_URL` | `https://api.porkbun.com/api/json/v3` | Porkbun API base URL (`api-ipv4.porkbun.com` forces IPv4) |
-| `CADDY_UI_PORKBUN_READONLY` | `false` (`true` when the UI has no sign-in: auth mode `none`, or `local` with no user and password) | Disables every write to Porkbun |
-| `CADDY_UI_PORKBUN_CACHE_TTL` | `60s` | How long Porkbun reads are cached |
-| `CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD` | `false` | Allows downloading the private key of the Porkbun-issued certificate |
-| `TZ` | `UTC` | Display timezone (an IANA name such as `Europe/Budapest`) |
+| Variable | Default | Meaning | In Settings |
+| --- | --- | --- | --- |
+| `CADDY_UI_PORT` | `3001` | Port the UI listens on inside the container | Shown, environment only |
+| `CADDY_ADMIN_URL` | `http://caddy:2019` | Caddy admin API | Shown, environment only |
+| `CADDYFILE_PATH` | `/etc/caddy/Caddyfile` | The file to edit | Shown, environment only |
+| `CADDY_LOG_PATH` | `/var/log/caddy/access.log` | JSON access log to tail (optional) | Shown, environment only |
+| `CADDY_DATA_PATH` | `/data/caddy` | Caddy data dir, for certificate expiry (optional) | Shown, environment only |
+| `CADDY_UI_DATA` | `/etc/caddy-ui` | Where the SQLite database and backups live | Shown, environment only |
+| `CADDY_UI_USER`, `CADDY_UI_PASSWORD` | unset | Local login; both unset disables local auth | Shown, environment only |
+| `CADDY_UI_AUTH_MODE` | `local` | `local`, `forward` or `none` | Shown, environment only |
+| `CADDY_UI_SESSION_SECRET` | random at boot | Cookie signing; set it to keep sessions across restarts | Shown, environment only |
+| `CADDY_UI_PROBE_INTERVAL` | `30s` | Site and upstream probes (minimum 1s) | Editable, applies at once |
+| `CADDY_UI_SCRAPE_INTERVAL` | `15s` | Caddy `/metrics` scrape (minimum 1s) | Editable, applies at once |
+| `CADDY_UI_RETENTION_DAYS` | `90` | Days of probe results and metric samples kept | Editable, applies at once |
+| `CADDY_UI_PUBLIC_URL` | unset | Used in links | Editable, applies at once |
+| `CADDY_UI_UPDATE_INTERVAL` | `1h` | Updater poll period (minimum 1m in the UI; 30s in the sidecar) | Shown, environment only |
+| `CADDY_UI_UPDATE_WEBHOOK_PORT` | unset | Updater listens for a push webhook when set | Shown, environment only |
+| `CADDY_UI_UPDATE_SOURCE` | `ghcr` | `ghcr` (pull image) or `git` (clone and build) | Shown, environment only |
+| `PORKBUN_API_KEY`, `PORKBUN_API_SECRET_KEY` | unset | Porkbun key pair for the Domains area; same names as the Caddy plugin uses. See [porkbun.md](porkbun.md) | Shown, environment only |
+| `PORKBUN_API_URL` | `https://api.porkbun.com/api/json/v3` | Porkbun API base URL (`api-ipv4.porkbun.com` forces IPv4) | Shown, environment only |
+| `CADDY_UI_PORKBUN_READONLY` | `false` (`true` when the UI has no sign-in: auth mode `none`, or `local` with no user and password) | Disables every write to Porkbun | Editable, applies at once |
+| `CADDY_UI_PORKBUN_CACHE_TTL` | `60s` | How long Porkbun reads are cached | Editable, applies at once |
+| `CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD` | `false` | Allows downloading the private key of the Porkbun-issued certificate | Shown, environment only |
+| `TZ` | `UTC` | Display timezone (an IANA name such as `Europe/Budapest`) | Editable, applies at once |
+| `CADDY_UI_SETTINGS_IGNORE` | `false` | `true` runs on environment values and defaults only; saved settings are kept but not used | Shown, environment only |
 
 The two Porkbun keys are secrets like the session secret: keep them in `.env`, never in
 the compose file or the Caddyfile. They are shown only as set or unset.
@@ -39,6 +44,55 @@ updater sidecar; the full list is in [`deploy/updater/README.md`](../deploy/upda
 
 The example compose file also reads `CADDY_UI_TAG`, `CADDY_UI_HOST_PORT` and
 `CADDY_UI_COMPOSE_DIR`; those are compose variables, not settings of the app.
+
+## Settings and the environment
+
+The editable variables are `CADDY_UI_PROBE_INTERVAL`, `CADDY_UI_SCRAPE_INTERVAL`,
+`CADDY_UI_RETENTION_DAYS`, `TZ`, `CADDY_UI_PUBLIC_URL`, `CADDY_UI_PORKBUN_READONLY` and
+`CADDY_UI_PORKBUN_CACHE_TTL`. For each of them the value in force is:
+
+1. the value saved in Settings, if there is one;
+2. otherwise the environment variable, if it is set;
+3. otherwise the default in the table above.
+
+So the environment is the starting value, and a value saved in the UI overrides it, also
+after a restart and after changing compose. "Use the environment's value" in Settings (or
+`null` in `PATCH /api/settings`) removes the saved value, and the environment applies again.
+A change takes effect at once, without a restart: the probe and scrape timers are re-armed,
+retention is read at the next prune, the Porkbun cache uses the new lifetime from its next
+lookup, and pages show times in the new time zone. `TZ` set in Settings changes only how the
+UI displays times; the process's own clock and log timestamps keep the environment's `TZ`.
+
+Saved values are checked with the same rules, and get the same messages, as the environment
+variables. A saved value that no longer passes (for example after going back to an older
+image) is ignored with a warning in the log and in Settings; it never stops the container.
+Only a bad environment variable does.
+
+Every other variable is environment-only: sign-in (`CADDY_UI_AUTH_MODE`, `CADDY_UI_USER`,
+`CADDY_UI_PASSWORD`, `CADDY_UI_SESSION_SECRET`), the paths, `CADDY_ADMIN_URL`, the port,
+`PORKBUN_API_URL`, `CADDY_UI_PORKBUN_SSL_KEY_DOWNLOAD` and the updater's variables. Settings
+shows them with their values; secrets and the Porkbun keys only as set or unset, never the
+values. The Porkbun keys can never be entered in the UI.
+
+`CADDY_UI_PORKBUN_READONLY` can always be turned on in Settings, but turned off only while
+the UI has a sign-in (forward auth, or local auth with a user and password). If the sign-in
+goes away later, a saved "off" is ignored and the default (read-only) applies.
+
+Every change is recorded with who made it, when, and the old and new saved values; Settings
+lists the latest ones.
+
+**The way back.** Because compose can no longer override a saved value, starting the
+container with `CADDY_UI_SETTINGS_IGNORE=true` runs it on environment values and defaults
+only. Nothing is deleted; Settings says that saved values are not in force, refuses new
+ones, and still lets you remove them. Remove the variable again to use the saved values.
+
+**API.** `GET /api/settings` returns every variable above with its value in force, its
+source (`saved`, `env` or `default`), the environment's value, whether it is editable, any
+saved value that is being ignored and why, and the latest changes. `PATCH /api/settings`
+takes `{ "CADDY_UI_PROBE_INTERVAL": "1m", "TZ": null }`: a string saves a value, `null`
+removes the saved one. All keys are checked first and saved together, or none is; a refusal
+answers 400 with a message per key (403 for loosening Porkbun without a sign-in, 409 while
+`CADDY_UI_SETTINGS_IGNORE` is on). Both need a signed-in request, like every other route.
 
 ## Authentication
 

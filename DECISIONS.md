@@ -988,3 +988,40 @@ Format: date · workstream · decision · why · how to reverse.
   way back from a bad saved value, and the Discord webhook URL as the one secret kept in SQLite · David's words
   on 19 Nov; "the UI should be able to override any of that" is read as every editable setting, not sign-in,
   paths or the port · confidence 75.
+- 2026-11-19 · S1 · New contracts `GET /api/settings` and `PATCH /api/settings` (PLAN.md §3.2 table, shapes in
+  `apps/ui/src/lib/api/settings.ts`). GET lists every editable variable with `value`, `source` (`saved`, `env`,
+  `default`), `env`, `default`, `saved` and `ignoredReason`, then the environment-only ones (secrets as
+  `{ secret: true, set }` only), plus `ignoringSaved`, `signIn`, `warnings` and the latest 50 log rows. PATCH
+  takes `{ VAR: "value" | number | boolean | null }`; `null` is the reset, so there is no separate DELETE route.
+  All keys are checked first and saved in one transaction, or none is. Refusals: 400 `INVALID` (with a message
+  per key), `NOT_EDITABLE`, `UNKNOWN_KEY`; 403 `NEEDS_SIGN_IN`; 409 `SETTINGS_IGNORED` · confidence 82.
+- 2026-11-19 · S1 · Saved values are stored as the variable's own text (`cfg.CADDY_UI_PROBE_INTERVAL` = `2m`) and
+  the effective config is `loadConfig({...env, ...saved})`, so precedence, defaults (including the read-only
+  default that depends on the sign-in) and error messages are exactly the environment's. Only the seven editable
+  fields are taken from that result; every other field comes from the environment's own parse. `process.env` is
+  never written, so a `TZ` saved in Settings changes how the UI shows times, not Node's clock · confidence 85.
+- 2026-11-19 · S1 · `config()` keeps its name and its callers: it now returns the effective config through a
+  resolver the settings service installs at the top of `init` (`installSettings()`), and `envConfig()` is the
+  environment alone (the database path uses it, which breaks the cycle settings → db → config). Everything that
+  reads `config()` per use (layout time zone, public URL for cookies) is live with no other change; the two
+  places that keep a copy get a subscriber: `Collector.reconfigure()` and `reconfigurePorkbun()` · confidence 80.
+- 2026-11-19 · S1 · `Collector` timers are now named loops. `reconfigure()` re-arms a waiting probe or scrape
+  timer to fire one new interval from now; a job that is running takes the new interval when it schedules its
+  next run. Retention is read at the next prune. Paths and the admin URL in the passed config are ignored, since
+  they cannot change while the process runs. S0 also touches this file; S1 rebases onto it · confidence 82.
+- 2026-11-19 · S1 · Only `CADDY_UI_PUBLIC_URL` may be saved as an empty value (meaning unset, so the UI can clear a
+  URL compose sets). An empty value for any other key is refused, because it would silently mean "the default"
+  while hiding the environment's value; the reset is the way to get the environment back · confidence 78.
+- 2026-11-19 · S1 · "Has a sign-in" for the Porkbun guard means auth mode `forward`, or `local` with both a user and a
+  password. A saved `CADDY_UI_PORKBUN_READONLY=false` is refused from the UI without one (403) and ignored with a
+  warning if the sign-in is removed later. An environment `false` without a sign-in still works as before, since
+  that is a deploy-time choice · confidence 80.
+- 2026-11-19 · S1 · With `CADDY_UI_SETTINGS_IGNORE=true` the UI runs on environment values and defaults, saving a
+  value answers 409, and a reset (`null`) still works, so the flag is also how a bad saved value is cleared
+  without touching the database by hand. The layout gets `settingsIgnored` for S2's banner · confidence 76.
+- 2026-11-19 · S1 · `settings_log` holds the saved values before and after (NULL = nothing saved), not the
+  effective ones: the effective value can be rebuilt from the environment, and this keeps environment values out
+  of the database. A save that leaves a value as it was writes no row. Migration 4 in this branch; renumbered to
+  follow S0's on rebase. A new empty table, so it is instant on any database · confidence 80.
+- 2026-11-19 · S1 · A saved settings store that can not be read at all (database error) is logged and the UI runs
+  on the environment, in line with D11; only a bad environment variable stops the container · confidence 78.

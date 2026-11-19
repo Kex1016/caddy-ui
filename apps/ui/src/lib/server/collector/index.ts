@@ -1,6 +1,7 @@
 import { adminFetch } from '../caddy/admin-fetch';
 import { config } from '../env';
 import { getDb, type Db } from '../db';
+import { onSettingsChange } from '../settings';
 import {
 	allCerts,
 	certFor,
@@ -45,7 +46,11 @@ export function startCollector(): void {
 	started = true;
 	const c = getCollector();
 	c.start();
-	process.once('sveltekit:shutdown', () => c.stop());
+	const off = onSettingsChange((next) => c.reconfigure(next));
+	process.once('sveltekit:shutdown', () => {
+		off();
+		c.stop();
+	});
 }
 
 /** Live passive-health data from Caddy's admin API, cached briefly so a page load costs one request. */
