@@ -5,6 +5,7 @@ import type { Db } from '../db';
 import { readCerts } from './certs';
 import { FileTailer, LogRollup, parseAccessLine, type TailPosition } from './logs';
 import { MetricsRollup, parsePrometheus } from './metrics';
+import { NetworkMatcher } from '../netlist';
 import { probeSite, probeUpstream, type ProbeResult } from './probe';
 import { loadProbeOptions, NO_OPTIONS, withPath, type ProbeOptions } from './probe-options';
 import {
@@ -38,7 +39,14 @@ export type CollectorStatus = {
 	caddyfile: JobStatus & { sites: number };
 	probes: JobStatus & { intervalMs: number };
 	metrics: JobStatus & { intervalMs: number; perHost: boolean };
-	logs: JobStatus & { path: string; found: boolean; lastEntry: number | null; lagBytes: number };
+	logs: JobStatus & {
+		path: string;
+		found: boolean;
+		lastEntry: number | null;
+		lagBytes: number;
+		/** Entries skipped since start because the client is in `CADDY_UI_LOG_EXCLUDE_NETWORKS`. */
+		excluded: number;
+	};
 	certs: JobStatus & { count: number };
 	upstreams: JobStatus;
 };
@@ -115,6 +123,8 @@ export class Collector {
 	private metrics: MetricsRollup;
 	private logs: LogRollup;
 	private tailer: FileTailer;
+	/** Clients whose requests are not counted (`CADDY_UI_LOG_EXCLUDE_NETWORKS`). */
+	private excludeNetworks: NetworkMatcher;
 	private caddyfileMtime = -1;
 	private loops = new Map<string, Loop>();
 	private stopped = false;
@@ -140,6 +150,7 @@ export class Collector {
 		const siteFor = (host: string) => this.matcher.match(host);
 		this.metrics = new MetricsRollup(siteFor);
 		this.logs = new LogRollup(siteFor);
+		this.excludeNetworks = new NetworkMatcher(cfg.logExcludeNetworks);
 		const saved = getSetting(db, TAIL_KEY);
 		this.tailer = new FileTailer(cfg.logPath, saved ? (JSON.parse(saved) as TailPosition) : undefined);
 		this.status = {
@@ -147,7 +158,7 @@ export class Collector {
 			caddyfile: { ...job(), sites: 0 },
 			probes: { ...job(), intervalMs: cfg.probeIntervalMs },
 			metrics: { ...job(), intervalMs: cfg.scrapeIntervalMs, perHost: false },
-			logs: { ...job(), path: cfg.logPath, found: false, lastEntry: null, lagBytes: 0 },
+			logs: { ...job(), path: cfg.logPath, found: false, lastEntry: null, lagBytes: 0, excluded: 0 },
 			certs: { ...job(), count: 0 },
 			upstreams: job()
 		};
@@ -374,7 +385,13 @@ export class Collector {
 				for (const line of lines) {
 					const e = parseAccessLine(line);
 					if (!e) continue;
-					this.logs.add(e);
+					if (this.excludeNetworks.has(e.ip)) {
+						// Still marks the minute as read, so a quiet minute shows zero requests rather than a gap.
+						this.logs.touch(e.ts);
+						st.excluded++;
+					} else {
+						this.logs.add(e);
+					}
 					st.lastEntry = Math.max(st.lastEntry ?? 0, e.ts);
 				}
 				if (this.tailer.position?.offset === at || this.tailer.lagBytes === 0) break;
@@ -490,7 +507,7 @@ export class Collector {
 
 	/**
 	 * Apply a changed config while running (settings service, plan §2.2): the probe, scrape and upstream-poll
-	 * timers are re-armed, and retention is read at the next prune. Environment-only fields (paths, admin URL) are not
+	 * timers are re-armed, retention is read at the next prune, and the excluded networks apply from the next log line. Environment-only fields (paths, admin URL) are not
 	 * taken from `next`; they cannot change while the process runs.
 	 */
 	reconfigure(next: Config): void {
@@ -500,8 +517,10 @@ export class Collector {
 			scrapeIntervalMs: next.scrapeIntervalMs,
 			retentionDays: next.retentionDays,
 			probeTimeoutMs: next.probeTimeoutMs,
-			certWarnDays: next.certWarnDays
+			certWarnDays: next.certWarnDays,
+			logExcludeNetworks: next.logExcludeNetworks
 		};
+		this.excludeNetworks = new NetworkMatcher(next.logExcludeNetworks);
 		this.probeTimeoutMs = probeTimeout(next.probeIntervalMs, next.probeTimeoutMs);
 		if (this.certWarnDays !== next.certWarnDays) {
 			this.certWarnDays = next.certWarnDays;

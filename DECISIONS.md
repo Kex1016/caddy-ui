@@ -1282,3 +1282,19 @@ Format: date · workstream · decision · why · how to reverse.
   `notify.last_version`, `notify.certs`) and the `notify_log` table are never exported. Import applies the block and
   the webhook through the notifier's own `update`, so they are validated, logged in Recent changes (webhook by id
   only) and live at once · confidence 82.
+- 2026-11-19 · Log exclusion (David's request, outside S0–S6) · Access-log entries whose client (`client_ip`, else
+  `remote_ip`) is in a configurable list are skipped by the collector before the per-minute rollup, so they leave
+  requests, errors, latency, bytes, top paths and top IPs alike. New editable variable
+  `CADDY_UI_LOG_EXCLUDE_NETWORKS` (Settings → Monitoring), so this adds to the PLAN.md §3.2 env-var contract; no
+  API route, no migration. Metrics from `/metrics` cannot be filtered (Caddy's counters have no client) · confidence 85.
+- 2026-11-19 · Log exclusion · Default `127.0.0.0/8, ::1, 172.16.0.0/12`: loopback plus Docker's default address
+  pool for bridge and compose networks. 10.0.0.0/8 and 192.168.0.0/16 are not in it, because David's LAN clients and
+  upstreams are on 10.0.0.x and should still count. Risk: with Docker's userland proxy, IPv6 visitors arrive from the
+  bridge gateway and are left out too; Check everything shows the skipped count and the docs say how to narrow the
+  list · confidence 72.
+- 2026-11-19 · Log exclusion · `none` means an empty list; an empty value is refused like every other editable
+  setting except the public URL and probe timeout (removing the saved value is what goes back to the default). A
+  minute with only skipped entries still gets a zero row for the whole server, so charts show zero rather than a gap
+  or a fall-back to metrics. Already stored minutes are not rewritten · confidence 80.
+- 2026-11-19 · Log exclusion · The CIDR check uses Node's `net.BlockList`, no new dependency; IPv4-mapped IPv6
+  (`::ffff:172.18.0.3`), brackets and zone ids are normalised first · confidence 88.

@@ -148,7 +148,8 @@ and `CADDYFILE_PATH`. The complete table is in [docs/configuration.md](docs/conf
 
 The **Settings** page changes twelve of them while the UI runs, without a restart: the probe and
 metrics intervals, how many days of probe results to keep, the probe timeout, when a certificate
-counts as close to expiry, how many Caddyfile revisions and backups to keep, the time zone, the
+counts as close to expiry, which client networks (Docker and loopback by default) are left out of
+the request stats, how many Caddyfile revisions and backups to keep, the time zone, the
 public address, the Porkbun read-only switch and cache lifetime, and how often the updater checks
 for a new version. A value saved there wins over the environment until you press "Use the
 environment's value". The page also shows every other variable with its value (secrets only as set

@@ -148,10 +148,13 @@ function accessLog(i: DiagnosticsInput): DiagnosticCheck {
 		};
 	}
 	const age = i.now - l.lastEntry;
+	const excluded = l.excluded
+		? ` ${l.excluded.toLocaleString('en-GB')} ${l.excluded === 1 ? 'request' : 'requests'} from excluded networks not counted since the UI started.`
+		: '';
 	return {
 		...base,
 		state: age > STALE_LOG_MS || l.lagBytes > 64 * 1024 * 1024 ? 'warning' : 'ok',
-		message: `Last entry ${ago(age)}.${behind}`
+		message: `Last entry ${ago(age)}.${behind}${excluded}`
 	};
 }
 

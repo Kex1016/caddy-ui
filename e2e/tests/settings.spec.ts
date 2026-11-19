@@ -21,7 +21,8 @@ const EDITABLE = [
 	'CADDY_UI_PROBE_TIMEOUT',
 	'CADDY_UI_REVISIONS_KEEP',
 	'CADDY_UI_BACKUPS_KEEP',
-	'CADDY_UI_UPDATE_INTERVAL'
+	'CADDY_UI_UPDATE_INTERVAL',
+	'CADDY_UI_LOG_EXCLUDE_NETWORKS'
 ];
 
 /** Every spec shares one stack, so nothing saved here may outlive this file. */

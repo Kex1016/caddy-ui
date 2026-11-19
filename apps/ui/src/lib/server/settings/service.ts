@@ -399,7 +399,8 @@ function pickEditable(c: Config) {
 		backupsKeep: c.backupsKeep,
 		timeZone: c.timeZone,
 		publicUrl: c.publicUrl,
-		updateIntervalMs: c.updateIntervalMs
+		updateIntervalMs: c.updateIntervalMs,
+		logExcludeNetworks: c.logExcludeNetworks
 	};
 }
 
@@ -434,5 +435,7 @@ export function effectiveOf(c: Config, key: EditableKey): string {
 			return String(c.backupsKeep);
 		case 'CADDY_UI_UPDATE_INTERVAL':
 			return String(c.updateIntervalMs);
+		case 'CADDY_UI_LOG_EXCLUDE_NETWORKS':
+			return c.logExcludeNetworks.map((n) => `${n.address}/${n.prefix}`).join(',');
 	}
 }

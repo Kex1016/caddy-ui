@@ -27,6 +27,7 @@ Seven of the variables can also be changed while the UI runs, from Settings (or
 | `CADDY_UI_PUBLIC_URL` | unset | Used in links | Editable, applies at once |
 | `CADDY_UI_PROBE_TIMEOUT` | automatic | How long a probe waits (1s to 60s, never longer than the probe interval); unset is a third of the interval, between 2s and 10s | Editable, applies at once |
 | `CADDY_UI_CERT_WARN_DAYS` | `14` | A certificate with fewer days left is flagged on Overview and Sites (1 to 365) | Editable, applies at once |
+| `CADDY_UI_LOG_EXCLUDE_NETWORKS` | `127.0.0.0/8, ::1, 172.16.0.0/12` | Access-log requests from these client addresses or ranges are not counted (loopback and Docker's bridge and compose networks); `none` counts everything. See [below](#requests-from-docker-and-loopback) | Editable, applies at once |
 | `CADDY_UI_REVISIONS_KEEP` | `200` | Caddyfile revisions kept in History (10 to 10000) | Editable, applies at once |
 | `CADDY_UI_BACKUPS_KEEP` | `50` | Caddyfile backup files kept in `CADDY_UI_DATA/backups` (1 to 10000) | Editable, applies at once |
 | `CADDY_UI_UPDATE_INTERVAL` | `1h` | How often the updater looks for a new version: `30s`, `5m`, `1h`, `1d`, at least 30s. The updater takes a changed value within a few seconds | Editable (needs the updater's shared folder, below) |
@@ -155,12 +156,35 @@ UI's data folder is `./caddy-ui` there. If your data folder is somewhere else, s
 Without a shared folder the Updates section says so, the interval is saved but the updater
 keeps its own, and **Check now** does nothing.
 
+## Requests from Docker and loopback
+
+Health checks, containers talking to each other through Caddy and the UI's own probes would
+otherwise fill the request charts and the top client IPs. `CADDY_UI_LOG_EXCLUDE_NETWORKS`
+(Settings → Monitoring, "Leave out requests from") lists the client addresses whose access-log
+entries are skipped: by default loopback (`127.0.0.0/8`, `::1`) and `172.16.0.0/12`, the range
+Docker gives its default bridge and compose networks. Write addresses or CIDR ranges, IPv4 or
+IPv6, separated by commas; `none` counts every request. Your LAN (for example `10.0.0.x`) is
+counted unless you add it.
+
+- The client address is the one Caddy logs as `client_ip` (the real client behind
+  `trusted_proxies`), else `remote_ip`.
+- A minute that had only skipped requests shows as zero traffic, not as a gap.
+- Only new log lines are affected; minutes already stored keep their counts.
+- Charts drawn from Caddy's `/metrics` (when there is no access log) cannot be filtered: Caddy's
+  counters do not know the client.
+- **Check everything** shows how many requests were left out since the UI started.
+- If Docker hands IPv6 visitors to Caddy through its userland proxy (no IPv6 on the Docker
+  network), they arrive from the bridge gateway, such as `172.18.0.1`, and would be left out.
+  If the count in Check everything looks too high, narrow the list, for example to the
+  containers' subnet without its `.1` gateway, or set it to `none`.
+
 ## Settings and the environment
 
 The editable variables are `CADDY_UI_PROBE_INTERVAL`, `CADDY_UI_SCRAPE_INTERVAL`,
 `CADDY_UI_RETENTION_DAYS`, `CADDY_UI_PROBE_TIMEOUT`, `CADDY_UI_CERT_WARN_DAYS`,
 `CADDY_UI_REVISIONS_KEEP`, `CADDY_UI_BACKUPS_KEEP`, `TZ`, `CADDY_UI_PUBLIC_URL`,
-`CADDY_UI_PORKBUN_READONLY`, `CADDY_UI_PORKBUN_CACHE_TTL` and `CADDY_UI_UPDATE_INTERVAL`. For each of them the value in force is:
+`CADDY_UI_PORKBUN_READONLY`, `CADDY_UI_PORKBUN_CACHE_TTL`, `CADDY_UI_UPDATE_INTERVAL` and
+`CADDY_UI_LOG_EXCLUDE_NETWORKS`. For each of them the value in force is:
 
 1. the value saved in Settings, if there is one;
 2. otherwise the environment variable, if it is set;

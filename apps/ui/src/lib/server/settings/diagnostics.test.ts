@@ -12,7 +12,14 @@ function input(over: Partial<DiagnosticsInput> = {}): DiagnosticsInput {
 		caddyfile: { ...ok(), sites: 3 },
 		probes: { ...ok(), intervalMs: 30_000 },
 		metrics: { ...ok(), intervalMs: 15_000, perHost: true },
-		logs: { ...ok(), path: '/var/log/caddy/access.log', found: true, lastEntry: NOW - 5_000, lagBytes: 0 },
+		logs: {
+			...ok(),
+			path: '/var/log/caddy/access.log',
+			found: true,
+			lastEntry: NOW - 5_000,
+			lagBytes: 0,
+			excluded: 0
+		},
 		certs: { ...ok(), count: 2 },
 		upstreams: ok()
 	};
@@ -85,6 +92,15 @@ describe('diagnose', () => {
 		expect(state(r, 'metrics')).toBe('warning');
 		expect(r.checks.find((c) => c.id === 'metrics')?.fix?.href).toBe('#helpers');
 		expect(state(r, 'access-log')).toBe('warning');
+	});
+
+	it('says how many requests from excluded networks were left out', () => {
+		const i = input();
+		expect(diagnose(i).checks.find((c) => c.id === 'access-log')?.message).not.toContain('excluded');
+		i.collector.logs.excluded = 1234;
+		const log = diagnose(i).checks.find((c) => c.id === 'access-log')!;
+		expect(log.state).toBe('ok');
+		expect(log.message).toContain('1,234 requests from excluded networks not counted');
 	});
 
 	it('says a job is late or failing', () => {

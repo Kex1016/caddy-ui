@@ -259,6 +259,59 @@ describe('Collector', () => {
 		expect(c.status.logs.error).toBeNull();
 	});
 
+	it('leaves out requests from excluded networks, and takes a new list without a restart', async () => {
+		let now = Date.UTC(2026, 10, 5, 16, 0, 5);
+		const logPath = join(dir, 'docker.log');
+		writeFileSync(logPath, '');
+		const db = openDb(':memory:');
+		const c = new Collector(db, loadConfig({ ...cfgEnv, CADDY_LOG_PATH: logPath }), () => now);
+		c.refreshSites();
+		const up = siteId([`http://up.test:${port}`]);
+		await c.tailLogs(); // first sight: start at the end
+		const line = (ts: number, ip: string) =>
+			JSON.stringify({
+				ts: ts / 1000,
+				request: { remote_ip: ip, host: `up.test:${port}`, uri: '/health', method: 'GET' },
+				duration: 0.01,
+				size: 10,
+				status: 200
+			}) + '\n';
+		// Only Docker and loopback traffic in the first minute: it is read, but counts as zero requests.
+		appendFileSync(
+			logPath,
+			line(now, '172.18.0.5') + line(now + 1000, '::ffff:127.0.0.1') + line(now + 2000, '::1')
+		);
+		await c.tailLogs();
+		now += 90_000;
+		await c.tailLogs();
+		expect(c.status.logs.excluded).toBe(3);
+		let stats = siteStats(c, db, up, '1h', now)!;
+		expect(stats.series.requests.source).toBe('logs');
+		expect(stats.totals.requests).toBe(0);
+		expect(db.prepare(`SELECT requests FROM log_minutes WHERE site_id = '*'`).all()).toEqual([
+			{ requests: 0 }
+		]);
+
+		// A LAN or public client is still counted next to Docker traffic.
+		appendFileSync(logPath, line(now, '10.0.0.7') + line(now + 1000, '172.20.1.2'));
+		await c.tailLogs();
+		now += 90_000;
+		await c.tailLogs();
+		stats = siteStats(c, db, up, '1h', now)!;
+		expect(stats.totals.requests).toBe(1);
+		expect(stats.top?.ips).toEqual([['10.0.0.7', 1]]);
+
+		// "none" counts everything again from the next line on.
+		c.reconfigure(loadConfig({ ...cfgEnv, CADDY_LOG_PATH: logPath, CADDY_UI_LOG_EXCLUDE_NETWORKS: 'none' }));
+		appendFileSync(logPath, line(now, '172.18.0.5'));
+		await c.tailLogs();
+		now += 90_000;
+		await c.tailLogs();
+		expect(siteStats(c, db, up, '1h', now)!.totals.requests).toBe(2);
+		expect(c.status.logs.excluded).toBe(4);
+		c.stop();
+	});
+
 	it('keeps minute rollups and drops raw rows past retention', () => {
 		const db = openDb(':memory:');
 		const old = Date.UTC(2026, 0, 1);

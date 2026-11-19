@@ -36,7 +36,12 @@ describe('loadConfig', () => {
 				sslKeyDownload: false
 			},
 			settingsIgnore: false,
-			discordApiUrl: 'https://discord.com/api/v10'
+			discordApiUrl: 'https://discord.com/api/v10',
+			logExcludeNetworks: [
+				{ address: '127.0.0.0', prefix: 8, family: 'ipv4' },
+				{ address: '::1', prefix: 128, family: 'ipv6' },
+				{ address: '172.16.0.0', prefix: 12, family: 'ipv4' }
+			]
 		});
 	});
 
@@ -181,5 +186,28 @@ describe('S3 thresholds and history', () => {
 		expect(() => checkSetting('CADDY_UI_REVISIONS_KEEP', '5')).toThrow(/between 10 and 10000/);
 		expect(checkSetting('CADDY_UI_BACKUPS_KEEP', '1')).toBe('1');
 		expect(() => loadConfig({ CADDY_UI_PROBE_TIMEOUT: '0s' })).toThrow(ConfigError);
+	});
+});
+
+describe('CADDY_UI_LOG_EXCLUDE_NETWORKS', () => {
+	it("leaves out loopback and Docker's private ranges by default", () => {
+		expect(loadConfig({}).logExcludeNetworks.map((n) => `${n.address}/${n.prefix}`)).toEqual([
+			'127.0.0.0/8',
+			'::1/128',
+			'172.16.0.0/12'
+		]);
+	});
+
+	it('takes a list, or none for an empty one', () => {
+		expect(loadConfig({ CADDY_UI_LOG_EXCLUDE_NETWORKS: '172.18.0.0/16' }).logExcludeNetworks).toHaveLength(1);
+		expect(loadConfig({ CADDY_UI_LOG_EXCLUDE_NETWORKS: 'None' }).logExcludeNetworks).toEqual([]);
+	});
+
+	it('checks a saved value with the same message as the environment', () => {
+		expect(checkSetting('CADDY_UI_LOG_EXCLUDE_NETWORKS', ' none ')).toBe('none');
+		expect(() => checkSetting('CADDY_UI_LOG_EXCLUDE_NETWORKS', 'docker')).toThrow(
+			/CADDY_UI_LOG_EXCLUDE_NETWORKS must be IP addresses or ranges.*"docker"/
+		);
+		expect(() => checkSetting('CADDY_UI_LOG_EXCLUDE_NETWORKS', '')).toThrow(/must not be empty/);
 	});
 });
