@@ -7,6 +7,8 @@ import { FakeAdmin } from '$lib/server/config/fake-admin';
 import { ConfigService } from '$lib/server/config/service';
 import { openDb } from '$lib/server/db';
 import { siteId } from '$lib/server/collector/sites';
+import { NOT_REGISTERED } from '$lib/server/caddy/porkbun/testing';
+import { actions as siteActions } from './[id]/+page.server';
 import { actions } from './+page.server';
 
 const TEXT = 'a.example.com {\n\treverse_proxy 10.0.0.20:80\n}\n\nb.example.com {\n\trespond hi\n}\n';
@@ -26,6 +28,8 @@ async function run(name: keyof typeof actions, fields: Record<string, string>, b
 		ok?: boolean;
 		data?: { message: string };
 		message?: string;
+		added?: string[];
+		dns01?: string;
 	};
 }
 const disk = () => readFile(file, 'utf8');
@@ -129,5 +133,76 @@ describe('sites actions', () => {
 		expect((missing.data as { field?: string } | undefined)?.field).toBe('upstream');
 		expect((await run('delete', { id: 'unknown' })).status).toBe(404);
 		expect(await disk()).toBe(TEXT);
+	});
+});
+
+/** docs/porkbun-plan.md §4: the wildcard hint's action and the DNS record step after adding a site. */
+describe('the Porkbun tie-in on the Sites pages', () => {
+	const BLOCK =
+		'\ttls {\n\t\tdns porkbun {\n\t\t\tapi_key {env.PORKBUN_API_KEY}\n\t\t\tapi_secret_key {env.PORKBUN_API_SECRET_KEY}\n\t\t}\n\t}\n';
+	const wildcard = siteId(['*.example.com']);
+	const addWildcard = () =>
+		run('add', { addresses: '*.example.com', recipe: 'reverse_proxy', f_upstream: '10.0.0.9:80' });
+
+	it('add answers the host names of the new site, so the page can offer their DNS records', async () => {
+		const r = await run('add', {
+			addresses: 'https://c.example.com:8443, :9000, *.example.com, 10.0.0.7',
+			recipe: 'reverse_proxy',
+			f_upstream: '10.0.0.9:80'
+		});
+		expect(r.ok).toBe(true);
+		expect(r.added).toEqual(['c.example.com', '*.example.com']);
+	});
+
+	it('dns01 gives a wildcard site the Porkbun DNS challenge, with placeholders for the keys', async () => {
+		await addWildcard();
+		const r = await run('dns01', { id: wildcard });
+		expect(r.ok).toBe(true);
+		expect(r.dns01).toBe(wildcard);
+		expect(r.message).toContain('*.example.com');
+		expect(await disk()).toContain(`*.example.com {\n${BLOCK}\treverse_proxy 10.0.0.9:80\n}\n`);
+		expect(svc.listRevisions()[0]?.note).toBe('Added the Porkbun DNS challenge to *.example.com');
+		expect(admin.loads).toHaveLength(2);
+
+		// Asking twice changes nothing; an unknown site is a 404.
+		const before = await disk();
+		expect((await run('dns01', { id: wildcard })).status).toBe(409);
+		expect((await run('dns01', { id: 'unknown' })).status).toBe(404);
+		expect(await disk()).toBe(before);
+	});
+
+	it('dns01 keeps a tls block the site already has', async () => {
+		await writeFile(file, '*.example.com {\n\ttls {\n\t\tprotocols tls1.3\n\t}\n\trespond hi\n}\n');
+		const r = await run('dns01', { id: wildcard });
+		expect(r.ok).toBe(true);
+		const text = await disk();
+		expect(text).toContain('protocols tls1.3');
+		expect(text).toContain('dns porkbun {\n\t\t\tapi_key {env.PORKBUN_API_KEY}');
+		expect(text.match(/\btls \{/g)).toHaveLength(1);
+	});
+
+	it('the site page has the same action', async () => {
+		await addWildcard();
+		type SiteAction = (e: never) => Promise<{ ok?: boolean; status?: number; message?: string }>;
+		const dns01 = siteActions.dns01 as unknown as SiteAction;
+		const r = await dns01({ params: { id: wildcard }, locals } as never);
+		expect(r.ok).toBe(true);
+		expect(await disk()).toContain(BLOCK);
+		expect((await dns01({ params: { id: wildcard }, locals } as never)).status).toBe(409);
+		expect((await dns01({ params: { id: 'unknown' }, locals } as never)).status).toBe(404);
+	});
+
+	it('writes nothing when the running Caddy has no Porkbun plugin and refuses the file', async () => {
+		await addWildcard();
+		const before = await disk();
+		const adapt = admin.adapt.bind(admin);
+		admin.adapt = async (text) =>
+			text.includes('dns porkbun')
+				? { ok: false, diagnostics: [{ severity: 'error', source: 'adapt', message: NOT_REGISTERED }] }
+				: adapt(text);
+		const r = await run('dns01', { id: wildcard });
+		expect(r.status).toBe(422);
+		expect(r.data?.message).toBeDefined();
+		expect(await disk()).toBe(before);
 	});
 });

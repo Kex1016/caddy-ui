@@ -1,8 +1,13 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { ArrowDown, ArrowUp, Copy, Pencil, Plus, Power, PowerOff, Search, Trash2 } from '@lucide/svelte';
+	import { writeBlock } from '$lib/api/porkbun';
+	import type { DnsHint, SiteDnsCheck } from '$lib/api/porkbun-caddy';
 	import { Dialog, EmptyState, Notice, PageHero, Tag } from '$lib/design/components';
 	import { formatElapsed, formatNumber } from '$lib/format';
+	import { Dns01Dialog, DnsStatusTag, RecordFixDialog, TieInState, worst } from '$lib/porkbun/caddy';
+	import { PorkbunNotice, ScopeGate } from '$lib/porkbun/components';
 	import RecipePicker from '$lib/visual/components/RecipePicker.svelte';
 	import { recipeDefaults, type Recipe } from '$lib/visual/recipes';
 	import type { SiteRow } from './+page.server';
@@ -59,13 +64,80 @@
 			: null
 	);
 
-	function submit(close: () => void) {
+	// The DNS column (docs/porkbun-plan.md §4): what the records at Porkbun say about each site's names. Asked
+	// for after the list has rendered, and only when the UI has Porkbun keys.
+	const dns = new TieInState();
+	onMount(() => {
+		if (data.porkbunOn) void dns.load();
+	});
+	const refreshDns = () => (data.porkbunOn ? dns.load() : Promise.resolve());
+
+	type DnsCell = {
+		/** The check to show: the worst of the site's addresses. Null when none is under a Porkbun domain. */
+		shown: SiteDnsCheck | null;
+		several: boolean;
+		/** The first address one record change would fix. */
+		fixable: SiteDnsCheck | null;
+		wildcard: DnsHint | null;
+		/** Something else is wrong with the site's DNS challenge. */
+		challenge: DnsHint | null;
+	};
+	const dnsCells = $derived.by(() => {
+		const cells: Record<string, DnsCell> = {};
+		for (const r of data.rows) {
+			const checks = dns.of(r.id);
+			const hints = checks.flatMap((c) => c.hints);
+			const top = worst(checks);
+			cells[r.id] = {
+				shown: top && top.status !== 'not_porkbun' ? top : null,
+				several: checks.length > 1,
+				fixable: checks.find((c) => c.fix !== null) ?? null,
+				wildcard: hints.find((h) => h.code === 'wildcard_needs_dns01') ?? null,
+				challenge: hints.find((h) => h.code !== 'wildcard_needs_dns01') ?? null
+			};
+		}
+		return cells;
+	});
+
+	// The review step for a site's record, and the queue of them after a site was added.
+	let fixing = $state<SiteDnsCheck | null>(null);
+	let fixLead = $state<string | undefined>();
+	let fixQueue: SiteDnsCheck[] = [];
+	function fix(check: SiteDnsCheck, lead?: string) {
+		fixLead = lead;
+		fixing = check;
+	}
+	function fixClosed() {
+		const next = fixQueue.shift();
+		fixing = null;
+		// The next address of the site that was just added, once this dialog has closed.
+		if (next) setTimeout(() => fix(next, 'Next address of the new site.'));
+	}
+	/** After "Add site": offer the record for each new address that has none, as a second review step. */
+	async function offerRecords(hosts: unknown) {
+		if (!data.porkbunOn || !Array.isArray(hosts) || hosts.length === 0) return;
+		await dns.load();
+		if (writeBlock(dns.gate, 'dns')) return;
+		const [first, ...rest] = (dns.tie?.sites ?? []).filter((s) => hosts.includes(s.host) && s.fix !== null);
+		if (!first) return;
+		fixQueue = rest;
+		fix(first, 'The site was added to the Caddyfile.');
+	}
+
+	// The wildcard hint: give the site the Porkbun DNS challenge.
+	let challenging = $state<SiteRow | null>(null);
+
+	type Submitted = { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> };
+	function submit(close: () => void, then?: (data: Record<string, unknown>) => void | Promise<void>) {
 		return () => {
 			busy = true;
-			return async ({ result, update }: { result: { type: string }; update: () => Promise<void> }) => {
+			return async ({ result, update }: Submitted) => {
 				await update();
 				busy = false;
-				if (result.type === 'success') close();
+				if (result.type !== 'success') return;
+				close();
+				if (then) await then(result.data ?? {});
+				else void refreshDns();
 			};
 		};
 	}
@@ -74,6 +146,7 @@
 		return async ({ update }: { update: () => Promise<void> }) => {
 			await update();
 			busy = false;
+			void refreshDns();
 		};
 	};
 </script>
@@ -84,7 +157,7 @@
 	lede="Every site block in the Caddyfile, with whether it is up and for how long. Changes are validated by Caddy before they are written."
 />
 
-{#if form?.message && !adding && !copying && !deleting}
+{#if form?.message && !adding && !copying && !deleting && !challenging}
 	<section class="fp-section" aria-live="polite">
 		<Notice kind={'ok' in form ? 'success' : 'error'}>
 			{form.message}
@@ -97,6 +170,11 @@
 {#if data.unsupported}
 	<section class="fp-section">
 		<Notice kind="warning"><b>Editing from this list is off.</b> {data.unsupported}</Notice>
+	</section>
+{/if}
+{#if dns.error}
+	<section class="fp-section">
+		<PorkbunNotice error={dns.error} />
 	</section>
 {/if}
 {#if data.caddyfileError}
@@ -153,6 +231,9 @@
 						<th scope="col" class="num">Upstreams</th>
 						<th scope="col" class="num">24 h</th>
 						<th scope="col" class="num">Cert</th>
+						{#if data.porkbunOn}<th scope="col" title="What the records at Porkbun say about the site's names"
+								>DNS</th
+							>{/if}
 						<th scope="col"><span class="visually-hidden">Actions</span></th>
 					</tr>
 				</thead>
@@ -170,7 +251,7 @@
 												: 'Unknown'}
 								</Tag>
 							</td>
-							<td>
+							<td class="name">
 								<a class="site" href={r.disabled ? `/editor?site=${r.id}` : `/sites/${r.id}`}
 									>{r.addresses[0]}</a
 								>
@@ -196,6 +277,59 @@
 									>
 								{:else}{r.certDays} d{/if}
 							</td>
+							{#if data.porkbunOn}
+								{@const cell = dnsCells[r.id]}
+								<td>
+									{#if !dns.tie}
+										<span class="t-faint">{dns.loading ? 'Checking…' : '—'}</span>
+									{:else if !cell || (!cell.shown && !cell.wildcard && !cell.challenge)}
+										<span class="t-faint">—</span>
+									{:else}
+										<div class="dns">
+											{#if cell.shown}<DnsStatusTag check={cell.shown} named={cell.several} />{/if}
+											{#if cell.fixable}
+												{@const target = cell.fixable}
+												<ScopeGate status={dns.gate} scope="dns" showReason={false}>
+													{#snippet children({ disabled })}
+														<button
+															type="button"
+															class="fp-btn dns__btn"
+															disabled={disabled || busy}
+															aria-label="{target.fix?.kind === 'edit'
+																? 'Point the record at this server'
+																: 'Create the DNS record'} for {target.host}"
+															onclick={() => fix(target)}
+														>
+															{target.fix?.kind === 'edit' ? 'Fix' : 'Create'}
+														</button>
+													{/snippet}
+												</ScopeGate>
+											{/if}
+											{#if cell.wildcard}
+												<a href="/sites/{r.id}#dns" title={cell.wildcard.message}
+													><Tag kind="warning">Needs DNS challenge</Tag></a
+												>
+												{#if cell.wildcard.canAddPorkbun}
+													<button
+														type="button"
+														class="fp-btn dns__btn"
+														disabled={!editable || busy}
+														aria-label="Use the Porkbun DNS challenge for {name(r)}"
+														onclick={() => (challenging = r)}
+													>
+														Set up
+													</button>
+												{/if}
+											{/if}
+											{#if cell.challenge}
+												<a href="/sites/{r.id}#dns" title={cell.challenge.message}
+													><Tag kind="warning">DNS challenge</Tag></a
+												>
+											{/if}
+										</div>
+									{/if}
+								</td>
+							{/if}
 							<td>
 								<div class="acts">
 									<form method="POST" action="?/move" use:enhance={quiet}>
@@ -310,7 +444,15 @@
 </section>
 
 <Dialog bind:open={adding} title="Add a site">
-	<form method="POST" action="?/add" class="stack" use:enhance={submit(() => (adding = false))}>
+	<form
+		method="POST"
+		action="?/add"
+		class="stack"
+		use:enhance={submit(
+			() => (adding = false),
+			(result) => offerRecords(result.added)
+		)}
+	>
 		<input type="hidden" name="baseHash" value={data.hash} />
 		<label class="lbl">
 			<span class="t-ui">Address</span>
@@ -370,7 +512,37 @@
 	{/if}
 </Dialog>
 
+<RecordFixDialog check={fixing} lead={fixLead} ondone={() => void refreshDns()} onclose={fixClosed} />
+
+<Dns01Dialog
+	site={challenging}
+	action="?/dns01"
+	baseHash={data.hash}
+	pluginUnknown={dns.tie?.plugin.state === 'unknown'}
+	error={challenging && form?.message && !('ok' in form) ? form.message : null}
+	onclose={() => (challenging = null)}
+	onresult={() => void refreshDns()}
+/>
+
 <style>
+	.dns {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-1) var(--space-2);
+	}
+	/* The DNS column must not squeeze the names into a few letters per line. */
+	.name {
+		min-width: 11rem;
+	}
+	.dns a {
+		text-decoration: none;
+	}
+	.dns__btn {
+		height: 24px;
+		padding: 0 var(--space-2);
+		font-size: 13px;
+	}
 	.bar {
 		justify-content: space-between;
 	}

@@ -114,7 +114,8 @@
 		{/if}
 		{#if dryRun === 'running'}
 			<p class="t-ui t-muted" role="status">Asking Porkbun to check this without changing anything…</p>
-		{:else if rehearsal?.wouldSucceed}
+		{:else if rehearsal?.wouldSucceed && !blocked}
+			<!-- Not beside "This can not be applied": a blocked change is not one Porkbun "would accept". -->
 			<Notice kind="success"
 				>Porkbun checked this change and would accept it. Nothing has been changed yet.</Notice
 			>

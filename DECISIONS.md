@@ -660,3 +660,242 @@ Format: date · workstream · decision · why · how to reverse.
   restores, and a forward is one row · typed confirm · confidence 82.
 - 2026-11-18 · P4 · The SSL page does not branch on Porkbun's invented `SSL_NOT_READY`; any error is shown by
   `PorkbunNotice` as written · P0 asked for that · none · confidence 90.
+- 2026-11-18 · P1 · P1's shared code lives in a new folder, `apps/ui/src/lib/porkbun/domains/`: client-safe
+  types and helpers in `index.ts`, the reads and the auto-renew write in `data.server.ts`, used by both the
+  `/api/porkbun/*` routes and the two page loads · the ownership table names no home for a workstream's
+  helpers outside its route folders, and no other workstream owns this one · move it if P0 wants it elsewhere ·
+  confidence 80.
+- 2026-11-18 · P1 · The domain list sends every row to the page and sorts, filters and searches in the browser,
+  drawing 100 rows per page; the page data leaves out `createDate` and `tld`. Measured with 1,000 fake domains
+  against the built app: 423 KB in all, TTFB 136 ms, load 248 ms, 60 KB of JS (the W11 budget is 600 KB,
+  500 ms, 1,500 ms, 120 KB) · instant filtering without a server round trip, inside the budget · server-side
+  paging if accounts grow past a few thousand domains · confidence 78.
+- 2026-11-18 · P1 · "Expiring soon" means within 30 days or already expired. The countdown is a warning tag only
+  when auto-renew is off (an expired domain is always an error tag) · a domain that renews by itself needs no
+  attention · `EXPIRING_SOON_DAYS` in `lib/porkbun/domains` · confidence 75.
+- 2026-11-18 · P1 · The renewal price is Porkbun's public list price for the TLD (`/pricing/get`, every TLD in one
+  call, cached as `_account:pricing`); a price list that fails leaves the column empty with a notice and does not
+  fail the page · the API has no per-domain renewal quote outside the out-of-scope renew call; premium domains
+  can cost more than this · confidence 72.
+- 2026-11-18 · P1 · The Overview tab's flags come from `/domain/get` (cached as `<d>:domain`), not from the list,
+  and fall back to the list's copy with a notice when that read fails · the definition of done asks that every
+  flag match `/domain/get` · confidence 85.
+- 2026-11-18 · P1 · The Overview counts (records, restore points, URL forwards, glue hosts, DS records) are
+  cached under their own keys, `<d>:<area>:overview`, holding counts only; the nameservers are read through
+  P3's key `<d>:ns` with P3's loader (`ns.get`, a sorted string[]) and summarised after reading, as P3 asked. With API access off
+  those reads are not made and the tiles say why · a write on another tab that drops `<d>:<area>` or `<d>` drops
+  the count too, and the overview can never store something under another tab's key in a shape that tab does
+  not expect; asking for what Porkbun is known to refuse only spends the rate limit · confidence 80.
+- 2026-11-18 · P1 · Bulk auto-renew sends 100 domains per `/domain/updateAutoRenew` request, in turn, and answers
+  with one result per domain in the order asked. A request for one domain is logged under that domain; a
+  request for several is logged once as an account-wide change with the names and the state before in the row.
+  One name not in the account refuses the whole request before anything is sent · Porkbun takes a list, so one
+  row per request matches what was sent; per-domain rows would mean one request per domain · confidence 75.
+- 2026-11-18 · P1 · Auto-renew changes skip domains already in the target state. In bulk, a domain with API access
+  off is still sent and Porkbun's refusal is reported for it (the review step says it will be refused); on the
+  Overview tab the button is disabled for such a domain · a bulk selection should report what happened to every
+  name in it, while a single button that can only fail should not be offered · confidence 72.
+- 2026-11-18 · P1 · Transfer lock, WHOIS privacy and API access are shown read-only with a link to porkbun.com, and
+  the account credit is a read-only tile on the list (no top-up) · the API in this build's scope has no call that
+  changes them, and top-ups are out of scope (plan §2) · confidence 85.
+- 2026-11-18 · P1 · The list's filter and search are kept in the address (`?filter=soon`, `?q=`) by a shallow
+  history replace, so a reload or a link shows the same list; the sort is not · links such as "expiring soon"
+  can point straight at the filtered list · confidence 78.
+- 2026-11-18 · P3 · P3 also owns two new folders the ownership table does not list, `lib/porkbun/registry/**`
+  (input checks, browser calls, the safety check list, shared by the pages and the routes) and
+  `lib/server/porkbun-registry/**` (small route helpers) · the checks must be the same in the form and on the
+  server, and no other workstream claimed these names, so nothing collides · move them under a P3 route folder
+  if anyone objects · confidence 85.
+- 2026-11-18 · P3 · The server checks the typed confirmation as well as the page: restore with prune, a
+  nameserver change, deleting glue, and adding or deleting a DS record need `"confirm": "<domain>"` in the body,
+  or the route answers 400 `CONFIRMATION_REQUIRED` and sends nothing · §3.1 rule 3 then holds for every caller,
+  not only for this UI's pages · drop `requireConfirm` from a route to relax it · confidence 80.
+- 2026-11-18 · P3 · Adding a DS record needs the domain typed too, although §3.1 rule 3 names only deleting one
+  · a DS record that does not match the zone's key makes the whole domain fail for validating resolvers, which
+  is worse than most deletes · confidence 75.
+- 2026-11-18 · P3 · Nameserver and DNSSEC changes run Porkbun's preflight on the server, uncached, right before
+  the write, and answer 409 `PREFLIGHT_BLOCKED` (with the preflight) while it reports a blocker. The review
+  step gets the same check from the rehearsal (`PUT …/nameservers` with `dryRun`, `POST …/dnssec` with
+  `check`) · §3.1 rule 4 and the P3 definition of done; a cached "safe" answer must not let a move through ·
+  confidence 88.
+- 2026-11-18 · P3 · "Undo this restore" restores `previousStateSavedAs` with prune, always · a restore without
+  prune only adds records back, so it can not take away what the first restore added; with prune the zone is
+  exactly as before. The undo still needs the domain typed · confidence 85.
+- 2026-11-18 · P3 · Cache keys: `<domain>:history`, `<domain>:history:<id>` (diff), `<domain>:preflight:<intent>`,
+  `<domain>:ns` (the `string[]` of `porkbun().ns.get`, the shape P1's overview would read), `<domain>:glue`,
+  `<domain>:dnssec`. Compare and the review step always ask Porkbun for a fresh diff · one key per read, same
+  shape for anyone who reads the same key; a diff is a comparison with the live zone and goes stale with every
+  change made at porkbun.com · confidence 80. Told the coordinator about `<domain>:ns`.
+- 2026-11-18 · P3 · Input rules before any call: 2 to 13 distinct nameserver hostnames; a glue host is one label
+  (`ns1`) or a full name under the domain (`ns1.eu.example.com`), never another domain; 1 to 13 glue addresses;
+  DS key tag 0 to 65535, digest in hex with the length its digest type requires (40, 64 or 96); algorithms 1, 3,
+  5, 6, 7 and 12 refused as retired (the same list the fake refuses); key data all or nothing; a second DS
+  record with a key tag that exists is refused (Porkbun keys DS records by key tag) · catches typing mistakes
+  with a clear message instead of a registry error · `lib/porkbun/registry/validate.ts` · confidence 78.
+- 2026-11-18 · P3 · Glue and DNSSEC have no dry run at Porkbun, so their review step shows the change, the
+  safety check (DNSSEC) and advice, and says plainly that Porkbun does not rehearse it · §3.1 rule 2 asks for a
+  dry run only where Porkbun has one · confidence 85.
+- 2026-11-18 · P3 follow-up · `ReviewDialog` (P0-owned) no longer shows "Porkbun checked this change and would
+  accept it" while `blocked` is set; the red "This can not be applied" stands alone. A failed dry run is still
+  shown beside a blocker · the two lines contradicted each other in the nameserver dialog with active DNSSEC and
+  in the restore dialog with nothing to add back. A one-condition change, no prop or contract changes, so P2, P4
+  and P5 need nothing · confidence 92.
+- 2026-11-18 · P5 · The plugin's Caddyfile syntax was read from the source of github.com/caddy-dns/porkbun
+  v0.3.1 and checked by adapting against Caddy 2.11.2 built with and without it: nothing on the `porkbun` line,
+  `api_key` and `api_secret_key` in its block, both required, no other option. Stock Caddy answers the probe
+  with HTTP 400 "module not registered: dns.providers.porkbun" · the plan's syntax was written from memory and
+  flagged; it was right · `packages/caddy-schema/scripts/plugins.ts` and `PROBE_CADDYFILE` · confidence 95.
+- 2026-11-18 · P5 · Contract addition (schema): `DirectiveSchema.plugin` (Caddy module ID),
+  `DirectiveSchema.requires` (subdirectives that must be present) and `ArgSchema.secret` (the placeholder to
+  suggest); the four lines that name a DNS provider (`tls`'s `dns`, the acme issuer's `dns`, global `acme_dns`
+  and `dns`) now take a block, free-form for providers the schema does not know, with a `porkbun` variant from
+  `scripts/plugins.ts` · the schema said "dns does not take a block" for the valid `dns porkbun { … }`, and a
+  validator rule reaches both editors and the server at once · all three fields are optional, so nothing that
+  reads the schema changes; remove the `applyPlugins` call to undo · confidence 85.
+- 2026-11-18 · P5 · The literal-key warning is a validator rule (`literal-secret`, a warning, never an error):
+  a value for `api_key` / `api_secret_key` without a placeholder says "this puts the key in the Caddyfile and
+  in History; use {env.…} instead" and never repeats the value; `{env.X}` and `{$X}` both pass. The form shows
+  the same as a notice · one rule for the text editor, the visual editor and the server's check · `validate.ts`
+  `checkArg` · confidence 88.
+- 2026-11-18 · P5 · Contract addition (forms): `FormSpec.claimsFor(node)` lets a form claim body lines per node;
+  the provider picker is a `custom` field, so `forms-w5b.test.ts` (W5b's file) sets the provider through the
+  picker's functions instead of the old text field · a global `acme_dns` line is the provider line itself, so
+  which of its lines the form owns depends on the node · optional, nothing else uses it · confidence 85.
+- 2026-11-18 · P5 · Porkbun is first in the provider picker unless the plugin is known to be missing, where it
+  is still offered, marked "plugin not in this Caddy", with a warning; a provider other than Porkbun keeps the
+  free text it had (credentials on the line, options in a block) · "not checked" must not hide the guided path,
+  and controls are disabled or explained, not hidden · `DnsProviderField.svelte` · confidence 80.
+- 2026-11-18 · P5 · Detection is cached until Caddy's process start time changes (from the metrics the UI
+  already reads), looks at that at most every 30 s, asks again after an answer that was neither yes nor no, and
+  never throws for an unreachable Caddy (state `unknown` with the reason) · "cached until Caddy restarts"
+  needs something that changes on a restart, and a page must still render when Caddy is down · `plugin.ts` ·
+  confidence 85.
+- 2026-11-18 · P5 · Contract additions (API): `GET /api/porkbun/caddy` takes `?only=plugin` (asks Caddy only,
+  works with the keys unset), `?domain=` and `?force`, and its `sites[]` rows carry `siteId`, `status`, `detail`,
+  `fix`, `hints` beside the `host`, `records[].id` and `dns01` the DNS tab reads; `POST
+  /api/porkbun/caddy/records` takes `dryRun` and `expect`; new route `POST /api/porkbun/caddy/challenges` for
+  the cleanup. Shapes are in `lib/api/porkbun-caddy.ts` · the review step needs a rehearsal and a way to notice
+  that the records changed since, and the cleanup is a write of its own · additive; P2 reads only the three
+  fields it named · confidence 82.
+- 2026-11-18 · P5 · The server decides the record fix: an A (or AAAA) record with this server's public IP as
+  Porkbun's `/ping` saw it, or that content on the one record that is wrong. The browser sends only the site
+  address and the fix it reviewed; a fix that no longer matches is a 409 with the new one. No fix is offered
+  behind a CNAME, for several records of one name, or when only some of them are wrong; behind a wildcard the
+  name gets a record of its own and the wildcard is left alone · a request can then never write an address the
+  person did not review, and the cases without one obvious change go to the DNS tab · `actions.ts`, `judge()` in
+  `check.ts`; the dialog says where the IP comes from, for servers that are reached through another address ·
+  confidence 80.
+- 2026-11-18 · P5 · Cross-check statuses beyond the plan's wording: `private` (the name points at 10.x,
+  192.168.x and the like; shown neutral, no fix, since internal-only sites are normal in a homelab),
+  `external` (a CNAME leaves the account), `unverified` (public IP unknown, or only the other address family
+  has a record), `elsewhere` (nameservers are not Porkbun's) and `unreadable`. Wildcard records answer by the
+  closest-encloser rule, and CNAME/ALIAS are followed across the account's zones · a private address is not a
+  mistake to fix, and "wrong" should only be said when it is certain · `DnsCheckStatus` · confidence 78.
+- 2026-11-18 · P5 · "Left behind" for a challenge record means this UI first saw it more than 24 hours ago;
+  first-seen times are kept by record id in the `settings` table (key `porkbun.caddy.challenges`), no migration.
+  The cleanup deletes only such records, checks each id against the zone again, rehearses with Porkbun's dry
+  run, and logs each delete with what the record held · Porkbun does not say when a record was made, and a
+  record of an order in progress must never be deleted · `STALE_AFTER_MS` in `challenges.ts` · confidence 75.
+- 2026-11-18 · P5 · With the Porkbun keys unset the Sites pages look as before: no DNS column, no panel, no
+  hints; `GET /api/porkbun/caddy` still answers the plugin check. With keys, the pages ask for the tie-in after
+  they have rendered, so the list never waits for Porkbun · the cross-check is about records at Porkbun, and
+  David's first deploy has no keys on the UI yet · `porkbunOn` in the two `+page.server.ts` · confidence 80.
+- 2026-11-18 · P5 · The wildcard hint's "Use the Porkbun DNS challenge" is a form action (`dns01`) on the
+  Sites list and the site page that edits the site through the config service, after a dialog that shows the
+  block; "also create the DNS record" opens by itself after "Add site" as a second review step, once per new
+  address that has no record, and not at all in read-only mode · the Caddyfile edit gets Caddy's validation,
+  the hash check and History like every other edit, and the record write gets the same review as every other
+  record write · `site-edit.ts`, `RecordFixDialog.svelte` · confidence 82.
+- 2026-11-18 · P5 · Files outside the folders the plan lists for P5: `lib/api/porkbun-caddy.ts` (the API's
+  shapes, beside `lib/api/porkbun.ts`), `lib/porkbun/caddy/**` (the dialogs and the checks list that the Sites
+  pages and the Caddy tab share), `lib/visual/forms-w5b.test.ts` (see above) and one job in
+  `.github/workflows/ci.yml` (P6's file): `caddy-porkbun-tie-in` loads the `caddy-porkbun-image` artifact and
+  runs `test:caddy` with `CADDY_TEST_PORKBUN_PLUGIN=present`; the existing `caddy` job runs the same file
+  against stock Caddy and expects "missing" · shared code needs a home no other workstream owns, and the
+  definition of done asks for both Caddy builds; P6's entry says the artifact is for P5 · confidence 80.
+- 2026-11-18 · P5 · "Every Caddy call goes through `adminFetch`" is a test (`caddy.test.ts`) that reads the
+  tie-in's server files and fails on a bare `fetch(`; the detector takes a `CaddyAdmin` · the plan allows a lint
+  rule or a test, and a test needs no change to the shared ESLint config · confidence 85.
+- 2026-11-18 · P2 · Every change to a record goes into a pending-changes tray first, a single add, edit or
+  delete included, and is sent from one review step. The tray is kept in the tab's session storage per domain,
+  so a reload does not lose it · one path to Porkbun means one review (§3.1 rule 1) and nothing to keep in step
+  between a "quick" path and the batch path. The "plain confirm" for deleting one record (rule 3) is the
+  review's Apply button; more than one delete needs the domain typed · add direct buttons that call
+  `POST …/dns` and `PUT`/`DELETE …/dns/:id`, which exist and are tested · confidence 78.
+- 2026-11-18 · P2 · A batch is sent as deletes, then edits, then new records, each in the order they were
+  decided · replacing a record (a CNAME for the A record at the same name) then works whichever of the two was
+  decided first, and the review lists the changes in the order they go out · `inSendOrder` in
+  `lib/porkbun/records/tray.ts` · confidence 80.
+- 2026-11-18 · P2 · Records are edited and deleted by id only; Porkbun's `…ByNameType` endpoints are not used ·
+  they change every record of a name and type at once, which the review could not show record by record ·
+  confidence 82.
+- 2026-11-18 · P2 · An edit carries the whole record and, from this UI, the record as the person saw it
+  (`expect`). Only the fields that differ are sent to Porkbun. A record that reads differently now, is gone, or
+  is named twice in one batch refuses the change with a 409 before anything is written · two people (or this
+  UI and porkbun.com) must not overwrite each other without seeing it · leave `expect` out of a request to
+  skip the check · confidence 85.
+- 2026-11-18 · P2 · The type of a record can not be changed by an edit; the form says to delete it and add
+  another · Porkbun's edit keeps the id, and a record that silently became another type under the same id is
+  hard to follow in the write log · confidence 80.
+- 2026-11-18 · P2 · Records of a type outside the 14 are shown and exported but can be neither edited nor
+  deleted here · this build has no rules for them, so it can not say what a change would do · allow delete in
+  `planChanges` (`READ_ONLY_TYPE`) · confidence 80.
+- 2026-11-18 · P2 · Preview and apply both read the zone fresh from Porkbun and plan the batch with the same
+  pure code the page uses (`planChanges`). A problem with any change refuses the whole batch before a write:
+  400 `INVALID_RECORD` for a record that is not valid, 409 `PLAN_REFUSED` for a clash with the zone. Once writes
+  go out, the first failure stops the batch and the changes after it are reported as `not_applied` (HTTP 207) ·
+  later changes were reviewed on the assumption that earlier ones worked; sending them into another zone than
+  the one reviewed is worse than stopping. Porkbun has no transaction to roll back with · confidence 78.
+- 2026-11-18 · P2 · The server, not only the page, wants `"confirm": "<domain>"` for a batch with more than one
+  delete (400 `CONFIRM_REQUIRED`) · §3.1 rule 3 then holds for every caller, as P3 did for its routes ·
+  confidence 85.
+- 2026-11-18 · P2 · Limits: 100 changes in one batch; an import reads at most 1 MiB and 2000 records and
+  creates at most 500 at a time (Porkbun's own limit for `/dns/import`) · a batch is one request that sends
+  its writes one after another, and Porkbun rate limits by the minute · `MAX_BATCH`, `MAX_IMPORT_SOURCE` in
+  `lib/porkbun/records/service.server.ts` · confidence 75.
+- 2026-11-18 · P2 · A create that Porkbun refuses as `DUPLICATE_RECORD` adopts the existing id: the change
+  counts as done (`adopted`), the record's TTL and notes are left alone, and the write log still shows the
+  refusal as what it was · §3.1 rule 7 · confidence 80.
+- 2026-11-18 · P2 · No Idempotency-Key is reused for a retry by the person · Porkbun replays the stored answer
+  for 24 hours, failures included, so a second click after a fix would get the old failure back. P0's client
+  still sends a fresh key per write · confidence 80.
+- 2026-11-18 · P2 · Checks made here before Porkbun is asked: a duplicate (same name, type and value), a CNAME
+  that would not be alone at its name (both ways), and a second SPF record at the bare domain. An edit that only
+  changes the TTL or the notes is not held against its neighbours · they mirror `DUPLICATE_RECORD`,
+  `RECORD_CONFLICT` and `SPF_CONFLICT`, give the reason with the records in the way, and work for changes
+  Porkbun's dry run can not judge (a change that depends on an earlier one in the same batch) · confidence 78.
+- 2026-11-18 · P2 · The review asks Porkbun to rehearse each change on its own (`dryRun`), except a change that
+  only works after an earlier one of the batch, which is marked as not rehearsed, and except when any change
+  has a problem found here, where Porkbun is not asked at all · Porkbun's dry run sees the zone as it is now ·
+  confidence 82.
+- 2026-11-18 · P2 · HTTPS and SVCB values are written as the full RDATA in `content` ("priority target
+  parameters"); the spec does not show an example and no account was at hand to check. A stored value this page
+  can not split into its fields is shown as one raw value, and the record's name, TTL and notes can still be
+  edited with the value kept as stored · nothing is lost if Porkbun spells these differently · adjust
+  `serviceBinding` in `lib/porkbun/records/kinds.ts` · confidence 72.
+- 2026-11-18 · P2 · Import (zone file, the JSON this page exports, or a scan of the live DNS) is a dry run
+  first: every record is sorted into new, already there, in conflict, left out or not valid against the fresh
+  zone, the person ticks what to import, Porkbun rehearses it, and only then it is sent. Everything but NS goes
+  through `/dns/import`; NS records below the bare domain are created one by one, because Porkbun's import
+  skips every NS record. SOA and the domain's own NS records are left out. Notes are not imported (the import
+  endpoint has no field for them); the review says so · confidence 74.
+- 2026-11-18 · P2 · Export is a BIND zone file (`$ORIGIN`, `$TTL 600`, one record per line, notes as
+  `; note: …` comments) or JSON with the notes, read fresh from Porkbun; when Porkbun can not be reached the
+  last good copy is exported with a comment saying so. `ANAME` in a zone file is read as `ALIAS` ·
+  `GET …/dns/export?format=json` · confidence 80.
+- 2026-11-18 · P2 · "Managed by Caddy" and "used by site" are worked out by the DNS tab itself from the
+  Caddyfile's site addresses and the zone (exact name, else the covering wildcard, following CNAME and ALIAS
+  inside the zone). When `GET /api/porkbun/caddy?domain=<domain>` (P5) answers within 1.5 s, the pairs of
+  its cross-check (`sites[].host`, `sites[].records[].id`) are used instead, and `siteId` gives the link for a
+  site the scan here did not list; an answer of another shape, or one that could not read the zone, is
+  ignored · the tab works when Caddy or the tie-in is slow or down and never waits on it; a test runs P5's
+  real route against the same zone and both ways give the same marks. The tie-in is asked for this domain
+  only, so a site under another domain whose CNAME leads into this zone is not marked; asking for every
+  domain would read every zone of the account each time a DNS tab opens (the reader already handles that
+  answer) · `lib/porkbun/records/marks.ts` · confidence 75.
+- 2026-11-18 · P2 · The DNS tab reads the nameservers under P3's cache key `<domain>:ns` to say up front when a
+  domain is answered from somewhere else, and uses P3's browser helper (`lib/porkbun/registry/api.ts`) and
+  `isAtPorkbun` · one read and one way to call the API routes; no P3 file is changed · confidence 85.
+- 2026-11-18 · P2 · Known gap, not decided here: `porkbun().dns.list` drops the `warnings` Porkbun sends with
+  `/dns/retrieve`, so a warning that only comes with a read is not shown on the DNS tab. Warnings on dry runs
+  and writes are shown as written. Needs `warnings` on `DnsZone` in P0's client; told the coordinator.

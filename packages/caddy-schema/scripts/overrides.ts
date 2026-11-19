@@ -324,7 +324,7 @@ type Node = DirectiveSchema | MatcherSchema;
  *   m:file   r:status
  * `~name` steps into variants, other steps into subdirectives.
  */
-function resolve(bundle: SchemaBundle, path: string): Node {
+export function resolve(bundle: SchemaBundle, path: string): Node {
 	const [kind, rest] = path.split(':');
 	const [head, ...steps] = rest.split('/');
 	const table =
