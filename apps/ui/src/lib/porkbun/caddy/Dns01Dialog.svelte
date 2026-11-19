@@ -62,7 +62,7 @@
 				The keys are not written to the Caddyfile. Caddy reads them from its own environment, so the
 				<code>caddy</code> service needs <code>PORKBUN_API_KEY</code> and
 				<code>PORKBUN_API_SECRET_KEY</code>. Caddy checks the file before it is saved, and the previous
-				version stays in <a href="/history">History</a>.
+				version stays in <a class="inline-link" href="/history">History</a>.
 			</p>
 			{#if pluginUnknown}
 				<Notice kind="warning">
@@ -82,6 +82,11 @@
 </Dialog>
 
 <style>
+	/* Links inside a sentence need more than colour to stand out (WCAG 1.4.1). */
+	.inline-link {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
 	.stack {
 		display: flex;
 		flex-direction: column;

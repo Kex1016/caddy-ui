@@ -40,8 +40,11 @@
 		<Notice kind="warning">
 			<b>API access is off for this domain.</b> Porkbun refuses to read or change anything on it through the
 			API until "API access" is turned on in the domain's details at
-			<a href="https://porkbun.com/account/domainsSpeedy" target="_blank" rel="noopener noreferrer"
-				>porkbun.com</a
+			<a
+				class="inline-link"
+				href="https://porkbun.com/account/domainsSpeedy"
+				target="_blank"
+				rel="noopener noreferrer">porkbun.com</a
 			>.
 		</Notice>
 	{/if}
@@ -54,6 +57,11 @@
 {/if}
 
 <style>
+	/* Links inside a sentence need more than colour to stand out (WCAG 1.4.1). */
+	.inline-link {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
 	.name {
 		overflow-wrap: anywhere;
 	}

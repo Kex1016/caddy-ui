@@ -90,6 +90,28 @@ for (const scheme of ['light', 'dark'] as const) {
 			await shot(page, `editor-split${suffix}`);
 		});
 
+		// The Domains area, against the fake Porkbun the stack starts (seeded from fixtures/seed.json).
+		test('domains', async ({ page }) => {
+			await page.setViewportSize({ width: 1440, height: 1000 });
+			await page.goto('/domains');
+			await expect(page.getByRole('heading', { level: 1 })).toHaveText('Domains');
+			await shot(page, `domains${suffix}`);
+		});
+
+		test('domain DNS', async ({ page }) => {
+			await page.setViewportSize({ width: 1440, height: 1240 });
+			await page.goto('/domains/example.com/dns');
+			await expect(page.getByRole('heading', { level: 2, name: 'DNS records' })).toBeVisible();
+			await shot(page, `domain-dns${suffix}`);
+		});
+
+		test('domain Caddy', async ({ page }) => {
+			await page.setViewportSize({ width: 1440, height: 1100 });
+			await page.goto('/domains/example.com/caddy');
+			await expect(page.getByRole('heading', { level: 2, name: 'Caddy' })).toBeVisible();
+			await shot(page, `domain-caddy${suffix}`);
+		});
+
 		test('editor, text', async ({ page }) => {
 			await page.goto('/editor?mode=text');
 			await expect(page.locator('.cm-content')).toBeVisible();

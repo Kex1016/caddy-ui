@@ -8,7 +8,8 @@
 import { spawn } from 'node:child_process';
 import { mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
-import { baseCaddyfile, paths, UI_PORT } from './paths.mjs';
+import { baseCaddyfile, paths, PORKBUN_URL, UI_PORT } from './paths.mjs';
+import { fakeCredentials, startPorkbunFake } from './porkbun-fake.mjs';
 
 const children = [];
 function stop() {
@@ -84,6 +85,30 @@ if (loaded.status !== 200) {
 	process.exit(1);
 }
 
+// The Domains area talks to a fake Porkbun (P7); no test reaches the real API. The one exception is the
+// optional CI job that sets E2E_PORKBUN=sandbox with a Porkbun sandbox key (pk1_sb_…, nothing real is touched)
+// and runs only tests/porkbun-sandbox.spec.ts.
+let porkbunEnv;
+if (process.env.E2E_PORKBUN === 'sandbox') {
+	const key = process.env.PORKBUN_SANDBOX_API_KEY ?? '';
+	const secret = process.env.PORKBUN_SANDBOX_API_SECRET_KEY ?? '';
+	if (!key.startsWith('pk1_sb_') || !secret) {
+		console.error('e2e stack: E2E_PORKBUN=sandbox needs PORKBUN_SANDBOX_API_KEY (pk1_sb_…) and its secret');
+		process.exit(1);
+	}
+	porkbunEnv = { PORKBUN_API_KEY: key, PORKBUN_API_SECRET_KEY: secret, CADDY_UI_PORKBUN_CACHE_TTL: '0s' };
+} else {
+	const porkbunFake = await startPorkbunFake();
+	process.on('exit', () => porkbunFake.close());
+	porkbunEnv = {
+		PORKBUN_API_URL: `${PORKBUN_URL}/api/json/v3`,
+		PORKBUN_API_KEY: fakeCredentials.apiKey,
+		PORKBUN_API_SECRET_KEY: fakeCredentials.apiSecret,
+		// Specs reset the fake between tests, so the UI must not answer from an older read.
+		CADDY_UI_PORKBUN_CACHE_TTL: '0s'
+	};
+}
+
 const ui = spawn(process.execPath, ['server.js'], {
 	cwd: paths.uiDir,
 	stdio: ['ignore', 'inherit', 'inherit'],
@@ -102,7 +127,8 @@ const ui = spawn(process.execPath, ['server.js'], {
 		CADDY_UI_PROBE_INTERVAL: '5s',
 		CADDY_UI_SCRAPE_INTERVAL: '5s',
 		ORIGIN: `http://127.0.0.1:${UI_PORT}`,
-		TZ: 'Europe/Budapest'
+		TZ: 'Europe/Budapest',
+		...porkbunEnv
 	}
 });
 ui.on('exit', (code) => {

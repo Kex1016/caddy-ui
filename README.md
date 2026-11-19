@@ -76,6 +76,30 @@ made-up traffic; see [docs/testing.md](docs/testing.md#screenshots) for how they
   <img alt="Text editor showing the example.com site block with named matchers, handle and route blocks" src="docs/screenshots/editor-text.png">
 </picture>
 
+**Domains**: the domains in a Porkbun account, with expiry, auto-renew and renewal price (optional; see
+[docs/porkbun.md](docs/porkbun.md)).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/domains-dark.png">
+  <img alt="Domains page: tiles for domain count, expiring soon, auto-renew off and account credit, then a table of three domains with expiry, auto-renew, renewal price and notes" src="docs/screenshots/domains.png">
+</picture>
+
+**DNS records**: a domain's records grouped by name, marked where a site in the Caddyfile uses them or Caddy
+manages them; changes collect in a tray and are reviewed before they are sent.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/domain-dns-dark.png">
+  <img alt="DNS tab of example.com: type filters, export and import, and the records grouped by name, with used by site and managed by Caddy marks" src="docs/screenshots/domain-dns.png">
+</picture>
+
+**Caddy and DNS**: whether Caddy has the Porkbun plugin, and whether every site under the domain points at
+this server.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/domain-caddy-dark.png">
+  <img alt="Caddy tab of example.com: the Porkbun plugin is in the running Caddy, and each site address under the domain points here through its record" src="docs/screenshots/domain-caddy.png">
+</picture>
+
 ## Quick start
 
 1. Make sure Caddy's global options include `admin 0.0.0.0:2019` and that Caddy and the UI
