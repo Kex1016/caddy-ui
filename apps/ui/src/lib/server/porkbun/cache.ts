@@ -19,7 +19,7 @@ import { PorkbunError, PorkbunUnreachable } from './errors';
  */
 export class PorkbunCache {
 	readonly #db: Db;
-	readonly #ttlMs: number;
+	#ttlMs: number;
 	readonly #now: () => number;
 	readonly #inflight = new Map<string, Promise<Cached<unknown>>>();
 
@@ -28,6 +28,15 @@ export class PorkbunCache {
 		this.#ttlMs = ttlMs;
 		this.#now = now;
 		this.clear();
+	}
+
+	/** How long a read stays fresh. Changing it applies to the next lookup, rows already stored included. */
+	get ttlMs(): number {
+		return this.#ttlMs;
+	}
+
+	set ttlMs(ms: number) {
+		this.#ttlMs = ms;
 	}
 
 	clear(): void {

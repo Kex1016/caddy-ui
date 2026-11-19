@@ -23,6 +23,8 @@ export type Config = {
 	updateSource: 'ghcr' | 'git';
 	timeZone: string;
 	porkbun: PorkbunConfig;
+	/** `CADDY_UI_SETTINGS_IGNORE`: run on the environment and defaults only, ignoring saved settings. */
+	settingsIgnore: boolean;
 };
 
 /** Porkbun settings (docs/porkbun-plan.md §3.2). Both keys unset means the Domains area is off. */
@@ -156,14 +158,91 @@ export function loadConfig(env: Env): Config {
 			updateWebhook === undefined ? undefined : int(env, 'CADDY_UI_UPDATE_WEBHOOK_PORT', 0, 1, 65535),
 		updateSource: oneOf(env, 'CADDY_UI_UPDATE_SOURCE', 'ghcr', ['ghcr', 'git'] as const),
 		timeZone: timeZone(env),
-		porkbun: porkbun(env, openAccess)
+		porkbun: porkbun(env, openAccess),
+		settingsIgnore: bool(env, 'CADDY_UI_SETTINGS_IGNORE', false)
 	};
+}
+
+/**
+ * The variables the Settings page can change while the UI runs (docs/settings-and-perf-plan.md §2.1). A saved
+ * value is written in the same syntax as the variable and checked by the same parser, so the messages match.
+ */
+export const EDITABLE = [
+	'CADDY_UI_PROBE_INTERVAL',
+	'CADDY_UI_SCRAPE_INTERVAL',
+	'CADDY_UI_RETENTION_DAYS',
+	'TZ',
+	'CADDY_UI_PUBLIC_URL',
+	'CADDY_UI_PORKBUN_READONLY',
+	'CADDY_UI_PORKBUN_CACHE_TTL'
+] as const;
+
+export type EditableKey = (typeof EDITABLE)[number];
+
+export function isEditable(key: string): key is EditableKey {
+	return (EDITABLE as readonly string[]).includes(key);
+}
+
+/** Default of each editable variable, in its own syntax. `undefined` means unset. */
+export const EDITABLE_DEFAULTS: Record<EditableKey, string | undefined> = {
+	CADDY_UI_PROBE_INTERVAL: '30s',
+	CADDY_UI_SCRAPE_INTERVAL: '15s',
+	CADDY_UI_RETENTION_DAYS: '90',
+	TZ: 'UTC',
+	CADDY_UI_PUBLIC_URL: undefined,
+	// Depends on the sign-in; see porkbun(). Shown as `false` with a sign-in and `true` without.
+	CADDY_UI_PORKBUN_READONLY: undefined,
+	CADDY_UI_PORKBUN_CACHE_TTL: '60s'
+};
+
+const CHECKS: Record<EditableKey, (env: Env) => unknown> = {
+	CADDY_UI_PROBE_INTERVAL: (e) => duration(e, 'CADDY_UI_PROBE_INTERVAL', '30s', 1000),
+	CADDY_UI_SCRAPE_INTERVAL: (e) => duration(e, 'CADDY_UI_SCRAPE_INTERVAL', '15s', 1000),
+	CADDY_UI_RETENTION_DAYS: (e) => int(e, 'CADDY_UI_RETENTION_DAYS', 90, 1, 36500),
+	TZ: (e) => timeZone(e),
+	CADDY_UI_PUBLIC_URL: (e) => url(e, 'CADDY_UI_PUBLIC_URL', undefined),
+	CADDY_UI_PORKBUN_READONLY: (e) => bool(e, 'CADDY_UI_PORKBUN_READONLY', false),
+	CADDY_UI_PORKBUN_CACHE_TTL: (e) => duration(e, 'CADDY_UI_PORKBUN_CACHE_TTL', '60s', 0)
+};
+
+/**
+ * Check one value for an editable variable with the parser `loadConfig` uses. Returns the value as it will
+ * be stored (trimmed), or throws a ConfigError with the same message a bad environment variable gets. Only
+ * `CADDY_UI_PUBLIC_URL` may be empty, which means unset; anywhere else an empty value would silently mean
+ * "the default", which is what removing the saved value is for.
+ */
+export function checkSetting(key: EditableKey, raw: string): string {
+	const value = raw.trim();
+	if (value === '' && key !== 'CADDY_UI_PUBLIC_URL') {
+		throw new ConfigError(`${key} must not be empty; reset it to use the environment's value instead`);
+	}
+	CHECKS[key]({ [key]: value });
+	return value;
 }
 
 let cached: Config | undefined;
 
-/** The process-wide config. Throws a ConfigError naming the bad variable if the environment is invalid. */
-export function config(): Config {
+/** The configuration from the environment alone. Throws a ConfigError naming the bad variable. */
+export function envConfig(): Config {
 	cached ??= loadConfig(process.env);
 	return cached;
+}
+
+/** Turns the environment's config into the effective one. Installed by the settings service at boot. */
+export type ConfigResolver = (fromEnv: Config) => Config;
+let resolver: ConfigResolver | undefined;
+
+export function setConfigResolver(r: ConfigResolver | undefined): void {
+	resolver = r;
+}
+
+/**
+ * The process-wide effective config: a saved setting, else the environment, else the default
+ * (docs/configuration.md, "Settings and the environment"). Before the settings service is installed, and
+ * for every environment-only variable, this is the environment's config. Read it per use rather than
+ * keeping a copy, because editable values change while the UI runs.
+ */
+export function config(): Config {
+	const fromEnv = envConfig();
+	return resolver ? resolver(fromEnv) : fromEnv;
 }

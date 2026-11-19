@@ -60,6 +60,12 @@ const HOURLY = 3_600_000;
 const PROBE_CONCURRENCY = 16;
 const RETRY_DELAY_MS = 1_000;
 
+/** A repeating job. `ms` is read each time the job is scheduled again, so a new interval applies at once. */
+type Loop = { ms: number; fn: () => unknown; timer: NodeJS.Timeout | undefined; running: boolean };
+
+/** Probe timeout: a third of the interval, between 2 and 10 seconds. */
+const probeTimeout = (intervalMs: number) => Math.min(10_000, Math.max(2_000, intervalMs / 3));
+
 const job = (): JobStatus => ({ lastRun: null, lastOk: null, error: null });
 
 function errText(err: unknown): string {
@@ -92,7 +98,7 @@ export class Collector {
 	private logs: LogRollup;
 	private tailer: FileTailer;
 	private caddyfileMtime = -1;
-	private timers: NodeJS.Timeout[] = [];
+	private loops = new Map<string, Loop>();
 	private stopped = false;
 	readonly connectHost: string;
 	private probeTimeoutMs: number;
@@ -103,7 +109,7 @@ export class Collector {
 		private now: () => number = Date.now
 	) {
 		this.connectHost = new URL(cfg.adminUrl).hostname;
-		this.probeTimeoutMs = Math.min(10_000, Math.max(2_000, cfg.probeIntervalMs / 3));
+		this.probeTimeoutMs = probeTimeout(cfg.probeIntervalMs);
 		this.states = loadStates(db);
 		const siteFor = (host: string) => this.matcher.match(host);
 		this.metrics = new MetricsRollup(siteFor);
@@ -344,39 +350,88 @@ export class Collector {
 		await pruneInBatches(this.db, this.cfg.retentionDays, this.now());
 	}
 
-	private every(ms: number, fn: () => unknown, delay = 0): void {
-		const tick = async () => {
-			if (this.stopped) return;
-			try {
-				await fn();
-			} catch (err) {
-				console.error('caddy-ui collector:', err);
-			}
-			if (this.stopped) return;
-			const t = setTimeout(tick, ms);
-			t.unref();
-			this.timers.push(t);
-		};
-		const t = setTimeout(tick, delay);
+	private schedule(loop: Loop, delay: number): void {
+		const t = setTimeout(() => void this.tick(loop), delay);
 		t.unref();
-		this.timers.push(t);
+		loop.timer = t;
+	}
+
+	private async tick(loop: Loop): Promise<void> {
+		loop.timer = undefined;
+		if (this.stopped) return;
+		loop.running = true;
+		try {
+			await loop.fn();
+		} catch (err) {
+			console.error('caddy-ui collector:', err);
+		} finally {
+			loop.running = false;
+		}
+		if (!this.stopped) this.schedule(loop, loop.ms);
+	}
+
+	private every(name: string, ms: number, fn: () => unknown, delay = 0): void {
+		const loop: Loop = { ms, fn, timer: undefined, running: false };
+		this.loops.set(name, loop);
+		this.schedule(loop, delay);
+	}
+
+	/**
+	 * Change a job's interval. A waiting timer is re-armed to fire one new interval from now; a job that is
+	 * running picks the new interval up when it schedules its next run.
+	 */
+	private rearm(name: string, ms: number): void {
+		const loop = this.loops.get(name);
+		if (!loop || loop.ms === ms) {
+			if (loop) loop.ms = ms;
+			return;
+		}
+		loop.ms = ms;
+		if (loop.running || loop.timer === undefined || this.stopped) return;
+		clearTimeout(loop.timer);
+		this.schedule(loop, ms);
+	}
+
+	/** The interval a job runs at now, or undefined when the collector was not started. Tests use this. */
+	intervalOf(name: 'probes' | 'metrics' | 'upstreams' | 'logs' | 'certs' | 'prune'): number | undefined {
+		return this.loops.get(name)?.ms;
+	}
+
+	/**
+	 * Apply a changed config while running (settings service, plan §2.2): the probe, scrape and upstream-poll
+	 * timers are re-armed, and retention is read at the next prune. Environment-only fields (paths, admin URL) are not
+	 * taken from `next`; they cannot change while the process runs.
+	 */
+	reconfigure(next: Config): void {
+		this.cfg = {
+			...this.cfg,
+			probeIntervalMs: next.probeIntervalMs,
+			scrapeIntervalMs: next.scrapeIntervalMs,
+			retentionDays: next.retentionDays
+		};
+		this.probeTimeoutMs = probeTimeout(next.probeIntervalMs);
+		this.status.probes.intervalMs = next.probeIntervalMs;
+		this.status.metrics.intervalMs = next.scrapeIntervalMs;
+		this.rearm('probes', next.probeIntervalMs);
+		this.rearm('metrics', next.scrapeIntervalMs);
+		this.rearm('upstreams', next.scrapeIntervalMs);
 	}
 
 	start(): void {
 		this.refreshSites();
-		this.every(this.cfg.probeIntervalMs, () => this.probeAll());
-		this.every(this.cfg.scrapeIntervalMs, () => this.scrapeMetrics());
-		this.every(this.cfg.scrapeIntervalMs, () => this.pollUpstreams());
-		this.every(LOG_EVERY_MS, () => this.tailLogs());
-		this.every(HOURLY, () => this.scanCerts());
-		this.every(HOURLY, () => this.prune(), 60_000);
+		this.every('probes', this.cfg.probeIntervalMs, () => this.probeAll());
+		this.every('metrics', this.cfg.scrapeIntervalMs, () => this.scrapeMetrics());
+		this.every('upstreams', this.cfg.scrapeIntervalMs, () => this.pollUpstreams());
+		this.every('logs', LOG_EVERY_MS, () => this.tailLogs());
+		this.every('certs', HOURLY, () => this.scanCerts());
+		this.every('prune', HOURLY, () => this.prune(), 60_000);
 	}
 
 	/** Stops the timers and writes what is buffered for the open minute. */
 	stop(): void {
 		this.stopped = true;
-		for (const t of this.timers) clearTimeout(t);
-		this.timers = [];
+		for (const loop of this.loops.values()) if (loop.timer) clearTimeout(loop.timer);
+		this.loops.clear();
 		try {
 			insertMetricRows(this.db, this.metrics.flush());
 			upsertLogMinutes(this.db, this.logs.take(this.now(), true));

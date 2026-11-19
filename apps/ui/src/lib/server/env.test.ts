@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfigError, loadConfig } from './env';
+import { ConfigError, checkSetting, loadConfig } from './env';
 
 describe('loadConfig', () => {
 	it('uses the PLAN.md defaults with an empty environment', () => {
@@ -29,7 +29,8 @@ describe('loadConfig', () => {
 				readonly: true,
 				cacheTtlMs: 60_000,
 				sslKeyDownload: false
-			}
+			},
+			settingsIgnore: false
 		});
 	});
 
@@ -128,5 +129,25 @@ describe('loadConfig', () => {
 		])('is read-only by default only when nobody has to sign in: %o', (env, readonly) => {
 			expect(loadConfig(env).porkbun.readonly).toBe(readonly);
 		});
+	});
+});
+
+describe('checkSetting', () => {
+	it('uses the same parsers and messages as loadConfig', () => {
+		expect(checkSetting('CADDY_UI_PROBE_INTERVAL', ' 2m ')).toBe('2m');
+		expect(() => checkSetting('CADDY_UI_PROBE_INTERVAL', '500ms')).toThrow(
+			'CADDY_UI_PROBE_INTERVAL must be at least 1s, got "500ms"'
+		);
+		expect(() => checkSetting('CADDY_UI_RETENTION_DAYS', '9.5')).toThrow(/whole number/);
+		expect(() => checkSetting('CADDY_UI_PORKBUN_READONLY', 'maybe')).toThrow(/true or false/);
+		expect(() => checkSetting('CADDY_UI_PUBLIC_URL', 'ftp://x')).toThrow(/http\(s\) URL/);
+		expect(checkSetting('CADDY_UI_PUBLIC_URL', '')).toBe('');
+		expect(() => checkSetting('TZ', '')).toThrow(/must not be empty/);
+		expect(checkSetting('CADDY_UI_PORKBUN_CACHE_TTL', '0s')).toBe('0s');
+	});
+
+	it('CADDY_UI_SETTINGS_IGNORE is a strict boolean', () => {
+		expect(loadConfig({ CADDY_UI_SETTINGS_IGNORE: 'true' }).settingsIgnore).toBe(true);
+		expect(() => loadConfig({ CADDY_UI_SETTINGS_IGNORE: 'please' })).toThrow(/CADDY_UI_SETTINGS_IGNORE/);
 	});
 });

@@ -1,5 +1,6 @@
 import { config } from '../env';
 import { getDb } from '../db';
+import { onSettingsChange } from '../settings';
 import { Snapshot } from './snapshot';
 import { Collector } from './worker';
 
@@ -51,5 +52,9 @@ export function startCollector(): void {
 	getSnapshot();
 	const c = getCollector();
 	c.start();
-	process.once('sveltekit:shutdown', () => c.stop());
+	const off = onSettingsChange((next) => c.reconfigure(next));
+	process.once('sveltekit:shutdown', () => {
+		off();
+		c.stop();
+	});
 }

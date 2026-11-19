@@ -6,7 +6,9 @@ import { installCaddyfileParser } from '$lib/server/config/caddyfile-parser';
 import { startCollector } from '$lib/server/collector';
 import { ConfigError, config } from '$lib/server/env';
 import { isApiPath, isPublicPath, sameOrigin } from '$lib/server/guard';
+import { reconfigurePorkbun } from '$lib/server/porkbun';
 import { getRuntime } from '$lib/server/runtime';
+import { installSettings, onSettingsChange } from '$lib/server/settings';
 import { SESSION_COOKIE } from '$lib/server/session';
 import { Timing } from '$lib/server/timing';
 import { THEME_COOKIE, parseTheme, themeAttribute } from '$lib/theme';
@@ -15,9 +17,25 @@ function seeOther(location: string): Response {
 	return new Response(null, { status: 303, headers: { location } });
 }
 
-/** Read and validate the environment once at boot, so a bad variable stops the container with its name. */
+/**
+ * Read and validate the environment once at boot, so a bad variable stops the container with its name. Saved
+ * settings are loaded first, so everything after reads the effective config; a bad saved value is only a
+ * warning (docs/configuration.md).
+ */
 export const init: ServerInit = async () => {
 	try {
+		if (!building) {
+			try {
+				installSettings();
+				onSettingsChange((next) => reconfigurePorkbun(next.porkbun));
+			} catch (err) {
+				if (err instanceof ConfigError) throw err;
+				// Saved settings must never stop the UI: run on the environment and say why.
+				console.error(
+					`caddy-ui: saved settings could not be read (${err instanceof Error ? err.message : String(err)}); using environment values and defaults`
+				);
+			}
+		}
 		const { auth } = getRuntime();
 		if (auth.mode === 'local-disabled') {
 			console.warn('caddy-ui: CADDY_UI_USER and CADDY_UI_PASSWORD are unset, so local sign-in is off.');

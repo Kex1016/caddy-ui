@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { config } from '../env';
+import { envConfig } from '../env';
 import { migrations, type Migration } from './migrations';
 
 export type Db = Database.Database;
@@ -39,7 +39,7 @@ let shared: Db | undefined;
 
 /** The process-wide database at `$CADDY_UI_DATA/caddy-ui.db`. */
 export function getDb(): Db {
-	shared ??= openDb(join(config().uiData, 'caddy-ui.db'));
+	shared ??= openDb(join(envConfig().uiData, 'caddy-ui.db'));
 	return shared;
 }
 
