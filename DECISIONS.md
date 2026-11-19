@@ -793,3 +793,86 @@ Format: date · workstream · decision · why · how to reverse.
 - 2026-11-18 · P5 · "Every Caddy call goes through `adminFetch`" is a test (`caddy.test.ts`) that reads the
   tie-in's server files and fails on a bare `fetch(`; the detector takes a `CaddyAdmin` · the plan allows a lint
   rule or a test, and a test needs no change to the shared ESLint config · confidence 85.
+- 2026-11-18 · P2 · Every change to a record goes into a pending-changes tray first, a single add, edit or
+  delete included, and is sent from one review step. The tray is kept in the tab's session storage per domain,
+  so a reload does not lose it · one path to Porkbun means one review (§3.1 rule 1) and nothing to keep in step
+  between a "quick" path and the batch path. The "plain confirm" for deleting one record (rule 3) is the
+  review's Apply button; more than one delete needs the domain typed · add direct buttons that call
+  `POST …/dns` and `PUT`/`DELETE …/dns/:id`, which exist and are tested · confidence 78.
+- 2026-11-18 · P2 · A batch is sent as deletes, then edits, then new records, each in the order they were
+  decided · replacing a record (a CNAME for the A record at the same name) then works whichever of the two was
+  decided first, and the review lists the changes in the order they go out · `inSendOrder` in
+  `lib/porkbun/records/tray.ts` · confidence 80.
+- 2026-11-18 · P2 · Records are edited and deleted by id only; Porkbun's `…ByNameType` endpoints are not used ·
+  they change every record of a name and type at once, which the review could not show record by record ·
+  confidence 82.
+- 2026-11-18 · P2 · An edit carries the whole record and, from this UI, the record as the person saw it
+  (`expect`). Only the fields that differ are sent to Porkbun. A record that reads differently now, is gone, or
+  is named twice in one batch refuses the change with a 409 before anything is written · two people (or this
+  UI and porkbun.com) must not overwrite each other without seeing it · leave `expect` out of a request to
+  skip the check · confidence 85.
+- 2026-11-18 · P2 · The type of a record can not be changed by an edit; the form says to delete it and add
+  another · Porkbun's edit keeps the id, and a record that silently became another type under the same id is
+  hard to follow in the write log · confidence 80.
+- 2026-11-18 · P2 · Records of a type outside the 14 are shown and exported but can be neither edited nor
+  deleted here · this build has no rules for them, so it can not say what a change would do · allow delete in
+  `planChanges` (`READ_ONLY_TYPE`) · confidence 80.
+- 2026-11-18 · P2 · Preview and apply both read the zone fresh from Porkbun and plan the batch with the same
+  pure code the page uses (`planChanges`). A problem with any change refuses the whole batch before a write:
+  400 `INVALID_RECORD` for a record that is not valid, 409 `PLAN_REFUSED` for a clash with the zone. Once writes
+  go out, the first failure stops the batch and the changes after it are reported as `not_applied` (HTTP 207) ·
+  later changes were reviewed on the assumption that earlier ones worked; sending them into another zone than
+  the one reviewed is worse than stopping. Porkbun has no transaction to roll back with · confidence 78.
+- 2026-11-18 · P2 · The server, not only the page, wants `"confirm": "<domain>"` for a batch with more than one
+  delete (400 `CONFIRM_REQUIRED`) · §3.1 rule 3 then holds for every caller, as P3 did for its routes ·
+  confidence 85.
+- 2026-11-18 · P2 · Limits: 100 changes in one batch; an import reads at most 1 MiB and 2000 records and
+  creates at most 500 at a time (Porkbun's own limit for `/dns/import`) · a batch is one request that sends
+  its writes one after another, and Porkbun rate limits by the minute · `MAX_BATCH`, `MAX_IMPORT_SOURCE` in
+  `lib/porkbun/records/service.server.ts` · confidence 75.
+- 2026-11-18 · P2 · A create that Porkbun refuses as `DUPLICATE_RECORD` adopts the existing id: the change
+  counts as done (`adopted`), the record's TTL and notes are left alone, and the write log still shows the
+  refusal as what it was · §3.1 rule 7 · confidence 80.
+- 2026-11-18 · P2 · No Idempotency-Key is reused for a retry by the person · Porkbun replays the stored answer
+  for 24 hours, failures included, so a second click after a fix would get the old failure back. P0's client
+  still sends a fresh key per write · confidence 80.
+- 2026-11-18 · P2 · Checks made here before Porkbun is asked: a duplicate (same name, type and value), a CNAME
+  that would not be alone at its name (both ways), and a second SPF record at the bare domain. An edit that only
+  changes the TTL or the notes is not held against its neighbours · they mirror `DUPLICATE_RECORD`,
+  `RECORD_CONFLICT` and `SPF_CONFLICT`, give the reason with the records in the way, and work for changes
+  Porkbun's dry run can not judge (a change that depends on an earlier one in the same batch) · confidence 78.
+- 2026-11-18 · P2 · The review asks Porkbun to rehearse each change on its own (`dryRun`), except a change that
+  only works after an earlier one of the batch, which is marked as not rehearsed, and except when any change
+  has a problem found here, where Porkbun is not asked at all · Porkbun's dry run sees the zone as it is now ·
+  confidence 82.
+- 2026-11-18 · P2 · HTTPS and SVCB values are written as the full RDATA in `content` ("priority target
+  parameters"); the spec does not show an example and no account was at hand to check. A stored value this page
+  can not split into its fields is shown as one raw value, and the record's name, TTL and notes can still be
+  edited with the value kept as stored · nothing is lost if Porkbun spells these differently · adjust
+  `serviceBinding` in `lib/porkbun/records/kinds.ts` · confidence 72.
+- 2026-11-18 · P2 · Import (zone file, the JSON this page exports, or a scan of the live DNS) is a dry run
+  first: every record is sorted into new, already there, in conflict, left out or not valid against the fresh
+  zone, the person ticks what to import, Porkbun rehearses it, and only then it is sent. Everything but NS goes
+  through `/dns/import`; NS records below the bare domain are created one by one, because Porkbun's import
+  skips every NS record. SOA and the domain's own NS records are left out. Notes are not imported (the import
+  endpoint has no field for them); the review says so · confidence 74.
+- 2026-11-18 · P2 · Export is a BIND zone file (`$ORIGIN`, `$TTL 600`, one record per line, notes as
+  `; note: …` comments) or JSON with the notes, read fresh from Porkbun; when Porkbun can not be reached the
+  last good copy is exported with a comment saying so. `ANAME` in a zone file is read as `ALIAS` ·
+  `GET …/dns/export?format=json` · confidence 80.
+- 2026-11-18 · P2 · "Managed by Caddy" and "used by site" are worked out by the DNS tab itself from the
+  Caddyfile's site addresses and the zone (exact name, else the covering wildcard, following CNAME and ALIAS
+  inside the zone). When `GET /api/porkbun/caddy?domain=<domain>` (P5) answers within 1.5 s, the pairs of
+  its cross-check (`sites[].host`, `sites[].records[].id`) are used instead, and `siteId` gives the link for a
+  site the scan here did not list; an answer of another shape, or one that could not read the zone, is
+  ignored · the tab works when Caddy or the tie-in is slow or down and never waits on it; a test runs P5's
+  real route against the same zone and both ways give the same marks. The tie-in is asked for this domain
+  only, so a site under another domain whose CNAME leads into this zone is not marked; asking for every
+  domain would read every zone of the account each time a DNS tab opens (the reader already handles that
+  answer) · `lib/porkbun/records/marks.ts` · confidence 75.
+- 2026-11-18 · P2 · The DNS tab reads the nameservers under P3's cache key `<domain>:ns` to say up front when a
+  domain is answered from somewhere else, and uses P3's browser helper (`lib/porkbun/registry/api.ts`) and
+  `isAtPorkbun` · one read and one way to call the API routes; no P3 file is changed · confidence 85.
+- 2026-11-18 · P2 · Known gap, not decided here: `porkbun().dns.list` drops the `warnings` Porkbun sends with
+  `/dns/retrieve`, so a warning that only comes with a read is not shown on the DNS tab. Warnings on dry runs
+  and writes are shown as written. Needs `warnings` on `DnsZone` in P0's client; told the coordinator.
