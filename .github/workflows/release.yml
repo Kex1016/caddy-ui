@@ -1,0 +1,137 @@
+name: release
+
+# Run by hand (Actions > release > Run workflow) to cut a release from main:
+#   1. checks the version and that CI passed on the commit,
+#   2. pushes the tag vX.Y.Z,
+#   3. builds and pushes the images through publish.yml (a tag pushed with GITHUB_TOKEN does
+#      not start other workflows, so publish.yml is called directly here),
+#   4. creates the GitHub release.
+# Release notes come from the "notes" input, else docs/releases/vX.Y.Z.md, else GitHub's
+# generated notes. A failed run can be re-run: an existing tag on the same commit is reused.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version without the v, for example 1.1.0'
+        required: true
+        type: string
+      notes:
+        description: 'Release notes in Markdown (optional; default docs/releases/vX.Y.Z.md, else generated)'
+        required: false
+        type: string
+      skip_ci_check:
+        description: 'Release even if CI has not passed on this commit'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    name: Check and tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    outputs:
+      tag: ${{ steps.check.outputs.tag }}
+      prerelease: ${{ steps.check.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: check
+        name: Check the version and the commit
+        env:
+          VERSION: ${{ inputs.version }}
+          SKIP_CI_CHECK: ${{ inputs.skip_ci_check }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Run this workflow on main (it ran on $GITHUB_REF)."; exit 1
+          fi
+          VERSION="${VERSION#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$VERSION' is not a version like 1.1.0 or 1.2.0-rc.1."; exit 1
+          fi
+          TAG="v$VERSION"
+          if existing="$(git rev-parse -q --verify "refs/tags/$TAG^{commit}")"; then
+            if [ "$existing" != "$GITHUB_SHA" ]; then
+              echo "::error::$TAG already exists on ${existing:0:7}, not on ${GITHUB_SHA:0:7}."; exit 1
+            fi
+            echo "$TAG already points at this commit; reusing it."
+          fi
+          if [ "$SKIP_CI_CHECK" != "true" ]; then
+            conclusion="$(gh run list --workflow ci.yml --commit "$GITHUB_SHA" --event push \
+              --json conclusion --jq '.[0].conclusion // ""')"
+            if [ "$conclusion" != "success" ]; then
+              echo "::error::CI on ${GITHUB_SHA:0:7} is '${conclusion:-not run or still running}'. Wait for it, or set skip_ci_check."
+              exit 1
+            fi
+          fi
+          prerelease=false
+          [[ "$VERSION" == *-* ]] && prerelease=true
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+      - name: Push the tag
+        env:
+          TAG: ${{ steps.check.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "$TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$TAG"
+
+  publish:
+    name: Images
+    needs: tag
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      tag: ${{ needs.tag.outputs.tag }}
+
+  release:
+    name: GitHub release
+    needs: [tag, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create the release
+        env:
+          TAG: ${{ needs.tag.outputs.tag }}
+          PRERELEASE: ${{ needs.tag.outputs.prerelease }}
+          NOTES: ${{ inputs.notes }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          args=(--title "$TAG" --verify-tag)
+          [ "$PRERELEASE" = "true" ] && args+=(--prerelease) || args+=(--latest)
+          if [ -n "$NOTES" ]; then
+            printf '%s\n' "$NOTES" > "$RUNNER_TEMP/notes.md"
+            args+=(--notes-file "$RUNNER_TEMP/notes.md")
+          elif [ -f "docs/releases/$TAG.md" ]; then
+            args+=(--notes-file "docs/releases/$TAG.md")
+          else
+            args+=(--generate-notes)
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; leaving it as it is."
+          else
+            gh release create "$TAG" "${args[@]}"
+          fi
+          echo "Released [$TAG]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$TAG)" >> "$GITHUB_STEP_SUMMARY"
