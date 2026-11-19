@@ -907,3 +907,38 @@ Format: date · workstream · decision · why · how to reverse.
   fake Porkbun still sends none with a read and the tests queue an answer that has them. Done on the
   coordinator's request, outside P2's own files (`lib/api/porkbun.ts`, `lib/server/porkbun/client.ts`) ·
   confidence 85.
+- 2026-11-19 · P7 · The e2e stack always starts the fake Porkbun (`e2e/support/porkbun-fake.mjs`, the unit
+  tests' `fake.ts` served with `node:http`) and gives the UI its fake keys, so every existing spec now runs with
+  the Domains area on. Specs arrange it through `/__fake/*` control routes that live only in that server
+  (`reset`, `scopes`, `records`, `record-limit`, `ssl`, `many-domains`, …); `fake.ts` is not changed. The UI's
+  Porkbun cache TTL is 0 in e2e so a reset is seen at once · the keys-unset path stays covered by P0's unit
+  tests, and the 33 W11 specs passed unchanged with the fake on · confidence 82.
+- 2026-11-19 · P7 · "Green on both Caddy versions" is read as: the existing e2e matrix (stock Caddy 2.10 and 2)
+  runs the new Porkbun specs too, where they expect the plugin to be missing, and a new job
+  **E2E in Chromium against the plugin Caddy** runs the whole suite on P6's `caddy-porkbun:ci` image with
+  `CADDY_TEST_PORKBUN_PLUGIN=present`, the switch `test:caddy` already uses. On stock Caddy the wildcard spec
+  checks that the hint says the plugin is missing and offers no button; on the plugin Caddy it applies
+  `tls { dns porkbun { … } }` through the hint and checks Caddy's running config · confidence 80.
+- 2026-11-19 · P7 · P7 adds its two CI jobs to `ci.yml` and a "Domains" section to `docs/testing.md` and the
+  README now, before P6's final pass, appended at the end so P6's edits merge cleanly · the plan's "after P6 is
+  merged" is about not colliding; appending does not collide · confidence 75.
+- 2026-11-19 · P7 · The optional sandbox job runs one read-only spec (`porkbun-sandbox.spec.ts`) with
+  `E2E_PORKBUN=sandbox`; the stack refuses a key that does not start with `pk1_sb_` in that mode, and without
+  the two secrets (TODO-USER, 18 Nov) every step is skipped and the job passes. It writes nothing, so it leaves
+  nothing in the sandbox account · confidence 80.
+- 2026-11-19 · P7 · The SSL spec makes a throwaway self-signed certificate with `openssl` at run time and has
+  the fake server return it from `/ssl/retrieve`, because the fake's own chain is placeholder text the tab
+  can not parse (it says so, correctly). Nothing shaped like a key is committed · confidence 85.
+- 2026-11-19 · P7 · Bug fixed: axe (WCAG 1.4.1, `link-in-text-block`, serious) failed on the Caddy tab and on a
+  domain with API access off: links inside a sentence were told apart by colour only. The links in the
+  API-access notice, the Overview's "changed at porkbun.com", the Caddy tab's "global options" and the
+  DNS-challenge dialog's "History" are now underlined, as the Overview page already does (`.inline-link`).
+  Fixed in this PR rather than a separate one, because this thread can push only one branch · confidence 85.
+- 2026-11-19 · P7 · Performance budget for the new pages: Domains, a domain's Overview and Caddy tab get the
+  stats pages' budget (500 ms, 1.5 s, 120 KB JS, 600 KB), the DNS tab 150 KB of JS for its forms, and the list
+  with 1,000 domains (P1's definition of done) 1 s, 2 s, 120 KB, 800 KB. Measured locally: first byte 20-50 ms,
+  load about 0.1 s, 60-81 KB of JS, 417 KB for 1,000 domains · confidence 78.
+- 2026-11-19 · P7 · Seen, not changed: the Forwarding tab opens the review for a forward whose name already has
+  one and the server refuses it at apply (`DUPLICATE_FORWARD`) before Porkbun is asked. The spec covers that
+  path. Catching it in the form first would be nicer, but the outcome is the same and nothing is sent ·
+  confidence 72.

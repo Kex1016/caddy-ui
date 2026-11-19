@@ -271,3 +271,100 @@ jobs:
       - name: Caddy logs
         if: failure()
         run: docker logs caddy
+
+  # P7 (docs/porkbun-plan.md §5): the whole e2e suite against Caddy built with caddy-dns/porkbun. The "e2e" job
+  # above runs the same suite against stock Caddy, where the Porkbun specs expect the plugin to be missing.
+  e2e-porkbun-plugin:
+    name: E2E in Chromium against the plugin Caddy
+    needs: caddy-porkbun
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build the UI
+        run: pnpm --filter @caddy-ui/ui build
+      - name: Install Chromium
+        run: pnpm --filter @caddy-ui/e2e exec playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: caddy-porkbun-image
+          path: ${{ runner.temp }}
+      - name: Start the plugin Caddy with its admin API on the runner
+        run: |
+          gunzip -c "$RUNNER_TEMP/caddy-porkbun.tar.gz" | docker load
+          echo '{"admin":{"listen":"0.0.0.0:2019"}}' > "$RUNNER_TEMP/caddy.json"
+          docker run -d --name caddy -p 2019:2019 -v "$RUNNER_TEMP/caddy.json:/etc/caddy/caddy.json:ro" \
+            caddy-porkbun:ci caddy run --config /etc/caddy/caddy.json
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:2019/config/ >/dev/null && exit 0; sleep 1; done
+          docker logs caddy
+          exit 1
+      - name: Playwright
+        env:
+          CADDY_ADMIN_URL: http://127.0.0.1:2019
+          CADDY_TEST_PORKBUN_PLUGIN: present
+        run: pnpm --filter @caddy-ui/e2e e2e
+      - name: Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-caddy-porkbun
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7
+      - name: Caddy logs
+        if: failure()
+        run: docker logs caddy
+
+  # Optional: the Domains area against Porkbun's sandbox. It runs only when the repository has the secrets
+  # PORKBUN_SANDBOX_API_KEY (a pk1_sb_ key) and PORKBUN_SANDBOX_API_SECRET_KEY; without them every step is
+  # skipped and the job passes. It only reads. See docs/testing.md.
+  porkbun-sandbox:
+    name: Domains area against the Porkbun sandbox (optional)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HAS_SANDBOX: ${{ secrets.PORKBUN_SANDBOX_API_KEY != '' && secrets.PORKBUN_SANDBOX_API_SECRET_KEY != '' }}
+    steps:
+      - name: No sandbox secrets, nothing to run
+        if: env.HAS_SANDBOX != 'true'
+        run: echo "PORKBUN_SANDBOX_API_KEY / PORKBUN_SANDBOX_API_SECRET_KEY are not set; skipping."
+      - uses: actions/checkout@v4
+        if: env.HAS_SANDBOX == 'true'
+      - uses: pnpm/action-setup@v4
+        if: env.HAS_SANDBOX == 'true'
+      - uses: actions/setup-node@v4
+        if: env.HAS_SANDBOX == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: env.HAS_SANDBOX == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Build the UI
+        if: env.HAS_SANDBOX == 'true'
+        run: pnpm --filter @caddy-ui/ui build
+      - name: Install Chromium
+        if: env.HAS_SANDBOX == 'true'
+        run: pnpm --filter @caddy-ui/e2e exec playwright install --with-deps chromium
+      - name: Start Caddy with its admin API on the runner
+        if: env.HAS_SANDBOX == 'true'
+        run: |
+          echo '{"admin":{"listen":"0.0.0.0:2019"}}' > "$RUNNER_TEMP/caddy.json"
+          docker run -d --name caddy -p 2019:2019 -v "$RUNNER_TEMP/caddy.json:/etc/caddy/caddy.json:ro" \
+            caddy:2 caddy run --config /etc/caddy/caddy.json
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:2019/config/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Playwright, sandbox spec only
+        if: env.HAS_SANDBOX == 'true'
+        env:
+          CADDY_ADMIN_URL: http://127.0.0.1:2019
+          E2E_PORKBUN: sandbox
+          PORKBUN_SANDBOX_API_KEY: ${{ secrets.PORKBUN_SANDBOX_API_KEY }}
+          PORKBUN_SANDBOX_API_SECRET_KEY: ${{ secrets.PORKBUN_SANDBOX_API_SECRET_KEY }}
+        run: pnpm --filter @caddy-ui/e2e e2e tests/porkbun-sandbox.spec.ts

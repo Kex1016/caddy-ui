@@ -160,13 +160,13 @@
 				<p class="t-ui t-muted">
 					{#if tie.globalDns01}
 						The global option <code>acme_dns {tie.globalDns01.provider ?? ''}</code> sets it for every site.
-						<a href="/globals">Open global options</a>
+						<a class="inline-link" href="/globals">Open global options</a>
 					{:else if sites.length === 0}
 						No site address is under this domain.
 					{:else}
 						Addresses under this domain whose site gets its certificate through the DNS challenge. It is set
 						per site in its <code>tls</code> block, or for all sites with <code>acme_dns</code> in the
-						<a href="/globals">global options</a>.
+						<a class="inline-link" href="/globals">global options</a>.
 					{/if}
 				</p>
 			</div>
@@ -281,6 +281,11 @@
 />
 
 <style>
+	/* Links inside a sentence need more than colour to stand out (WCAG 1.4.1). */
+	.inline-link {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
 	.asof {
 		display: flex;
 		flex-wrap: wrap;
